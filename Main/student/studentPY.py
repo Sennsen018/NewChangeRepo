@@ -1,0 +1,572 @@
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify
+from Main.db import get_db_connection
+from datetime import datetime, timedelta
+import json
+import os
+from werkzeug.utils import secure_filename
+
+user = Blueprint('user', __name__, template_folder='templates')
+
+@user.before_request
+def require_login():
+    if 'user_id' not in session or session.get('role') != 'student':
+        flash('Please login as student first.', 'error')
+        return redirect(url_for('auth.student_login'))
+
+@user.route('/dashboard')
+def dashboard():
+    uSID = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get Enrolled Subjects with their specific stats
+    cursor.execute("""
+    SELECT s.subject_id, s.subject_code, s.subject_name 
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    WHERE e.uSID = %s
+    """, (uSID,))
+    subjects_raw = cursor.fetchall()
+    
+    subjects_with_stats = []
+    overall_stats = {'Present': 0, 'Absent': 0, 'Late': 0}
+    
+    for s in subjects_raw:
+        cursor.execute("""
+            SELECT a.status, COUNT(*) as count 
+            FROM Attendance a
+            JOIN Sessions s_tab ON a.session_id = s_tab.session_id
+            WHERE a.uSID = %s AND s_tab.subject_id = %s
+            GROUP BY a.status
+        """, (uSID, s['subject_id']))
+        s_stats = {row['status']: row['count'] for row in cursor.fetchall()}
+        s_total = sum(s_stats.values())
+        s_present = s_stats.get('Present', 0)
+        s_pct = (s_present / s_total * 100) if s_total > 0 else 100
+        
+        # Accumulate overall stats
+        for status in overall_stats:
+            overall_stats[status] += s_stats.get(status, 0)
+            
+        subjects_with_stats.append({
+            **s,
+            'stats': s_stats,
+            'attendance_pct': round(s_pct, 1)
+        })
+
+    # Overall calculation
+    total = sum(overall_stats.values())
+    present = overall_stats.get('Present', 0)
+    attendance_pct = (present / total * 100) if total > 0 else 100
+    low_attendance = attendance_pct < 75
+    
+    # Get Notifications
+    cursor.execute("SELECT * FROM Notifications WHERE uSID = %s ORDER BY created_at DESC", (uSID,))
+    notifications = cursor.fetchall()
+    unread_notifs = [n for n in notifications if not n['is_read']]
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('student_dashboard.html', 
+                           name=session.get('name'), 
+                           subjects=subjects_with_stats,
+                           attendance_pct=round(attendance_pct, 1),
+                           low_attendance=low_attendance,
+                           stats=overall_stats,
+                           notifications=notifications,
+                           unread_count=len(unread_notifs))
+
+@user.route('/subject/<int:subject_id>')
+def subject_performance(subject_id):
+    uSID = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get Subject Info
+    cursor.execute("SELECT * FROM Subjects WHERE subject_id = %s", (subject_id,))
+    subject = cursor.fetchone()
+    
+    if not subject:
+        flash('Subject not found.', 'error')
+        return redirect(url_for('user.dashboard'))
+        
+    # Get stats for this subject
+    cursor.execute("""
+        SELECT a.status, COUNT(*) as count 
+        FROM Attendance a
+        JOIN Sessions s_tab ON a.session_id = s_tab.session_id
+        WHERE a.uSID = %s AND s_tab.subject_id = %s
+        GROUP BY a.status
+    """, (uSID, subject_id))
+    stats = {row['status']: row['count'] for row in cursor.fetchall()}
+    total = sum(stats.values())
+    present = stats.get('Present', 0)
+    attendance_pct = (present / total * 100) if total > 0 else 100
+    
+    # Get Sidebar Data
+    cursor.execute("""
+    SELECT s.subject_id, s.subject_code, s.subject_name 
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    WHERE e.uSID = %s
+    """, (uSID,))
+    subjects = cursor.fetchall()
+    
+    cursor.execute("SELECT * FROM Notifications WHERE uSID = %s AND is_read = 0", (uSID,))
+    unread_count = len(cursor.fetchall())
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('subject_view.html',
+                           subject=subject,
+                           stats=stats,
+                           attendance_pct=round(attendance_pct, 1),
+                           subjects=subjects,
+                           unread_count=unread_count)
+
+@user.route('/mark_notifications_read', methods=['POST'])
+def mark_notifications_read():
+    uSID = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE Notifications SET is_read = TRUE WHERE uSID = %s", (uSID,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'success': True})
+
+@user.route('/api/notifications')
+def get_notifications():
+    uSID = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM Notifications WHERE uSID = %s ORDER BY created_at DESC LIMIT 10", (uSID,))
+    notifications = cursor.fetchall()
+    
+    # Convert datetime to string for JSON serialization
+    for n in notifications:
+        if isinstance(n['created_at'], datetime):
+            n['created_at'] = n['created_at'].strftime('%Y-%m-%d %H:%M')
+            
+    cursor.close()
+    conn.close()
+    return jsonify({'notifications': notifications})
+
+@user.route('/notifications')
+def notifications_page():
+    uSID = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get Enrolled Subjects for Sidebar
+    cursor.execute("""
+    SELECT s.subject_id, s.subject_code, s.subject_name 
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    WHERE e.uSID = %s
+    """, (uSID,))
+    subjects = cursor.fetchall()
+    
+    # Get all notifications
+    cursor.execute("SELECT * FROM Notifications WHERE uSID = %s ORDER BY created_at DESC", (uSID,))
+    notifications = cursor.fetchall()
+    unread_count = len([n for n in notifications if not n['is_read']])
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('notifications.html',
+                           subjects=subjects,
+                           notifications=notifications,
+                           unread_count=unread_count,
+                           name=session.get('name'))
+
+@user.route('/scan_qr', methods=['GET'])
+def scan_qr():
+    uSID = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get Enrolled Subjects for Sidebar
+    cursor.execute("""
+    SELECT s.subject_id, s.subject_code, s.subject_name 
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    WHERE e.uSID = %s
+    """, (uSID,))
+    subjects = cursor.fetchall()
+    
+    # Get Notifications for Sidebar
+    cursor.execute("SELECT * FROM Notifications WHERE uSID = %s ORDER BY created_at DESC", (uSID,))
+    notifications = cursor.fetchall()
+    unread_count = len([n for n in notifications if not n['is_read']])
+
+    subject_id = request.args.get('subject_id')
+    cursor.execute("SELECT * FROM Subjects WHERE subject_id = %s", (subject_id,))
+    current_subject = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('qr_scan.html', 
+                           subject=current_subject,
+                           subjects=subjects,
+                           notifications=notifications,
+                           unread_count=unread_count)
+
+@user.route('/submit_attendance', methods=['POST'])
+def submit_attendance():
+    data = request.json
+    session_id = data.get('session_id')
+    token = data.get('token')
+    s_lat = data.get('lat')
+    s_lon = data.get('lon')
+    tab_switched = data.get('tab_switched', False)
+    behavior_flags = data.get('behavior_flags', [])
+    
+    if tab_switched:
+        behavior_flags.append("Tab Switched")
+    
+    uSID = session['user_id']
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # 1. Validate Session and Token
+        cursor.execute("SELECT * FROM Sessions WHERE session_id = %s", (session_id,))
+        ses = cursor.fetchone()
+        
+        if not ses:
+            return jsonify({'success': False, 'message': 'Session not found.'})
+        
+        if ses['status'] != 'Active':
+            return jsonify({'success': False, 'message': 'Session has already ended.'})
+            
+        if ses['random_token'] != token:
+            return jsonify({'success': False, 'message': 'Invalid QR Token.'})
+            
+        if datetime.now() > ses['expires_at']:
+            return jsonify({'success': False, 'message': 'QR Code has expired.'})
+
+        # 2. Check if already marked
+        cursor.execute("SELECT * FROM Attendance WHERE uSID = %s AND session_id = %s", (uSID, session_id))
+        if cursor.fetchone():
+            return jsonify({'success': False, 'message': 'Attendance already recorded for this session.'})
+
+        # 3. Calculate Distance (Haversine Formula)
+        import math
+        def haversine(lat1, lon1, lat2, lon2):
+            R = 6371000 # radius of Earth in meters
+            phi1, phi2 = math.radians(lat1), math.radians(lat2)
+            dphi = math.radians(lat2 - lat1)
+            dlambda = math.radians(lon2 - lon1)
+            a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
+            return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1-a))
+
+        distance = haversine(float(s_lat), float(s_lon), float(ses['latitude']), float(ses['longitude']))
+        
+        # 4. Mark Validity and Flags
+        is_valid = 'Valid'
+        if distance > 100: # Example: more than 100 meters
+            behavior_flags.append(f"Far Location: {round(distance)}m")
+            is_valid = 'Invalid'
+            
+        if tab_switched:
+            is_valid = 'Invalid'
+
+        # 5. Insert Record
+        status = 'Present' if is_valid == 'Valid' else 'Flagged'
+        cursor.execute("""
+            INSERT INTO Attendance 
+            (session_id, uSID, scan_time, status, remarks, is_valid, student_lat, student_lon, distance_meters, behavior_flags)
+            VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s)
+        """, (session_id, uSID, status, f"Distance: {round(distance)}m", is_valid, s_lat, s_lon, distance, json.dumps(behavior_flags)))
+        
+        # 6. Send Notification
+        msg = f"Attendance marked as Present for session {session_id}. Validity: {is_valid}."
+        cursor.execute("INSERT INTO Notifications (uSID, message, type) VALUES (%s, %s, %s)", (uSID, msg, 'Info' if is_valid == 'Valid' else 'Warning'))
+        
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Attendance recorded successfully.'})
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': f'Server error: {str(e)}'})
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@user.route('/timetable')
+def timetable():
+    uSID = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    query = """
+    SELECT s.subject_code, s.subject_name, t.first_name, t.last_name, 
+           sch.day_of_week, sch.start_time, sch.end_time, sch.room, sch.section
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    JOIN schedule sch ON e.subject_id = sch.subject_id AND e.section = sch.section
+    JOIN Teachers t ON sch.uTID = t.uTID
+    WHERE e.uSID = %s
+    """
+    cursor.execute(query, (uSID,))
+    schedule_raw = cursor.fetchall()
+    
+    # Process schedule for grid
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    day_map = {day: i+2 for i, day in enumerate(days)} # Column index
+    
+    processed_schedule = []
+    for item in schedule_raw:
+        # Helper to convert time/timedelta to row index
+        def get_row_index(t):
+            # MySQL TIME columns return timedelta objects
+            total_seconds = t.total_seconds() if hasattr(t, 'total_seconds') else (t.hour * 3600 + t.minute * 60)
+            hours = int(total_seconds // 3600)
+            minutes = int((total_seconds // 60) % 60)
+            # Row index calculation: 7am is row 2. 30min intervals.
+            return (hours * 2 + (1 if minutes >= 30 else 0)) - 14 + 2
+
+        start_row = get_row_index(item['start_time'])
+        end_row = get_row_index(item['end_time'])
+        
+        item['grid_column'] = day_map.get(item['day_of_week'], 0)
+        item['grid_row_start'] = start_row
+        item['grid_row_end'] = end_row
+        processed_schedule.append(item)
+
+    # Get Enrolled Subjects for Sidebar
+    cursor.execute("""
+    SELECT s.subject_id, s.subject_code, s.subject_name 
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    WHERE e.uSID = %s
+    """, (uSID,))
+    subjects = cursor.fetchall()
+    
+    # Get Notifications for Sidebar
+    cursor.execute("SELECT * FROM Notifications WHERE uSID = %s ORDER BY created_at DESC", (uSID,))
+    notifications = cursor.fetchall()
+    unread_count = len([n for n in notifications if not n['is_read']])
+
+    # Generate time slots for the left column (7 AM - 7 PM)
+    time_labels = []
+    for h in range(7, 19): # 7am to 6pm start times
+        for m in [0, 30]:
+            h2, m2 = (h, 30) if m == 0 else (h + 1, 0)
+            
+            p1 = "AM" if h < 12 else "PM"
+            dh1 = h if h <= 12 else h - 12
+            
+            p2 = "AM" if h2 < 12 else "PM"
+            dh2 = h2 if h2 <= 12 else h2 - 12
+            
+            time_labels.append(f"{dh1}:{m:02d} {p1} - {dh2}:{m2:02d} {p2}")
+
+    cursor.close()
+    conn.close()
+    return render_template('timetable.html', 
+                           schedule=processed_schedule, 
+                           days=days, 
+                           time_labels=time_labels,
+                           subjects=subjects,
+                           notifications=notifications,
+                           unread_count=unread_count)
+
+@user.route('/profile')
+def profile():
+    uSID = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get Student Profile
+    cursor.execute("SELECT * FROM Students WHERE uSID = %s", (uSID,))
+    student = cursor.fetchone()
+    
+    # Get Enrolled Subjects with Teacher Info
+    query = """
+    SELECT s.subject_code, s.subject_name, e.section, t.first_name, t.last_name
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    LEFT JOIN Teacher_Assignments ta ON e.subject_id = ta.subject_id AND e.section = ta.section
+    LEFT JOIN Teachers t ON ta.uTID = t.uTID
+    WHERE e.uSID = %s
+    """
+    cursor.execute(query, (uSID,))
+    enrollments = cursor.fetchall()
+    
+    # Get Sidebar Data
+    cursor.execute("""
+    SELECT s.subject_id, s.subject_code, s.subject_name 
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    WHERE e.uSID = %s
+    """, (uSID,))
+    subjects = cursor.fetchall()
+    
+    cursor.execute("SELECT * FROM Notifications WHERE uSID = %s ORDER BY created_at DESC", (uSID,))
+    notifications = cursor.fetchall()
+    unread_count = len([n for n in notifications if not n['is_read']])
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('profile.html', 
+                           student=student, 
+                           enrollments=enrollments,
+                           subjects=subjects,
+                           notifications=notifications,
+                           unread_count=unread_count)
+
+@user.route('/request_email_otp', methods=['POST'])
+def request_email_otp():
+    from Main.auth.loginPY import generate_otp, send_otp_email
+    new_email = request.form.get('new_email')
+    
+    if not new_email:
+        return jsonify({'success': False, 'message': 'Email is required.'})
+        
+    otp = generate_otp()
+    session['email_change_otp'] = otp
+    session['pending_new_email'] = new_email
+    session['email_otp_expiry'] = (datetime.now() + timedelta(minutes=10)).timestamp()
+    
+    if send_otp_email(new_email, otp):
+        return jsonify({'success': True, 'message': 'OTP sent to your new email.'})
+    else:
+        # Fallback for demo
+        return jsonify({'success': True, 'message': f'Failed to send email. (Demo OTP: {otp})'})
+
+@user.route('/verify_email_change', methods=['POST'])
+def verify_email_change():
+    entered_otp = request.form.get('otp')
+    uSID = session['user_id']
+    
+    if not entered_otp:
+        return jsonify({'success': False, 'message': 'OTP is required.'})
+        
+    if datetime.now().timestamp() > session.get('email_otp_expiry', 0):
+        return jsonify({'success': False, 'message': 'OTP has expired.'})
+        
+    if entered_otp == session.get('email_change_otp'):
+        new_email = session.get('pending_new_email')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE Students SET email = %s WHERE uSID = %s", (new_email, uSID))
+            conn.commit()
+            
+            # Clear session
+            session.pop('email_change_otp', None)
+            session.pop('pending_new_email', None)
+            session.pop('email_otp_expiry', None)
+            
+            return jsonify({'success': True, 'message': 'Email updated successfully.'})
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Update failed: {str(e)}'})
+        finally:
+            cursor.close()
+            conn.close()
+    else:
+        return jsonify({'success': False, 'message': 'Invalid OTP code.'})
+
+@user.route('/submit_excuse', methods=['GET', 'POST'])
+def submit_excuse():
+    uSID = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    if request.method == 'POST':
+        class_data = request.form.get('class_id') # Format: subject_id|uTID
+        message = request.form.get('message')
+        file = request.files.get('excuse_file')
+        
+        if not class_data or not message:
+            flash('Please select a class and provide a reason.', 'error')
+        else:
+            try:
+                subject_id, uTID = class_data.split('|')
+                filename = None
+                
+                if file and file.filename != '':
+                    # Ensure upload directory exists
+                    upload_dir = os.path.join('Main', 'static', 'uploads', 'excuses')
+                    if not os.path.exists(upload_dir):
+                        os.makedirs(upload_dir)
+                        
+                    ext = file.filename.rsplit('.', 1)[1].lower()
+                    allowed_ext = {'pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'}
+                    
+                    if ext not in allowed_ext:
+                        flash('Invalid file type. Only PDF, Word, and Images are allowed.', 'error')
+                        return redirect(url_for('user.submit_excuse'))
+                        
+                    filename = secure_filename(f"{uSID}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
+                    file_path = os.path.join(upload_dir, filename)
+                    file.save(file_path)
+                    # Store relative path for template use
+                    filename = filename 
+
+                cursor.execute("""
+                    INSERT INTO Excuse_Letters (uSID, uTID, subject_id, message, file_path)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (uSID, uTID, subject_id, message, filename))
+                conn.commit()
+                flash('Excuse letter submitted successfully!', 'success')
+                return redirect(url_for('user.submit_excuse'))
+            except Exception as e:
+                conn.rollback()
+                flash(f'Error submitting excuse: {str(e)}', 'error')
+
+    # GET request: Prepare data for the form
+    # 1. Enrollments with Teacher Info
+    query = """
+    SELECT s.subject_id, s.subject_code, s.subject_name, ta.uTID, t.first_name, t.last_name
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    JOIN Teacher_Assignments ta ON e.subject_id = ta.subject_id AND e.section = ta.section
+    JOIN Teachers t ON ta.uTID = t.uTID
+    WHERE e.uSID = %s
+    """
+    cursor.execute(query, (uSID,))
+    enrollments = cursor.fetchall()
+    
+    # 2. Previous Letters
+    cursor.execute("""
+        SELECT el.*, s.subject_code, t.first_name, t.last_name
+        FROM Excuse_Letters el
+        JOIN Subjects s ON el.subject_id = s.subject_id
+        JOIN Teachers t ON el.uTID = t.uTID
+        WHERE el.uSID = %s
+        ORDER BY el.created_at DESC
+    """, (uSID,))
+    previous_letters = cursor.fetchall()
+    
+    # 3. Sidebar Data
+    cursor.execute("""
+    SELECT s.subject_id, s.subject_code, s.subject_name 
+    FROM Enrollments e
+    JOIN Subjects s ON e.subject_id = s.subject_id
+    WHERE e.uSID = %s
+    """, (uSID,))
+    subjects = cursor.fetchall()
+    
+    cursor.execute("SELECT COUNT(*) as count FROM Notifications WHERE uSID = %s AND is_read = 0", (uSID,))
+    unread_count = cursor.fetchone()['count']
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('submit_excuse.html', 
+                           enrollments=enrollments, 
+                           previous_letters=previous_letters,
+                           subjects=subjects,
+                           unread_count=unread_count,
+                           name=session.get('name'))

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Teachers | Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--primary-color);">Attendeez</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Admin Portal</p>
+            </div>
+            
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
+                <i class="fas fa-user-graduate"></i> Manage Students
+            </a>
+            <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item active">
+                <i class="fas fa-chalkboard-teacher"></i> Manage Teachers
+            </a>
+            <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
+                <i class="fas fa-book"></i> Manage Subjects
+            </a>
+            <a href="{{ url_for('admin.assign_classes') }}" class="nav-item">
+                <i class="fas fa-link"></i> Assign Classes
+            </a>
+            <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i> Manage Schedules
+            </a>
+            <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
+                <i class="fas fa-user-minus"></i> Drop Requests
+            </a>
+            
+            <div style="margin-top: auto;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 style="margin: 0;">Manage Teachers</h2>
+                </div>
+
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Administrator</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content-inner">
+                <div class="flex justify-between items-center mb-4">
+                    <p style="color: var(--text-secondary); margin: 0;">Manage faculty accounts and departments.</p>
+                    <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus mr-2"></i> Add Teacher</button>
+                </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} mb-4">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="glass-panel p-4" style="padding: 1.5rem;">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Teacher ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for teacher in teachers if teacher.status == 'Active' %}
+                            <tr>
+                                <td>{{ teacher.uTID }}</td>
+                                <td>{{ teacher.first_name }} {% if teacher.middle_name %}{{ teacher.middle_name }} {% endif %}{{ teacher.last_name }}</td>
+                                <td>{{ teacher.department }}</td>
+                                <td>{{ teacher.email }}</td>
+                                <td>
+                                    <span class="badge {% if teacher.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
+                                        {{ teacher.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                        {% set m_name = teacher.middle_name if teacher.middle_name else '' %}
+                                        {% set dept = teacher.department if teacher.department else '' %}
+                                        <button class="btn btn-secondary" 
+                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                                 onclick="openEditModal('{{ teacher.uTID }}', '{{ teacher.first_name }}', '{{ m_name }}', '{{ teacher.last_name }}', '{{ dept }}', '{{ teacher.email }}', '{{ teacher.status }}')">
+                                             <i class="fas fa-edit"></i> Edit
+                                         </button>
+                                         <a href="{{ url_for('admin.archive_teacher', uTID=teacher.uTID) }}" 
+                                            class="btn btn-danger" 
+                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                            onclick="return confirm('Are you sure you want to archive this teacher?')">
+                                             <i class="fas fa-archive"></i> Archive
+                                         </a>
+                                     </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No teachers found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+
+                <div class="glass-panel p-4 mt-8" style="padding: 1.5rem; margin-top: 3rem;">
+                    <h3 class="mb-4 text-danger"><i class="fas fa-archive mr-2"></i> Archived Teachers</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Teacher ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for teacher in teachers if teacher.status == 'Archived' %}
+                                <tr>
+                                    <td>{{ teacher.uTID }}</td>
+                                    <td>{{ teacher.first_name }} {% if teacher.middle_name %}{{ teacher.middle_name }} {% endif %}{{ teacher.last_name }}</td>
+                                    <td>{{ teacher.email }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin.unarchive_teacher', uTID=teacher.uTID) }}" 
+                                           class="btn btn-success" 
+                                           style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
+                                            <i class="fas fa-undo"></i> Unarchive
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center" style="padding: 2rem;">No archived teachers.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div> <!-- End main-content-inner -->
+        </main>
+    </div>
+
+    <!-- Add Teacher Modal -->
+    <div id="addTeacherModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+        <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
+            <button onclick="closeModal('addTeacherModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">&times;</button>
+            <h3 class="mb-4">Add New Teacher</h3>
+            <form method="POST" action="{{ url_for('admin.manage_teachers') }}">
+                <div class="form-group mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Middle Name (Optional)</label>
+                    <input type="text" name="middle_name" class="form-control">
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Department</label>
+                    <input type="text" name="department" class="form-control" placeholder="e.g. Computer Science" required>
+                </div>
+                <div class="form-group mb-4">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addTeacherModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Teacher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Teacher Modal -->
+    <div id="editTeacherModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+        <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
+            <button onclick="closeModal('editTeacherModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">&times;</button>
+            <h3 class="mb-4">Edit Teacher</h3>
+            <form id="editTeacherForm" method="POST">
+                <div class="form-group mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" id="edit_first_name" class="form-control" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Middle Name</label>
+                    <input type="text" name="middle_name" id="edit_middle_name" class="form-control">
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" id="edit_last_name" class="form-control" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Department</label>
+                    <input type="text" name="department" id="edit_department" class="form-control" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" id="edit_email" class="form-control" required>
+                </div>
+                <div class="form-group mb-4">
+                    <label class="form-label">Status</label>
+                    <select name="status" id="edit_status" class="form-control">
+                        <option value="Active">Active</option>
+                        <option value="Archived">Archived</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editTeacherModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Teacher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openAddModal() {
+            document.getElementById('addTeacherModal').style.display = 'flex';
+        }
+
+        function openEditModal(tid, fname, mname, lname, dept, email, status) {
+            document.getElementById('editTeacherForm').action = "/admin/edit_teacher/" + tid;
+            document.getElementById('edit_first_name').value = fname;
+            document.getElementById('edit_middle_name').value = mname;
+            document.getElementById('edit_last_name').value = lname;
+            document.getElementById('edit_department').value = dept;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('edit_status').value = status;
+            
+            document.getElementById('editTeacherModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

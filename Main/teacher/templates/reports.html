@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports | Attendeez</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- SheetJS for Excel/CSV Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2pdf for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--primary-color);">Attendeez</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Faculty Portal</p>
+            </div>
+            
+            <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{{ url_for('teacher.profile') }}" class="nav-item">
+                <i class="fas fa-user"></i> My Profile
+            </a>
+            <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i> My Schedule
+            </a>
+            <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item">
+                <i class="fas fa-clipboard-check"></i> Manual Attendance
+            </a>
+            <a href="{{ url_for('teacher.manage_students') }}" class="nav-item">
+                <i class="fas fa-users"></i> Manage Students
+            </a>
+            <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item">
+                <i class="fas fa-check-circle"></i> Manage Marks
+            </a>
+            <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item">
+                <i class="fas fa-envelope-open-text"></i> Excuse Letters
+            </a>
+            <a href="{{ url_for('teacher.reports') }}" class="nav-item active">
+                <i class="fas fa-chart-bar"></i> Reports
+            </a>
+            
+            <div style="margin-top: auto;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    {% if selected_class %}
+                    <div class="flex items-center gap-4">
+                        <a href="{{ url_for('teacher.reports') }}" class="btn btn-secondary" style="padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" title="Back to Selection">
+                            <i class="fas fa-chevron-left" style="margin: 0;"></i>
+                        </a>
+                        <div>
+                            <h2 style="margin: 0; line-height: 1.2;">{{ selected_class.subject_name }}</h2>
+                            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">
+                                <span class="badge badge-warning" style="padding: 0.1rem 0.4rem; font-size: 0.65rem; vertical-align: middle;">{{ selected_class.subject_code }}</span>
+                                Sec {{ selected_class.section }}
+                            </p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <h2 style="margin: 0;">Reports & Analytics</h2>
+                    {% endif %}
+                </div>
+
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ name }}</p>
+                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Faculty Member</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content-inner">
+                {% if selected_class %}
+                <!-- Title moved to header -->
+
+            <!-- Analytics Overview (Pie Chart) -->
+            <div class="glass-panel mb-4" style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center;">
+                <h3 class="mb-4">Attendance Overview</h3>
+                {% if class_stats.values()|sum > 0 %}
+                <div style="width: 300px; height: 300px;">
+                    <!-- Hidden data for JS -->
+                    <div id="chartData" 
+                         data-present="{{ class_stats.get('Present', 0) }}" 
+                         data-absent="{{ class_stats.get('Absent', 0) }}" 
+                         data-late="{{ class_stats.get('Late', 0) }}" 
+                         style="display: none;"></div>
+                    <canvas id="classPieChart"></canvas>
+                </div>
+                {% else %}
+                <div style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                    <i class="fas fa-chart-pie" style="font-size: 2rem; display: block; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>No attendance data recorded yet for this class.</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Summary Report Section -->
+            <div class="glass-panel p-4 mb-4" style="padding: 1.5rem;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>Student Attendance Summary</h3>
+                    <div class="flex gap-2">
+                        <button onclick="exportTableToCSV('summaryTable', '{{ selected_class.subject_code }}_Summary.csv')" class="btn btn-success"><i class="fas fa-file-csv"></i> CSV</button>
+                        <button onclick="exportTableToExcel('summaryTable', '{{ selected_class.subject_code }}_Summary')" class="btn btn-primary" style="background:#10b981;"><i class="fas fa-file-excel"></i> Excel</button>
+                        <button onclick="exportTableToPDF('summaryTable', '{{ selected_class.subject_code }}_Summary.pdf')" class="btn btn-danger"><i class="fas fa-file-pdf"></i> PDF</button>
+                        
+                        <form method="POST" action="{{ url_for('teacher.submit_report') }}" style="display: inline;" 
+                              onsubmit="return confirm('{% if already_submitted %}file is already sent, do you want to send it again?{% else %}Send this attendance report snapshot to the Admin?{% endif %}');">
+                            <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
+                            <input type="hidden" name="section" value="{{ selected_class.section }}">
+                            <button type="submit" class="btn btn-primary" style="background: var(--primary-color);">
+                                <i class="fas fa-paper-plane"></i> Send to Admin
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="table-container" id="summaryTableWrapper">
+                    <table id="summaryTable">
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Total Classes</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Late</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in summary %}
+                            <tr>
+                                <td>{{ row.uSID }}</td>
+                                <td>{{ row.first_name }} {{ row.last_name }}</td>
+                                <td>{{ row.total_classes }}</td>
+                                <td>{{ row.days_present }}</td>
+                                <td>{{ row.days_absent }}</td>
+                                <td>{{ row.days_late }}</td>
+                                <td>
+                                    <span class="badge {% if row.percentage >= 75 %}badge-success{% else %}badge-error{% endif %}">
+                                        {{ row.percentage }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">No records found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Attendance Trends Analytics Section -->
+            <div class="glass-panel p-4 mb-4" style="padding: 1.5rem;">
+                <h3 class="mb-4">Attendance Trends Analytics</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                    
+                    <!-- Daily Trends -->
+                    <div>
+                        <h4 style="color: var(--primary-color); margin-bottom: 1rem;"><i class="fas fa-calendar-day"></i> Daily Trends</h4>
+                        <div class="table-container" style="max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Present</th>
+                                        <th>Absent</th>
+                                        <th>Late</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in daily_trends %}
+                                    <tr>
+                                        <td>{{ row.period }}</td>
+                                        <td style="color: #10b981; font-weight: bold;">{{ row.present_count }}</td>
+                                        <td style="color: #ef4444; font-weight: bold;">{{ row.absent_count }}</td>
+                                        <td style="color: #f59e0b; font-weight: bold;">{{ row.late_count }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="4" class="text-center">No data</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Trends -->
+                    <div>
+                        <h4 style="color: var(--secondary-color); margin-bottom: 1rem;"><i class="fas fa-calendar-week"></i> Weekly Trends</h4>
+                        <div class="table-container" style="max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Week</th>
+                                        <th>Present</th>
+                                        <th>Absent</th>
+                                        <th>Late</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in weekly_trends %}
+                                    <tr>
+                                        <td>{{ row.period }}</td>
+                                        <td style="color: #10b981; font-weight: bold;">{{ row.present_count }}</td>
+                                        <td style="color: #ef4444; font-weight: bold;">{{ row.absent_count }}</td>
+                                        <td style="color: #f59e0b; font-weight: bold;">{{ row.late_count }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="4" class="text-center">No data</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Trends -->
+                    <div>
+                        <h4 style="color: #fbbf24; margin-bottom: 1rem;"><i class="fas fa-calendar-alt"></i> Monthly Trends</h4>
+                        <div class="table-container" style="max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th>Present</th>
+                                        <th>Absent</th>
+                                        <th>Late</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in monthly_trends %}
+                                    <tr>
+                                        <td>{{ row.period }}</td>
+                                        <td style="color: #10b981; font-weight: bold;">{{ row.present_count }}</td>
+                                        <td style="color: #ef4444; font-weight: bold;">{{ row.absent_count }}</td>
+                                        <td style="color: #f59e0b; font-weight: bold;">{{ row.late_count }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="4" class="text-center">No data</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Daily Report Section -->
+            <div class="glass-panel p-4" style="padding: 1.5rem;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>Daily Attendance Log</h3>
+                    <div class="flex gap-2">
+                        <button onclick="exportTableToCSV('dailyTable', '{{ selected_class.subject_code }}_Daily_Log.csv')" class="btn btn-success"><i class="fas fa-file-csv"></i> CSV</button>
+                        <button onclick="exportTableToExcel('dailyTable', '{{ selected_class.subject_code }}_Daily_Log')" class="btn btn-primary" style="background:#10b981;"><i class="fas fa-file-excel"></i> Excel</button>
+                        <button onclick="exportTableToPDF('dailyTable', '{{ selected_class.subject_code }}_Daily_Log.pdf')" class="btn btn-danger"><i class="fas fa-file-pdf"></i> PDF</button>
+                    </div>
+                </div>
+                
+                <div class="table-container" id="dailyTableWrapper">
+                    <table id="dailyTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Validity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in daily_logs %}
+                            <tr>
+                                <td>{{ row.date }}</td>
+                                <td>{{ row.first_name }} {{ row.last_name }}</td>
+                                <td>{{ row.status }}</td>
+                                <td>{{ row.is_valid }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No logs found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% else %}
+            <h2 class="mb-4">Generate Reports</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select one of your assigned classes to view and export attendance reports.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                {% for c in classes %}
+                <a href="{{ url_for('teacher.reports', subject_id=c.subject_id, section=c.section) }}" class="glass-panel p-6" style="text-decoration: none; color: inherit; transition: all 0.3s ease; border-left: 4px solid var(--primary-color);">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="badge badge-warning" style="font-family: monospace;">{{ c.subject_code }}</span>
+                        <span class="badge badge-success">Section {{ c.section }}</span>
+                    </div>
+                    <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-primary);">{{ c.subject_name }}</h4>
+                    <div class="flex items-center" style="color: var(--primary-color); font-weight: 600; font-size: 0.9rem;">
+                        View Full Report <i class="fas fa-chevron-right" style="margin-left: 0.5rem; font-size: 0.7rem;"></i>
+                    </div>
+                </a>
+                {% else %}
+                <p style="color: var(--text-secondary);">No classes available.</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+            </div> <!-- End main-content-inner -->
+        </main>
+    </div>
+
+    <script>
+        // Export to CSV using SheetJS
+        function exportTableToCSV(tableId, filename) {
+            var table = document.getElementById(tableId);
+            var wb = XLSX.utils.table_to_book(table, {sheet: "Sheet1"});
+            XLSX.writeFile(wb, filename);
+        }
+
+        // Export to Excel using SheetJS
+        function exportTableToExcel(tableId, filename) {
+            var table = document.getElementById(tableId);
+            var wb = XLSX.utils.table_to_book(table, {sheet: "Sheet1"});
+            XLSX.writeFile(wb, filename + ".xlsx");
+        }
+
+        // Export to PDF using html2pdf
+        function exportTableToPDF(tableId, filename) {
+            var element = document.getElementById(tableId);
+            // Clone the table to avoid styling issues during render
+            var clone = element.cloneNode(true);
+            clone.style.width = '100%';
+            clone.style.color = 'black'; // Better for printing
+            clone.style.background = 'white';
+            
+            // Adjust badges for PDF text
+            var badges = clone.querySelectorAll('.badge');
+            badges.forEach(b => {
+                b.style.color = 'black';
+                b.style.border = '1px solid black';
+            });
+
+            var opt = {
+                margin:       1,
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            
+            // Render the element in a temporary div offscreen to pdf
+            var wrapper = document.createElement('div');
+            wrapper.appendChild(clone);
+            html2pdf().set(opt).from(wrapper).save();
+        }
+
+        // Initialize Pie Chart if data is available
+        const chartDataEl = document.getElementById('chartData');
+        if (chartDataEl) {
+            const ctx = document.getElementById('classPieChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Present', 'Absent', 'Late'],
+                    datasets: [{
+                        data: [
+                            parseInt(chartDataEl.dataset.present),
+                            parseInt(chartDataEl.dataset.absent),
+                            parseInt(chartDataEl.dataset.late)
+                        ],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#94a3b8',
+                                font: { size: 12, family: "'Inter', sans-serif" },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

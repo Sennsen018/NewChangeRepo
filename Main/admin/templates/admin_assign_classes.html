@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Classes | Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--primary-color);">Attendeez</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Admin Portal</p>
+            </div>
+            
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
+                <i class="fas fa-user-graduate"></i> Manage Students
+            </a>
+            <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item">
+                <i class="fas fa-chalkboard-teacher"></i> Manage Teachers
+            </a>
+            <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
+                <i class="fas fa-book"></i> Manage Subjects
+            </a>
+            <a href="{{ url_for('admin.assign_classes') }}" class="nav-item active">
+                <i class="fas fa-link"></i> Assign Classes
+            </a>
+            <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i> Manage Schedules
+            </a>
+            <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
+                <i class="fas fa-user-minus"></i> Drop Requests
+            </a>
+            
+            <div style="margin-top: auto;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 style="margin: 0;">Assign Classes</h2>
+                </div>
+
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Administrator</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content-inner">
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Link teachers to their specific subjects and sections.</p>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="glass-panel p-4 mb-4" style="padding: 1.5rem;">
+                <form method="POST" action="{{ url_for('admin.assign_classes') }}" class="flex gap-4 items-center">
+                    <div class="form-group w-100" style="margin-bottom: 0;">
+                        <label class="form-label">Select Teacher</label>
+                        <select name="uTID" class="form-control" required>
+                            <option value="">-- Choose Teacher --</option>
+                            {% for t in teachers %}
+                                <option value="{{ t.uTID }}">{{ t.first_name }} {{ t.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group w-100" style="margin-bottom: 0;">
+                        <label class="form-label">Select Subject</label>
+                        <select name="subject_id" class="form-control" required>
+                            <option value="">-- Choose Subject --</option>
+                            {% for s in subjects %}
+                                <option value="{{ s.subject_id }}">{{ s.subject_code }} - {{ s.subject_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group w-100" style="margin-bottom: 0;">
+                        <label class="form-label">Section</label>
+                        <input type="text" name="section" class="form-control" placeholder="e.g. A" required>
+                    </div>
+                    <div style="margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Assign</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="glass-panel p-4" style="padding: 1.5rem;">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Teacher Name</th>
+                                <th>Subject Code</th>
+                                <th>Subject Name</th>
+                                <th>Section</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in assignments %}
+                            <tr>
+                                <td>{{ a.first_name }} {{ a.last_name }}</td>
+                                <td><span class="badge badge-warning">{{ a.subject_code }}</span></td>
+                                <td>{{ a.subject_name }}</td>
+                                <td>{{ a.section }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin.remove_assignment', assignment_id=a.assignment_id) }}" 
+                                       class="btn btn-danger" 
+                                       style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                       onclick="return confirm('Are you sure to remove the subject to the assigned teacher?')">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No classes assigned yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div> <!-- End main-content-inner -->
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

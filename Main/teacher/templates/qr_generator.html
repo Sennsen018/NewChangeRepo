@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Generator | Attendeez</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--primary-color);">Attendeez</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Faculty Portal</p>
+            </div>
+            
+            <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{{ url_for('teacher.profile') }}" class="nav-item">
+                <i class="fas fa-user"></i> My Profile
+            </a>
+            <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i> My Schedule
+            </a>
+            <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item">
+                <i class="fas fa-clipboard-check"></i> Manual Attendance
+            </a>
+            <a href="{{ url_for('teacher.manage_students') }}" class="nav-item">
+                <i class="fas fa-users"></i> Manage Students
+            </a>
+            <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item">
+                <i class="fas fa-check-circle"></i> Manage Marks
+            </a>
+            <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item">
+                <i class="fas fa-envelope-open-text"></i> Excuse Letters
+            </a>
+            <a href="{{ url_for('teacher.reports') }}" class="nav-item">
+                <i class="fas fa-chart-bar"></i> Reports
+            </a>
+            
+            <div style="margin-top: auto;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 style="margin: 0;">QR Attendance Generator</h2>
+                </div>
+
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ name }}</p>
+                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Faculty Member</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content-inner" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 80px);">
+            <div style="width: 100%; max-width: 500px;">
+                <a href="{{ url_for('teacher.dashboard') }}" class="back-btn mb-4" style="display:inline-block; color:var(--text-secondary); text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                
+                <div class="glass-panel" style="padding: 2.5rem; text-align: center;">
+                    <div id="setup-view">
+                        <h2 style="margin-bottom: 1rem;">Attendance Session</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Click start to generate the QR code. You must allow location access.</p>
+                        
+                        <div class="form-group mb-4" id="duration-selector" style="text-align: left;">
+                            <label class="form-label" style="font-weight: 600;">Session Duration</label>
+                            <select id="duration" class="form-control">
+                                <option value="1">1 Minute</option>
+                                <option value="2">2 Minutes</option>
+                                <option value="3">3 Minutes</option>
+                                <option value="5">5 Minutes</option>
+                                <option value="10">10 Minutes</option>
+                            </select>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem;">Max 10 minutes allowed.</p>
+                        </div>
+                        <button id="start-btn" class="btn btn-primary w-100 mb-4" onclick="startSession()">Start Session</button>
+                    </div>
+
+                    <div id="session-view" style="display: none;">
+                        <div id="qr-container" style="background: white; padding: 1rem; border-radius: 8px; width: max-content; margin: 0 auto 1.5rem auto;">
+                            <div id="qrcode"></div>
+                        </div>
+                        
+                        <h1 id="timer" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1.5rem;">00:00</h1>
+
+                        <button id="monitoring-btn" class="btn btn-secondary w-100 mb-4" onclick="goToMonitoring()">
+                            <i class="fas fa-desktop"></i> View Live Tracking
+                        </button>
+                        <button id="end-btn" class="btn btn-danger w-100" onclick="endSession()">End Session</button>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- End main-content-inner -->
+        </main>
+    </div>
+
+    <script>
+        let currentSessionId = null;
+        let countdown = null;
+        const subjectId = '{{ subject_id }}';
+        const section = '{{ section }}';
+
+        function goToMonitoring() {
+            if (currentSessionId) {
+                window.location.href = `/teacher/session_monitoring/${currentSessionId}`;
+            }
+        }
+
+        function startSession() {
+            if (navigator.geolocation) {
+                Swal.fire({
+                    title: 'Getting Location...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        
+                        // Laguna Bounds (Roughly)
+                        const isInsideLaguna = (lat >= 13.91 && lat <= 14.53) && (lon >= 120.95 && lon <= 121.74);
+                        
+                        if (!isInsideLaguna) {
+                            Swal.fire('Out of Range', 'You can only start sessions within the Laguna area.', 'error');
+                            return;
+                        }
+
+                        createSession(lat, lon);
+                    },
+                    (error) => {
+                        Swal.fire('Location Error', 'You must enable location services to start a session.', 'error');
+                    }
+                );
+            } else {
+                Swal.fire('Error', 'Geolocation is not supported by your browser.', 'error');
+            }
+        }
+
+        function createSession(lat, lon) {
+            const duration = document.getElementById('duration').value;
+            fetch('{{ url_for("teacher.start_session") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject_id: subjectId, section: section, lat: lat, lon: lon, duration: duration })
+            })
+            .then(res => res.json())
+            .then(data => {
+                Swal.close();
+                if (data.success) {
+                    currentSessionId = data.session_id;
+                    
+                    // Generate QR
+                    const qrData = JSON.stringify({ session_id: data.session_id, token: data.token });
+                    document.getElementById('qrcode').innerHTML = "";
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: qrData,
+                        width: 256,
+                        height: 256
+                    });
+                    
+                    // UI changes
+                    document.getElementById('setup-view').style.display = "none";
+                    document.getElementById('session-view').style.display = "block";
+                    
+                    startTimer(duration * 60); 
+                } else {
+                    Swal.fire('Error', 'Could not start session.', 'error');
+                }
+            })
+            .catch(err => Swal.fire('Error', 'Server error.', 'error'));
+        }
+
+        function startTimer(duration) {
+            let timer = duration, minutes, seconds;
+            countdown = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                document.getElementById('timer').textContent = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(countdown);
+                    document.getElementById('timer').textContent = "Expired";
+                    document.getElementById('timer').style.color = "var(--danger-color)";
+                    endSession();
+                }
+            }, 1000);
+        }
+
+        function endSession() {
+            if (!currentSessionId) return;
+            
+            clearInterval(countdown);
+            document.getElementById('setup-view').style.display = "block";
+            document.getElementById('session-view').style.display = "none";
+            document.getElementById('timer').style.color = "var(--primary-color)";
+            document.getElementById('timer').textContent = "00:00";
+
+            fetch('{{ url_for("teacher.end_session") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: currentSessionId })
+            }).then(() => {
+                currentSessionId = null;
+                Swal.fire('Ended', 'Session has been ended.', 'info');
+            });
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

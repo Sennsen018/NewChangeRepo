@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Marks | Attendeez</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--primary-color);">Attendeez</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Faculty Portal</p>
+            </div>
+            
+            <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{{ url_for('teacher.profile') }}" class="nav-item">
+                <i class="fas fa-user"></i> My Profile
+            </a>
+            <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i> My Schedule
+            </a>
+            <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item">
+                <i class="fas fa-clipboard-check"></i> Manual Attendance
+            </a>
+            <a href="{{ url_for('teacher.manage_students') }}" class="nav-item">
+                <i class="fas fa-users"></i> Manage Students
+            </a>
+            <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item active">
+                <i class="fas fa-check-circle"></i> Manage Marks
+            </a>
+            <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item">
+                <i class="fas fa-envelope-open-text"></i> Excuse Letters
+            </a>
+            <a href="{{ url_for('teacher.reports') }}" class="nav-item">
+                <i class="fas fa-chart-bar"></i> Reports
+            </a>
+            
+            <div style="margin-top: auto;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    {% if selected_class %}
+                    <div class="flex items-center gap-4">
+                        <a href="{{ url_for('teacher.manage_marks') }}" class="btn btn-secondary" style="padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" title="Back to Selection">
+                            <i class="fas fa-chevron-left" style="margin: 0;"></i>
+                        </a>
+                        <div>
+                            <h2 style="margin: 0; line-height: 1.2;">Attendance Marks</h2>
+                            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">
+                                <span class="badge badge-warning" style="padding: 0.1rem 0.4rem; font-size: 0.65rem; vertical-align: middle;">{{ selected_class.subject_code }}</span>
+                                {{ selected_class.subject_name }} · Sec {{ selected_class.section }}
+                            </p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <h2 style="margin: 0;">Attendance Marks</h2>
+                    {% endif %}
+                </div>
+
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ name }}</p>
+                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Faculty Member</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content-inner">
+                {% if selected_class %}
+                <!-- Page Title moved to Header -->
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="glass-panel p-4" style="padding: 1.5rem;">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Date/Time</th>
+                                <th>Status</th>
+                                <th>Validity</th>
+                                <th>Activity Flags</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in records %}
+                            <tr {% if r.is_valid == 'Invalid' or r.status == 'Flagged' %}style="background: rgba(239, 68, 68, 0.05); border-left: 3px solid var(--danger-color);"{% endif %}>
+                                <td>{{ r.first_name }} {{ r.last_name }}</td>
+                                <td>{{ r.scan_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    {% if r.status == 'Present' %}
+                                    <span class="badge badge-success">Present</span>
+                                    {% elif r.status == 'Flagged' %}
+                                    <span class="badge badge-warning" style="background: #ef4444; color: white;"><i class="fas fa-flag"></i> Flagged</span>
+                                    {% elif r.status == 'Absent' %}
+                                    <span class="badge" style="background:var(--danger-color);color:white;">Absent</span>
+                                    {% else %}
+                                    <span class="badge badge-warning">Late</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if r.is_valid == 'Valid' %}
+                                    <span style="color:var(--success-color);"><i class="fas fa-check-circle"></i></span>
+                                    {% else %}
+                                    <span style="color:var(--danger-color);" title="Suspicious Activity"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if r.behavior_flags %}
+                                        {% set flags = r.behavior_flags %}
+                                        {# Behavior flags are stored as JSON string in DB but Flask-MySQL might return it differently. #}
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                                            {% if r.distance_meters %}
+                                                <div style="margin-bottom: 2px;"><i class="fas fa-map-marker-alt"></i> {{ r.distance_meters | round }}m</div>
+                                            {% endif %}
+                                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                                {% if flags is string %}
+                                                    {{ flags }}
+                                                {% else %}
+                                                    {% for f in flags %}
+                                                        <span class="badge" style="font-size: 0.6rem; background: rgba(245, 158, 11, 0.1); color: #f59e0b;">{{ f }}</span>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span style="color: var(--text-secondary); font-size: 0.75rem;">None</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('teacher.update_mark') }}" style="display:inline-flex; gap:0.5rem;">
+                                        <input type="hidden" name="attendance_id" value="{{ r.attendance_id }}">
+                                        <select name="status" class="form-control" style="padding:0.2rem; font-size:0.8rem; width:auto;" required>
+                                            <option value="Present" {% if r.status == 'Present' %}selected{% endif %}>Present</option>
+                                            <option value="Flagged" {% if r.status == 'Flagged' %}selected{% endif %}>Flagged</option>
+                                            <option value="Absent" {% if r.status == 'Absent' %}selected{% endif %}>Absent</option>
+                                            <option value="Late" {% if r.status == 'Late' %}selected{% endif %}>Late</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary" style="padding:0.2rem 0.5rem; font-size:0.8rem;">Update</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No attendance records found for this class.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% else %}
+            <h2 class="mb-4">Manage Attendance Marks</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select a class to manage and override attendance records for a specific subject and section.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                {% for c in classes %}
+                <a href="{{ url_for('teacher.manage_marks', subject_id=c.subject_id, section=c.section) }}" class="glass-panel p-6" style="text-decoration: none; color: inherit; transition: all 0.3s ease; border-left: 4px solid var(--primary-color);">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="badge badge-warning" style="font-family: monospace;">{{ c.subject_code }}</span>
+                        <span class="badge badge-success">Section {{ c.section }}</span>
+                    </div>
+                    <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-primary);">{{ c.subject_name }}</h4>
+                    <div class="flex items-center" style="color: var(--primary-color); font-weight: 600; font-size: 0.9rem;">
+                        Manage Attendance Marks <i class="fas fa-chevron-right" style="margin-left: 0.5rem; font-size: 0.7rem;"></i>
+                    </div>
+                </a>
+                {% else %}
+                <p style="color: var(--text-secondary);">No classes available.</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+            </div> <!-- End main-content-inner -->
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

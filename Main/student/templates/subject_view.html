@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject.subject_name }} Performance | Attendeez</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .performance-card { padding: 2rem; margin-bottom: 2rem; }
+        .stats-large { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; }
+        .stat-item { text-align: center; padding: 1.5rem; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); }
+        .scan-container { margin-top: 3rem; text-align: center; padding: 3rem; border-radius: 24px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1)); border: 1px dashed var(--primary-color); }
+    </style>
+</head>
+<body data-mark-read-url="{{ url_for('user.mark_notifications_read') }}">
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none; position: sticky; top: 0; height: 100vh; overflow-y: auto;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--primary-color);">Attendeez</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Student Portal</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem; padding-left: 1rem;">Main Menu</p>
+                <a href="{{ url_for('user.dashboard') }}" class="nav-item {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="{{ url_for('user.profile') }}" class="nav-item {% if request.endpoint == 'user.profile' %}active{% endif %}">
+                    <i class="fas fa-user"></i> My Profile
+                </a>
+                <a href="{{ url_for('user.timetable') }}" class="nav-item {% if request.endpoint == 'user.timetable' %}active{% endif %}">
+                    <i class="fas fa-calendar-alt"></i> Timetable
+                </a>
+                <a href="{{ url_for('user.notifications_page') }}" class="nav-item {% if request.endpoint == 'user.notifications_page' %}active{% endif %}">
+                    <i class="fas fa-bell"></i> Notifications
+                    {% if unread_count > 0 %}
+                    <span id="notif-badge-sidebar" class="badge badge-danger" style="margin-left: auto; padding: 0.2rem 0.5rem; font-size: 0.65rem;">{{ unread_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('user.submit_excuse') }}" class="nav-item {% if request.endpoint == 'user.submit_excuse' %}active{% endif %}">
+                    <i class="fas fa-envelope-open-text"></i> Excuse Letter
+                </a>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem; padding-left: 1rem;">My Classes</p>
+                {% for s in subjects %}
+                <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" 
+                   class="nav-item {% if request.endpoint == 'user.subject_performance' and subject and subject.subject_id == s.subject_id %}active{% endif %}" 
+                   style="font-size: 0.85rem; padding: 0.6rem 1rem;">
+                    <i class="fas fa-book" style="font-size: 0.8rem;"></i> {{ s.subject_code }}
+                </a>
+                {% endfor %}
+            </div>
+            
+            <div style="margin-top: auto; padding-top: 2rem;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 style="margin: 0;">{{ subject.subject_name }}</h2>
+                </div>
+
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ session.get('name', 'Student') }}</p>
+                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Student Member</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content-inner">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <p style="color: var(--text-secondary); margin: 0;">Subject Code: {{ subject.subject_code }}</p>
+                    </div>
+                    <div class="badge {% if attendance_pct >= 75 %}badge-success{% else %}badge-danger{% endif %}" style="font-size: 1.2rem; padding: 0.8rem 1.5rem;">
+                        Attendance: {{ attendance_pct }}%
+                    </div>
+                </div>
+
+
+
+            <div class="glass-panel performance-card">
+                <h3 style="margin-bottom: 1.5rem;">Attendance Breakdown</h3>
+                <div class="stats-large">
+                    <div class="stat-item">
+                        <i class="fas fa-check-circle" style="color: var(--secondary-color); font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <h2 style="margin: 0; color: var(--secondary-color);">{{ stats.get('Present', 0) }}</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Present</p>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-times-circle" style="color: var(--danger-color); font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <h2 style="margin: 0; color: var(--danger-color);">{{ stats.get('Absent', 0) }}</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Absent</p>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-clock" style="color: #fbbf24; font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <h2 style="margin: 0; color: #fbbf24;">{{ stats.get('Late', 0) }}</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Late</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 3rem; height: 300px;">
+                    <canvas id="subjectChart"></canvas>
+                </div>
+            </div>
+
+            <div class="scan-container">
+                <i class="fas fa-qrcode" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1.5rem; opacity: 0.8;"></i>
+                <h2 style="margin-bottom: 1rem;">Ready to mark attendance?</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+                    Ensure you are in the classroom and have granted camera/location permissions.
+                </p>
+                <a href="{{ url_for('user.scan_qr', subject_id=subject.subject_id) }}" class="btn btn-primary btn-lg" style="padding: 1.2rem 3rem; font-size: 1.2rem; border-radius: 50px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);">
+                    <i class="fas fa-camera mr-2"></i> Open QR Scanner
+                </a>
+            </div> <!-- End main-content-inner -->
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="application/json" id="subject-stats-data">{{ stats | tojson }}</script>
+    <script>
+        const MARK_READ_URL = document.body.dataset.markReadUrl;
+
+
+        const statsData = JSON.parse(document.getElementById('subject-stats-data').textContent);
+        const ctx = document.getElementById('subjectChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Present', 'Absent', 'Late'],
+                datasets: [{
+                    label: 'Attendance Count',
+                    data: [statsData['Present'] || 0, statsData['Absent'] || 0, statsData['Late'] || 0],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

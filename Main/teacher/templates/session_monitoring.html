@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Tracking | Attendeez</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .monitoring-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .student-track-card { 
+            padding: 1.5rem; border-radius: 16px; transition: all 0.3s ease; 
+            border: 1px solid var(--surface-border); background: var(--surface-color);
+        }
+        .status-pill { padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+        .status-present { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .status-absent { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+        .warning-tag { 
+            display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.5rem; 
+            background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-radius: 6px; font-size: 0.7rem; margin-top: 0.5rem;
+        }
+        .critical-tag { 
+            background: rgba(244, 63, 94, 0.1); color: #f43f5e;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--primary-color);">Attendeez</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Faculty Portal</p>
+            </div>
+            
+            <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{{ url_for('teacher.profile') }}" class="nav-item">
+                <i class="fas fa-user"></i> My Profile
+            </a>
+            <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i> My Schedule
+            </a>
+            <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item">
+                <i class="fas fa-clipboard-check"></i> Manual Attendance
+            </a>
+            <a href="{{ url_for('teacher.manage_students') }}" class="nav-item">
+                <i class="fas fa-users"></i> Manage Students
+            </a>
+            <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item">
+                <i class="fas fa-check-circle"></i> Manage Marks
+            </a>
+            <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item">
+                <i class="fas fa-envelope-open-text"></i> Excuse Letters
+            </a>
+            <a href="{{ url_for('teacher.reports') }}" class="nav-item">
+                <i class="fas fa-chart-bar"></i> Reports
+            </a>
+            
+            <div style="margin-top: auto;">
+                <button onclick="endSessionManually()" class="btn btn-danger w-100">
+                    <i class="fas fa-stop-circle"></i> End Session
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 style="margin: 0;">Live Tracking: {{ session.subject_code }}</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">{{ session.subject_name }} · Section {{ session.section }}</p>
+                </div>
+
+                    <div class="text-center">
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase;">Present</p>
+                        <h3 id="stat-present" style="margin: 0; color: #10b981;">0</h3>
+                    </div>
+                    <div class="text-center">
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase;">Flagged</p>
+                        <h3 id="stat-flagged" style="margin: 0; color: #f43f5e;">0</h3>
+                    </div>
+                    <div class="text-center">
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase;">Total</p>
+                        <h3 id="stat-total" style="margin: 0;">0</h3>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content-inner">
+                <div id="monitoring-list" class="monitoring-grid">
+                    <!-- Loaded via AJAX -->
+                    <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
+                        <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <p style="margin-top: 1rem; color: var(--text-secondary);">Connecting to live stream...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        const sessionId = "{{ session.session_id }}";
+        
+        async function fetchStats() {
+            try {
+                const response = await fetch(`/teacher/api/session_stats/${sessionId}`);
+                const data = await response.json();
+                
+                document.getElementById('stat-present').textContent = data.students.filter(s => s.status === 'Present').length;
+                document.getElementById('stat-flagged').textContent = data.students.filter(s => s.status === 'Flagged').length;
+                document.getElementById('stat-total').textContent = data.total_count;
+                
+                const container = document.getElementById('monitoring-list');
+                container.innerHTML = '';
+                
+                data.students.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = `student-track-card ${s.status === 'Present' ? '' : 'opacity-50'}`;
+                    
+                    let warningsHtml = '';
+                    if (s.is_valid === 'Invalid') {
+                        warningsHtml += `<div class="warning-tag critical-tag"><i class="fas fa-exclamation-triangle"></i> Tab Switched</div>`;
+                    }
+                    
+                    if (s.behavior_flags && s.behavior_flags.length > 0) {
+                        s.behavior_flags.forEach(flag => {
+                            warningsHtml += `<div class="warning-tag"><i class="fas fa-user-shield"></i> ${flag}</div>`;
+                        });
+                    }
+
+                    if (s.distance_meters > 50) {
+                        warningsHtml += `<div class="warning-tag critical-tag"><i class="fas fa-map-marker-alt"></i> Too Far (${Math.round(s.distance_meters)}m)</div>`;
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 style="margin: 0;">${s.last_name}, ${s.first_name}</h4>
+                                <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">${s.uSID}</p>
+                            </div>
+                            <span class="status-pill ${s.status === 'Present' ? 'status-present' : (s.status === 'Flagged' ? 'critical-tag' : 'status-absent')}">
+                                ${s.status || 'Waiting...'}
+                            </span>
+                        </div>
+                        ${s.scan_time ? `<p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;"><i class="far fa-clock"></i> Scanned at ${new Date(s.scan_time).toLocaleTimeString()}</p>` : ''}
+                        <div class="flex flex-wrap gap-2">
+                            ${warningsHtml}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Error fetching stats:", error);
+            }
+        }
+
+        // Poll every 3 seconds
+        const pollInterval = setInterval(fetchStats, 3000);
+        fetchStats();
+
+        async function endSessionManually() {
+            if (!confirm("Are you sure you want to end this session? Remaining students will be marked as Absent.")) return;
+            
+            try {
+                const response = await fetch('/teacher/end_session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    clearInterval(pollInterval);
+                    window.location.href = "{{ url_for('teacher.dashboard') }}";
+                }
+            } catch (error) {
+                alert("Failed to end session.");
+            }
+        }
+    </script>
+</body>
+</html>

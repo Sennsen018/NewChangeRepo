@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Submitted Report | Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--primary-color);">Attendeez</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Admin Portal</p>
+            </div>
+            
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
+                <i class="fas fa-user-graduate"></i> Manage Students
+            </a>
+            <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item">
+                <i class="fas fa-chalkboard-teacher"></i> Manage Teachers
+            </a>
+            <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
+                <i class="fas fa-book"></i> Manage Subjects
+            </a>
+            <a href="{{ url_for('admin.assign_classes') }}" class="nav-item">
+                <i class="fas fa-link"></i> Assign Classes
+            </a>
+            
+            <div style="margin-top: auto;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 style="margin: 0;">Attendance Report</h2>
+                </div>
+
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Administrator</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content-inner">
+                <div class="flex items-center gap-4 mb-6">
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary" style="padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                        <i class="fas fa-chevron-left" style="margin: 0;"></i>
+                    </a>
+                    <div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                            Submitted by {{ report.first_name }} {{ report.last_name }} on {{ report.submission_date.strftime('%Y-%m-%d %H:%M') }}
+                        </p>
+                    </div>
+                </div>
+
+            <div class="glass-panel p-6 mb-6">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+                    <div>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.2rem;">Subject</p>
+                        <h4 style="margin: 0;">{{ report.subject_name }}</h4>
+                        <span class="badge badge-warning" style="margin-top: 0.5rem;">{{ report.subject_code }}</span>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.2rem;">Section</p>
+                        <h4 style="margin: 0;">Section {{ report.section }}</h4>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.2rem;">Status</p>
+                        <span class="badge badge-success">{{ report.status }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if report_stats and report_stats.values()|sum > 0 %}
+            <!-- Analytics Overview (Pie Chart) -->
+            <div class="glass-panel mb-6" style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center;">
+                <h3 class="mb-4">Attendance Overview Snapshot</h3>
+                <div style="width: 300px; height: 300px;">
+                    <!-- Hidden data for JS -->
+                    <div id="chartData" 
+                         data-present="{{ report_stats.Present }}" 
+                         data-absent="{{ report_stats.Absent }}" 
+                         data-late="{{ report_stats.Late }}" 
+                         style="display: none;"></div>
+                    <canvas id="reportPieChart"></canvas>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="glass-panel p-4">
+                <h3 class="mb-4">Attendance Summary Snapshot</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Total Classes</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Late</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in summary %}
+                            <tr>
+                                <td><span class="badge badge-primary">{{ row.uSID }}</span></td>
+                                <td>{{ row.first_name }} {{ row.last_name }}</td>
+                                <td>{{ row.total_classes }}</td>
+                                <td>{{ row.days_present }}</td>
+                                <td>{{ row.days_absent }}</td>
+                                <td>{{ row.days_late }}</td>
+                                <td>
+                                    <span class="badge {% if row.percentage >= 75 %}badge-success{% else %}badge-danger{% endif %}">
+                                        {{ row.percentage }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">No records in this snapshot.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div> <!-- End main-content-inner -->
+        </main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartDataEl = document.getElementById('chartData');
+            if (!chartDataEl) return;
+
+            const ctx = document.getElementById('reportPieChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Present', 'Absent', 'Late'],
+                    datasets: [{
+                        data: [
+                            parseInt(chartDataEl.dataset.present),
+                            parseInt(chartDataEl.dataset.absent),
+                            parseInt(chartDataEl.dataset.late)
+                        ],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#94a3b8',
+                                font: { size: 12, family: "'Inter', sans-serif" },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

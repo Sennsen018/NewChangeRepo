@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP | Attendeez</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card glass-panel">
+            <div class="auth-header">
+                <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1.5rem;"></i>
+                <h1>Verify OTP</h1>
+                <p>We've sent a 4-digit code to <strong>{{ session.get('reset_email') }}</strong></p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth.verify_otp') }}">
+                <div class="form-group text-center">
+                    <label class="form-label" style="display: block; margin-bottom: 1rem;">Enter 4-Digit Code</label>
+                    <input type="text" name="otp" class="form-control text-center" required 
+                           maxlength="4" pattern="\d{4}" 
+                           placeholder="0000" 
+                           style="font-size: 2rem; letter-spacing: 1rem; font-weight: bold; padding: 1rem;">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Verify Code</button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    Didn't receive the code? 
+                    <a href="{{ url_for('auth.resend_otp') }}" style="color: var(--primary-color); text-decoration: none; font-weight: bold;">Resend Code</a>
+                </p>
+                <a href="{{ url_for('auth.forgot_password') }}" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; display: block; margin-top: 1rem;">
+                    Try a different email
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

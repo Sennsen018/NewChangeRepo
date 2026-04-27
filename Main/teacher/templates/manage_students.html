@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Students | Attendeez</title>
+
+    <!-- Global shared stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+<div class="dashboard-container">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar glass-panel" style="border-radius:0; border-left:none; border-top:none; border-bottom:none;">
+        <div style="text-align:center; margin-bottom:2rem;">
+            <h2 style="color:var(--primary-color);">Attendeez</h2>
+            <p style="font-size:0.8rem; color:var(--text-secondary);">Faculty Portal</p>
+        </div>
+
+        <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+        <a href="{{ url_for('teacher.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i> My Profile
+        </a>
+        <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item">
+            <i class="fas fa-calendar-alt"></i> My Schedule
+        </a>
+        <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item">
+            <i class="fas fa-clipboard-check"></i> Manual Attendance
+        </a>
+        <a href="{{ url_for('teacher.manage_students') }}" class="nav-item active">
+            <i class="fas fa-users"></i> Manage Students
+        </a>
+        <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item">
+            <i class="fas fa-check-circle"></i> Manage Marks
+        </a>
+        <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item">
+            <i class="fas fa-envelope-open-text"></i> Excuse Letters
+        </a>
+        <a href="{{ url_for('teacher.reports') }}" class="nav-item">
+            <i class="fas fa-chart-bar"></i> Reports
+        </a>
+
+        <div style="margin-top:auto;">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- ===================== MAIN CONTENT ===================== -->
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-left">
+                {% if selected_class %}
+                <div class="flex items-center gap-4">
+                    <a href="{{ url_for('teacher.manage_students') }}" class="btn btn-secondary" style="padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" title="Back to Selection">
+                        <i class="fas fa-chevron-left" style="margin: 0;"></i>
+                    </a>
+                    <div>
+                        <h2 style="margin: 0; line-height: 1.2;">My Students</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">
+                            <span class="badge badge-warning" style="padding: 0.1rem 0.4rem; font-size: 0.65rem; vertical-align: middle;">{{ selected_class.subject_code }}</span>
+                            {{ selected_class.subject_name }} · Sec {{ selected_class.section }}
+                        </p>
+                    </div>
+                </div>
+                {% else %}
+                <h2 style="margin: 0;">My Students</h2>
+                {% endif %}
+            </div>
+
+            <div class="user-menu-container">
+                <button class="burger-btn" onclick="toggleUserMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div id="user-dropdown" class="user-dropdown">
+                    <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
+                        <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ name }}</p>
+                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Faculty Member</p>
+                    </div>
+                    <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content-inner">
+            {% if selected_class %}
+            <!-- Page Title was moved to Header -->
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="glass-panel" style="padding:1.5rem;">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Course &amp; Level</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students if student.status == 'Active' %}
+                        <tr>
+                            <td>
+                                <span class="badge badge-primary">{{ student.uSID }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ student.last_name }}</strong>, {{ student.first_name }}
+                            </td>
+                            <td>{{ student.course }} — {{ student.level }}</td>
+
+                            <td>
+                                <span class="badge {% if student.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
+                                    {{ student.status }}
+                                </span>
+                            </td>
+
+                            <td>
+                                 {% if student.status == 'Active' %}
+                                 <button class="btn btn-warning" 
+                                         style="padding: 0.25rem 0.6rem; font-size: 0.8rem;"
+                                         onclick="openDropModal('{{ student.uSID }}', '{{ student.first_name }} {{ student.last_name }}')">
+                                     <i class="fas fa-user-minus"></i> Request Drop
+                                 </button>
+                                 {% else %}
+                                 <span class="badge badge-secondary">Archived</span>
+                                 {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center" style="color:var(--text-secondary); padding:2rem;">
+                                <i class="fas fa-user-slash" style="font-size:1.5rem; display:block; margin-bottom:0.5rem;"></i>
+                                No students enrolled in this class yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% else %}
+        <h2 class="mb-4">My Students</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select a class to manage students enrolled in that specific subject and section.</p>
+        
+        <!-- Flash messages (for global context) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            {% for c in classes %}
+            <a href="{{ url_for('teacher.manage_students', subject_id=c.subject_id, section=c.section) }}" class="glass-panel p-6" style="text-decoration: none; color: inherit; transition: all 0.3s ease; border-left: 4px solid var(--primary-color);">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="badge badge-warning" style="font-family: monospace;">{{ c.subject_code }}</span>
+                    <span class="badge badge-success">Section {{ c.section }}</span>
+                </div>
+                <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-primary);">{{ c.subject_name }}</h4>
+                <div class="flex items-center" style="color: var(--primary-color); font-weight: 600; font-size: 0.9rem;">
+                    Manage Enrolled Students <i class="fas fa-chevron-right" style="margin-left: 0.5rem; font-size: 0.7rem;"></i>
+                </div>
+            </a>
+            {% else %}
+            <p style="color: var(--text-secondary);">No classes assigned yet.</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        </div> <!-- End main-content-inner -->
+
+        <!-- Drop Request Modal -->
+        <div id="dropModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+            <div class="glass-panel" style="width: 450px; padding: 2rem; position: relative;">
+                <button onclick="closeModal('dropModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">&times;</button>
+                <h3 class="mb-4">Request to Drop Student</h3>
+                <form method="POST">
+                    <input type="hidden" name="action" value="request_drop">
+                    <input type="hidden" name="uSID" id="drop_uSID">
+                    <input type="hidden" name="subject_id" value="{{ selected_class.subject_id if selected_class else '' }}">
+                    
+                    <p style="font-size: 0.9rem; margin-bottom: 1rem;">Student: <strong id="drop_student_name"></strong></p>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Reason for Request</label>
+                        <textarea name="reason" class="form-control" rows="3" placeholder="e.g. Excessive absences, Student dropped the course, etc." required></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('dropModal')">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            function openDropModal(sid, name) {
+                document.getElementById('drop_uSID').value = sid;
+                document.getElementById('drop_student_name').innerText = name;
+                document.getElementById('dropModal').style.display = 'flex';
+            }
+            function closeModal(id) {
+                document.getElementById(id).style.display = 'none';
+            }
+        </script>
+    </main>
+</div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

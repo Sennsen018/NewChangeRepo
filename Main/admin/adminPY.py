@@ -66,13 +66,32 @@ def dashboard():
     """)
     submitted_reports = cursor.fetchall()
     
+    # New metrics for a better dashboard
+    cursor.execute("SELECT COUNT(*) as count FROM Drop_Requests WHERE status = 'Pending'")
+    pending_drops = cursor.fetchone()['count']
+    
+    cursor.execute("SELECT COUNT(*) as count FROM Teacher_Assignments")
+    total_classes = cursor.fetchone()['count']
+    
+    cursor.execute("""
+        SELECT log_id, timestamp, performed_by_id, action, table_name, details 
+        FROM Audit_Logs 
+        ORDER BY timestamp DESC 
+        LIMIT 5
+    """)
+    recent_logs = cursor.fetchall()
+    
     cursor.close()
     conn.close()
     return render_template('admin_dashboard.html', 
                            student_count=student_count, 
                            teacher_count=teacher_count, 
                            subject_count=subject_count,
-                           submitted_reports=submitted_reports)
+                           submitted_reports=submitted_reports,
+                           pending_drops=pending_drops,
+                           total_classes=total_classes,
+                           recent_logs=recent_logs)
+    
 
 @admin.route('/view_report/<int:report_id>')
 def view_report(report_id):

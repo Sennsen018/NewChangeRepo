@@ -231,6 +231,7 @@
 
             <!-- Attendance submission form -->
             <form method="POST" action="{{ url_for('teacher.submit_manual_attendance') }}" id="attendanceForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
                 <!-- Hidden fields carry the class info to the backend -->
                 <input type="hidden" name="subject_id" value="{{ selected_subject_id }}">
@@ -287,7 +288,7 @@
                                 </td>
 
                                 <td><span class="badge badge-primary">{{ s.uSID }}</span></td>
-                                <td><strong>{{ s.last_name }}</strong>, {{ s.first_name }}</td>
+                                <td><strong>{{ s.last_name }}</strong>, {{ s.first_name }} {{ s.middle_name }}</td>
                                 <td>{{ s.level }}</td>
                                 <td style="font-size:0.85rem; color:var(--text-secondary);">{{ s.email }}</td>
 

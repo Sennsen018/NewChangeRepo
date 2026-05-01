@@ -34,6 +34,10 @@
             <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item active">
                 <i class="fas fa-calendar-alt"></i> Manage Schedules
             </a>
+            <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item">
+                <i class="fas fa-chart-line"></i> Attendance Analytics
+            </a>
+    
             <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
                 <i class="fas fa-user-minus"></i> Drop Requests
             </a>
@@ -74,13 +78,14 @@
             <div class="glass-panel p-4 mb-4" style="padding: 1.5rem;">
                 <h3 class="mb-4">Add Schedule</h3>
                 <form method="POST" action="{{ url_for('admin.manage_schedules') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end;">
                         <div class="form-group mb-0">
                             <label class="form-label">Class (Subject - Section - Teacher)</label>
                             <select name="assignment_id" class="form-control" required>
                                 <option value="">-- Select Class --</option>
                                 {% for a in assignments %}
-                                    <option value="{{ a.assignment_id }}">{{ a.subject_code }} - {{ a.section }} ({{ a.first_name }} {{ a.last_name }})</option>
+                                    <option value="{{ a.assignment_id }}">{{ a.subject_code }} - {{ a.section }} ({{ a.first_name }} {{ a.middle_name }} {{ a.last_name }})</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -115,6 +120,29 @@
                 </form>
             </div>
 
+            <!-- Search Bar -->
+            <div class="glass-panel p-4 mb-4" style="border-radius: 15px;">
+                <form method="GET" action="{{ url_for('admin.manage_schedules') }}" style="display: flex; gap: 1rem; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Search Schedules</label>
+                        <div style="position: relative;">
+                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                            <input type="text" name="search" class="form-control" placeholder="Search by Subject, Teacher, Room or Section..." value="{{ search }}" style="padding-left: 2.5rem;">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="btn btn-primary" style="height: 42px;">
+                            <i class="fas fa-filter mr-1"></i> Apply
+                        </button>
+                        <a href="{{ url_for('admin.manage_schedules', clear=1) }}" class="btn btn-secondary" style="height: 42px; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Clear All Filters">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+    
+                    </div>
+                </form>
+            </div>
+            
+
             <div class="glass-panel p-4" style="padding: 1.5rem;">
                 <h3 class="mb-4">Active Schedules</h3>
                 <div class="table-container">
@@ -134,7 +162,7 @@
                             {% for s in schedules %}
                             <tr>
                                 <td><strong>{{ s.subject_code }}</strong><br><small>{{ s.subject_name }}</small></td>
-                                <td>{{ s.first_name }} {{ s.last_name }}</td>
+                                <td>{{ s.first_name }} {{ s.middle_name }} {{ s.last_name }}</td>
                                 <td>{{ s.section }}</td>
                                 <td>{{ s.day_of_week }}</td>
                                 <td>{{ s.start_time }} - {{ s.end_time }}</td>

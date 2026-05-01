@@ -34,8 +34,15 @@
             <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
                 <i class="fas fa-calendar-alt"></i> Manage Schedules
             </a>
+            <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item">
+                <i class="fas fa-chart-line"></i> Attendance Analytics
+            </a>
+    
             <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
                 <i class="fas fa-user-minus"></i> Drop Requests
+            </a>
+            <a href="{{ url_for('admin.audit_logs') }}" class="nav-item">
+                <i class="fas fa-history"></i> Audit Logs
             </a>
             
             <div style="margin-top: auto;">
@@ -86,6 +93,48 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
+
+            <!-- Search and Filter Bar -->
+            <div class="glass-panel p-4 mb-4" style="border-radius: 15px;">
+                <form method="GET" action="{{ url_for('admin.manage_teachers') }}" class="row" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 2; min-width: 200px;">
+                        <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Search Teachers</label>
+                        <div style="position: relative;">
+                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                            <input type="text" name="search" class="form-control" placeholder="Search by Name, ID, or Email..." value="{{ search }}" style="padding-left: 2.5rem;">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Filter Department</label>
+                        <select name="dept_filter" class="form-control">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept }}" {% if dept == dept_filter %}selected{% endif %}>{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Status</label>
+                        <select name="status_filter" class="form-control">
+                            <option value="All" {% if status_filter == 'All' %}selected{% endif %}>All Status</option>
+                            <option value="Active" {% if status_filter == 'Active' %}selected{% endif %}>Active</option>
+                            <option value="Archived" {% if status_filter == 'Archived' %}selected{% endif %}>Archived</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="btn btn-primary" style="height: 42px;">
+                            <i class="fas fa-filter mr-1"></i> Apply
+                        </button>
+                        <a href="{{ url_for('admin.manage_teachers', clear=1) }}" class="btn btn-secondary" style="height: 42px; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Clear All Filters">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+    
+                    </div>
+                </form>
+            </div>
             
             <div class="glass-panel p-4" style="padding: 1.5rem;">
                 <div class="table-container">
@@ -121,10 +170,16 @@
                                              <i class="fas fa-edit"></i> Edit
                                          </button>
                                          <a href="{{ url_for('admin.archive_teacher', uTID=teacher.uTID) }}" 
-                                            class="btn btn-danger" 
+                                            class="btn btn-warning" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                             onclick="return confirm('Are you sure you want to archive this teacher?')">
                                              <i class="fas fa-archive"></i> Archive
+                                         </a>
+                                         <a href="{{ url_for('admin.delete_teacher', uTID=teacher.uTID) }}" 
+                                            class="btn btn-danger" 
+                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                            onclick="return confirm('Are you sure you want to PERMANENTLY delete this teacher?')">
+                                             <i class="fas fa-trash-alt"></i> Delete
                                          </a>
                                      </td>
                             </tr>
@@ -134,8 +189,41 @@
                             </tr>
                             {% endfor %}
                         </tbody>
-                    </table>
+                </table>
                 </div>
+
+                <!-- Pagination Controls -->
+                {% if total_pages > 1 %}
+                <div class="pagination-container mt-4" style="display: flex; justify-content: center; gap: 0.5rem; align-items: center; margin-top: 2rem;">
+                    <a href="{{ url_for('admin.manage_teachers', page=current_page-1, search=search, dept_filter=dept_filter, status_filter=status_filter) }}" 
+                       class="btn btn-secondary {% if current_page == 1 %}disabled{% endif %}" 
+                       style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+    
+                    
+                    <div style="display: flex; gap: 0.25rem;">
+                        {% for p in range(1, total_pages + 1) %}
+                            {% if p == current_page %}
+                                <span class="btn btn-primary" style="padding: 0.5rem 1rem; cursor: default;">{{ p }}</span>
+                            {% else %}
+                                <a href="{{ url_for('admin.manage_teachers', page=p, search=search, dept_filter=dept_filter, status_filter=status_filter) }}" 
+                                   class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none;">{{ p }}</a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <a href="{{ url_for('admin.manage_teachers', page=current_page+1, search=search, dept_filter=dept_filter, status_filter=status_filter) }}" 
+                       class="btn btn-secondary {% if current_page == total_pages %}disabled{% endif %}"
+                       style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+    
+                </div>
+                <p style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem;">
+                    Showing page {{ current_page }} of {{ total_pages }}
+                </p>
+                {% endif %}
                 </div>
 
                 <div class="glass-panel p-4 mt-8" style="padding: 1.5rem; margin-top: 3rem;">
@@ -183,13 +271,14 @@
             <button onclick="closeModal('addTeacherModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Add New Teacher</h3>
             <form method="POST" action="{{ url_for('admin.manage_teachers') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group mb-3">
                     <label class="form-label">First Name</label>
                     <input type="text" name="first_name" class="form-control" required>
                 </div>
                 <div class="form-group mb-3">
-                    <label class="form-label">Middle Name (Optional)</label>
-                    <input type="text" name="middle_name" class="form-control">
+                    <label class="form-label">Middle Name</label>
+                    <input type="text" name="middle_name" class="form-control" required>
                 </div>
                 <div class="form-group mb-3">
                     <label class="form-label">Last Name</label>
@@ -217,13 +306,14 @@
             <button onclick="closeModal('editTeacherModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Edit Teacher</h3>
             <form id="editTeacherForm" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group mb-3">
                     <label class="form-label">First Name</label>
                     <input type="text" name="first_name" id="edit_first_name" class="form-control" required>
                 </div>
                 <div class="form-group mb-3">
                     <label class="form-label">Middle Name</label>
-                    <input type="text" name="middle_name" id="edit_middle_name" class="form-control">
+                    <input type="text" name="middle_name" id="edit_middle_name" class="form-control" required>
                 </div>
                 <div class="form-group mb-3">
                     <label class="form-label">Last Name</label>

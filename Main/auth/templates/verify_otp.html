@@ -13,40 +13,117 @@
             <div class="auth-header">
                 <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1.5rem;"></i>
                 <h1>Verify OTP</h1>
-                <p>We've sent a 4-digit code to <strong>{{ session.get('reset_email') }}</strong></p>
+                <p>A 4-digit code and your Unique ID have been sent to your email. Please check your inbox.</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">
-                            {{ message }}
-                        </div>
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
+            <!-- Attempt tracker -->
+            <div style="display: flex; justify-content: space-between; align-items: center;
+                        background: rgba(255,255,255,0.04); border: 1px solid var(--surface-border);
+                        border-radius: 10px; padding: 0.7rem 1rem; margin-bottom: 1.2rem; font-size: 0.82rem;">
+                <span style="color: var(--text-secondary);">
+                    <i class="fas fa-key" style="margin-right: 5px; color: var(--primary-color);"></i>
+                    Attempts left:
+                    <strong style="color: {% if (max_wrong - wrong_count) <= 2 %}#ef4444{% else %}var(--primary-color){% endif %};">
+                        {{ max_wrong - wrong_count }} / {{ max_wrong }}
+                    </strong>
+                </span>
+                <span style="color: var(--text-secondary);">
+                    <i class="fas fa-paper-plane" style="margin-right: 5px; color: var(--primary-color);"></i>
+                    Resends left:
+                    <strong style="color: {% if resends_left == 0 %}#ef4444{% else %}var(--primary-color){% endif %};">
+                        {{ resends_left }}
+                    </strong>
+                </span>
+            </div>
+
             <form method="POST" action="{{ url_for('auth.verify_otp') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group text-center">
                     <label class="form-label" style="display: block; margin-bottom: 1rem;">Enter 4-Digit Code</label>
-                    <input type="text" name="otp" class="form-control text-center" required 
+                    <input type="text" name="otp" id="otp-input" class="form-control text-center" required 
                            maxlength="4" pattern="\d{4}" 
                            placeholder="0000" 
-                           style="font-size: 2rem; letter-spacing: 1rem; font-weight: bold; padding: 1rem;">
+                           style="font-size: 2rem; letter-spacing: 1rem; font-weight: bold; padding: 1rem;"
+                           autocomplete="one-time-code" inputmode="numeric" autofocus>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Verify Code</button>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-check-circle" style="margin-right: 6px;"></i>
+                    Verify Code
+                </button>
             </form>
             
             <div class="text-center mt-4">
-                <p style="color: var(--text-secondary); font-size: 0.9rem;">
-                    Didn't receive the code? 
-                    <a href="{{ url_for('auth.resend_otp') }}" style="color: var(--primary-color); text-decoration: none; font-weight: bold;">Resend Code</a>
-                </p>
-                <a href="{{ url_for('auth.forgot_password') }}" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; display: block; margin-top: 1rem;">
+                <!-- Resend button with cooldown logic -->
+                {% if resends_left > 0 %}
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        Didn't receive the code?
+                    </p>
+                    <div id="resend-wrapper">
+                        <!-- Countdown shown while in cooldown -->
+                        <p id="cooldown-msg" style="color: var(--text-secondary); font-size: 0.85rem; display:none;">
+                            <i class="fas fa-clock" style="margin-right: 4px;"></i>
+                            Resend available in <strong id="countdown-timer">2:00</strong>
+                        </p>
+                        <!-- Active resend link shown when cooldown has passed -->
+                        <a id="resend-link" href="{{ url_for('auth.resend_otp') }}"
+                           style="color: var(--primary-color); text-decoration: none; font-weight: bold; font-size: 0.9rem;">
+                            <i class="fas fa-redo" style="margin-right: 4px;"></i>Resend Code
+                        </a>
+                    </div>
+                {% else %}
+                    <p style="color: #ef4444; font-size: 0.85rem;">
+                        <i class="fas fa-ban" style="margin-right: 4px;"></i>
+                        Resend limit reached. If you still need help, please contact support.
+                    </p>
+                {% endif %}
+
+                <a href="{{ url_for('auth.forgot_password') }}"
+                   style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; display: block; margin-top: 1rem;">
+                    <i class="fas fa-arrow-left" style="margin-right: 4px;"></i>
                     Try a different email
                 </a>
             </div>
         </div>
     </div>
+
+    <script>
+        // Cooldown countdown — cooldown_ends is a Unix epoch int passed from Flask
+        const cooldownEnds = {{ cooldown_ends }};
+
+        function updateCountdown() {
+            const now   = Math.floor(Date.now() / 1000);
+            const diff  = cooldownEnds - now;
+
+            const resendLink   = document.getElementById('resend-link');
+            const cooldownMsg  = document.getElementById('cooldown-msg');
+            const timerEl      = document.getElementById('countdown-timer');
+
+            if (!resendLink || !cooldownMsg) return;
+
+            if (diff > 0) {
+                // Still in cooldown — show timer, hide link
+                resendLink.style.display  = 'none';
+                cooldownMsg.style.display = 'block';
+                const m = Math.floor(diff / 60).toString().padStart(1, '0');
+                const s = (diff % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${m}:${s}`;
+                setTimeout(updateCountdown, 1000);
+            } else {
+                // Cooldown expired — show link, hide timer
+                resendLink.style.display  = '';
+                cooldownMsg.style.display = 'none';
+            }
+        }
+
+        updateCountdown();
+    </script>
 </body>
 </html>

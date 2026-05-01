@@ -100,13 +100,14 @@
                     {% endwith %}
 
                     <form action="{{ url_for('user.submit_excuse') }}" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group mb-4">
                             <label for="class_id" class="form-label">Select Class</label>
                             <select name="class_id" id="class_id" class="form-control" required style="background: var(--surface-color); color: white; border: 1px solid var(--surface-border);">
                                 <option value="" disabled selected>-- Select a Class --</option>
                                 {% for c in enrollments %}
                                 <option value="{{ c.subject_id }}|{{ c.uTID }}">
-                                    {{ c.subject_code }} - {{ c.subject_name }} ({{ c.first_name }} {{ c.last_name }})
+                                    {{ c.subject_code }} - {{ c.subject_name }} ({{ c.first_name }} {{ c.middle_name }} {{ c.last_name }})
                                 </option>
                                 {% endfor %}
                             </select>
@@ -114,8 +115,11 @@
                         </div>
 
                         <div class="form-group mb-4">
-                            <label for="message" class="form-label">Reason / Message</label>
-                            <textarea name="message" id="message" rows="5" class="form-control" placeholder="Explain why you missed the class..." required style="background: var(--surface-color); color: white; border: 1px solid var(--surface-border);"></textarea>
+                            <label for="message" class="form-label">Reason / Message <span style="font-weight:400; font-size:0.8rem; color: var(--text-secondary);">(max 600 characters)</span></label>
+                            <textarea name="message" id="message" rows="5" class="form-control" placeholder="Explain why you missed the class..." required maxlength="600" oninput="updateCharCount(this)" style="background: var(--surface-color); color: white; border: 1px solid var(--surface-border);"></textarea>
+                            <div style="display:flex; justify-content:flex-end; margin-top:0.35rem;">
+                                <small id="char-count" style="color: var(--text-secondary); font-size:0.78rem;"><span id="chars-used">0</span> / 600</small>
+                            </div>
                         </div>
 
                         <div class="form-group mb-6">
@@ -126,7 +130,7 @@
                                  onmouseout="this.style.borderColor='var(--surface-border)'">
                                 <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
                                 <p id="file-name" style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">Click to upload or drag and drop files</p>
-                                <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.5rem;">Accepted: .pdf, .doc, .docx, .png, .jpg</p>
+                                <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.5rem;">Accepted: .pdf, .doc, .docx, .png, .jpg &amp;nbsp;&amp;bull;&amp;nbsp; Max size: <strong>10 MB</strong></p>
                                 <input type="file" name="excuse_file" id="excuse_file" style="display: none;" onchange="updateFileName(this)">
                             </div>
                         </div>
@@ -158,7 +162,7 @@
                                 <tr style="border-bottom: 1px solid var(--surface-border);">
                                     <td style="padding: 1rem;">{{ letter.created_at.strftime('%Y-%m-%d %H:%M') if letter.created_at else 'N/A' }}</td>
                                     <td style="padding: 1rem;">{{ letter.subject_code }}</td>
-                                    <td style="padding: 1rem;">{{ letter.first_name }} {{ letter.last_name }}</td>
+                                    <td style="padding: 1rem;">{{ letter.first_name }} {{ letter.middle_name }} {{ letter.last_name }}</td>
                                     <td style="padding: 1rem;">
                                         <span class="badge {% if letter.status == 'Approved' %}badge-success{% elif letter.status == 'Rejected' %}badge-danger{% else %}badge-warning{% endif %}">
                                             {{ letter.status }}
@@ -189,10 +193,30 @@
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
+        function updateCharCount(textarea) {
+            const used = textarea.value.length;
+            const counter = document.getElementById('chars-used');
+            const label = document.getElementById('char-count');
+            counter.textContent = used;
+            if (used >= 580) {
+                label.style.color = used >= 600 ? '#ef4444' : '#f59e0b';
+            } else {
+                label.style.color = 'var(--text-secondary)';
+            }
+        }
+
         function updateFileName(input) {
             const fileNameDisplay = document.getElementById('file-name');
+            const MAX_MB = 10;
             if (input.files && input.files.length > 0) {
-                fileNameDisplay.textContent = 'Selected: ' + input.files[0].name;
+                const file = input.files[0];
+                if (file.size > MAX_MB * 1024 * 1024) {
+                    fileNameDisplay.textContent = '\u26a0 File exceeds 10 MB limit. Please choose a smaller file.';
+                    fileNameDisplay.style.color = '#ef4444';
+                    input.value = ''; // clear selection
+                    return;
+                }
+                fileNameDisplay.textContent = 'Selected: ' + file.name;
                 fileNameDisplay.style.color = 'var(--secondary-color)';
             } else {
                 fileNameDisplay.textContent = 'Click to upload or drag and drop files';

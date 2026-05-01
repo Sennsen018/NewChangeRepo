@@ -34,6 +34,10 @@
             <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
                 <i class="fas fa-calendar-alt"></i> Manage Schedules
             </a>
+            <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item">
+                <i class="fas fa-chart-line"></i> Attendance Analytics
+            </a>
+    
             <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
                 <i class="fas fa-user-minus"></i> Drop Requests
             </a>
@@ -86,12 +90,13 @@
             
             <div class="glass-panel p-4 mb-4" style="padding: 1.5rem;">
                 <form method="POST" action="{{ url_for('admin.assign_classes') }}" class="flex gap-4 items-center">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="form-group w-100" style="margin-bottom: 0;">
                         <label class="form-label">Select Teacher</label>
                         <select name="uTID" class="form-control" required>
                             <option value="">-- Choose Teacher --</option>
                             {% for t in teachers %}
-                                <option value="{{ t.uTID }}">{{ t.first_name }} {{ t.last_name }}</option>
+                                <option value="{{ t.uTID }}">{{ t.first_name }} {{ t.middle_name }} {{ t.last_name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -114,6 +119,29 @@
                 </form>
             </div>
 
+            <!-- Search Bar -->
+            <div class="glass-panel p-4 mb-4" style="border-radius: 15px;">
+                <form method="GET" action="{{ url_for('admin.assign_classes') }}" style="display: flex; gap: 1rem; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Search Assignments</label>
+                        <div style="position: relative;">
+                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                            <input type="text" name="search" class="form-control" placeholder="Search by Code, Subject, Teacher or Section..." value="{{ search }}" style="padding-left: 2.5rem;">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="btn btn-primary" style="height: 42px;">
+                            <i class="fas fa-filter mr-1"></i> Apply
+                        </button>
+                        <a href="{{ url_for('admin.assign_classes', clear=1) }}" class="btn btn-secondary" style="height: 42px; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Clear All Filters">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+    
+                    </div>
+                </form>
+            </div>
+            
+
             <div class="glass-panel p-4" style="padding: 1.5rem;">
                 <div class="table-container">
                     <table>
@@ -129,7 +157,7 @@
                         <tbody>
                             {% for a in assignments %}
                             <tr>
-                                <td>{{ a.first_name }} {{ a.last_name }}</td>
+                                <td>{{ a.first_name }} {{ a.middle_name }} {{ a.last_name }}</td>
                                 <td><span class="badge badge-warning">{{ a.subject_code }}</span></td>
                                 <td>{{ a.subject_name }}</td>
                                 <td>{{ a.section }}</td>

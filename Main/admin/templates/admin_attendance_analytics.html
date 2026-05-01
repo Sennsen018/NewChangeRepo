@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Analytics | Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: var(--primary-color);">Attendeez</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Admin Portal</p>
+            </div>
+            
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
+                <i class="fas fa-user-graduate"></i> Manage Students
+            </a>
+            <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item">
+                <i class="fas fa-chalkboard-teacher"></i> Manage Teachers
+            </a>
+            <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
+                <i class="fas fa-book"></i> Manage Subjects
+            </a>
+            <a href="{{ url_for('admin.assign_classes') }}" class="nav-item">
+                <i class="fas fa-link"></i> Assign Classes
+            </a>
+            <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
+                <i class="fas fa-calendar-alt"></i> Manage Schedules
+            </a>
+            <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item active">
+                <i class="fas fa-chart-line"></i> Attendance Analytics
+            </a>
+            <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
+                <i class="fas fa-user-minus"></i> Drop Requests
+            </a>
+            <a href="{{ url_for('admin.audit_logs') }}" class="nav-item">
+                <i class="fas fa-history"></i> Audit Logs
+            </a>
+            
+            <div style="margin-top: auto;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 style="margin: 0;">Attendance Analytics</h2>
+                </div>
+            </header>
+
+            <div class="main-content-inner">
+                
+                <!-- Class Selector -->
+                <div class="glass-panel p-6 mb-6">
+                    <h3 class="mb-4">Select Subject & Teacher</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                        {% for c in all_classes %}
+                        <a href="{{ url_for('admin.attendance_analytics', subject_id=c.subject_id, uTID=c.uTID, section=c.section) }}" 
+                           class="glass-panel p-4 {% if selected_class and selected_class.subject_id == c.subject_id and selected_class.uTID == c.uTID and selected_class.section == c.section %}active-class-box{% endif %}"
+                           style="text-decoration: none; color: inherit; transition: all 0.2s; border-left: 4px solid var(--primary-color);">
+                            <div class="badge badge-warning mb-2">{{ c.subject_code }}</div>
+                            <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;">{{ c.subject_name }}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Prof. {{ c.last_name }}, {{ c.first_name }}</div>
+                            <div style="font-size: 0.8rem; margin-top: 0.5rem;"><span class="badge">Section {{ c.section }}</span></div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if selected_class %}
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 style="margin: 0;">{{ selected_class.subject_name }}</h2>
+                        <p style="color: var(--text-secondary);">Analytical trends for <strong>Prof. {{ selected_class.first_name }} {{ selected_class.last_name }}</strong> (Section {{ selected_class.section }})</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <!-- Weekly Trends -->
+                    <div class="glass-panel p-6">
+                        <h3 class="mb-4 text-primary"><i class="fas fa-calendar-week mr-2"></i> Weekly Attendance</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Period</th>
+                                        <th class="text-center">Present</th>
+                                        <th class="text-center">Absent</th>
+                                        <th class="text-center">Late</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in weekly_trends %}
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: 600;">{{ row.period }}</div>
+                                            <small style="color: var(--text-secondary);">{{ row.week_start.strftime('%b %d') if row.week_start else '' }} - {{ row.week_end.strftime('%b %d, %Y') if row.week_end else '' }}</small>
+                                        </td>
+                                        <td class="text-center" style="color: #10b981; font-weight: 600;">{{ row.present_count }}</td>
+                                        <td class="text-center" style="color: #ef4444; font-weight: 600;">{{ row.absent_count }}</td>
+                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;">{{ row.late_count }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="4" class="text-center">No weekly data available.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Trends -->
+                    <div class="glass-panel p-6">
+                        <h3 class="mb-4 text-secondary"><i class="fas fa-calendar-alt mr-2"></i> Monthly Attendance</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th class="text-center">Present</th>
+                                        <th class="text-center">Absent</th>
+                                        <th class="text-center">Late</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in monthly_trends %}
+                                    <tr>
+                                        <td style="font-weight: 600;">{{ row.period }}</td>
+                                        <td class="text-center" style="color: #10b981; font-weight: 600;">{{ row.present_count }}</td>
+                                        <td class="text-center" style="color: #ef4444; font-weight: 600;">{{ row.absent_count }}</td>
+                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;">{{ row.late_count }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="4" class="text-center">No monthly data available.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="glass-panel p-12 text-center" style="color: var(--text-secondary);">
+                    <i class="fas fa-chart-bar fa-3x mb-4" style="opacity: 0.2;"></i>
+                    <p>Select a class above to view detailed attendance analytics.</p>
+                </div>
+                {% endif %}
+
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .active-class-box {
+            background: rgba(79, 70, 229, 0.1) !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .text-primary { color: var(--primary-color); }
+        .text-secondary { color: var(--secondary-color); }
+        .text-center { text-align: center; }
+    </style>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

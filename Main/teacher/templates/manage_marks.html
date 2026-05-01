@@ -96,12 +96,46 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">
-                            {{ message }}
-                        </div>
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
+
+            <!-- Search and Filter Bar -->
+            <div class="glass-panel p-4 mb-4" style="border-radius: 12px; margin-top: 1.5rem;">
+                <form method="GET" action="{{ url_for('teacher.manage_marks') }}" class="row" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
+                    <input type="hidden" name="section" value="{{ selected_class.section }}">
+                    
+                    <div class="form-group" style="flex: 2; min-width: 200px;">
+                        <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Search Student</label>
+                        <div style="position: relative;">
+                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                            <input type="text" name="search" class="form-control" placeholder="Name or ID..." value="{{ search }}" style="padding-left: 2.5rem;">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="flex: 1; min-width: 150px;">
+                        <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Status</label>
+                        <select name="status_filter" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="Present" {% if status_filter == 'Present' %}selected{% endif %}>Present</option>
+                            <option value="Absent" {% if status_filter == 'Absent' %}selected{% endif %}>Absent</option>
+                            <option value="Late" {% if status_filter == 'Late' %}selected{% endif %}>Late</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="btn btn-primary" style="height: 42px;">
+                            <i class="fas fa-filter mr-1"></i> Apply
+                        </button>
+                        <a href="{{ url_for('teacher.manage_marks', subject_id=selected_class.subject_id, section=selected_class.section, clear=1) }}" class="btn btn-secondary" style="height: 42px; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Clear All Filters">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+    
+                    </div>
+                </form>
+            </div>
 
             <div class="glass-panel p-4" style="padding: 1.5rem;">
                 <div class="table-container">
@@ -119,7 +153,7 @@
                         <tbody>
                             {% for r in records %}
                             <tr {% if r.is_valid == 'Invalid' or r.status == 'Flagged' %}style="background: rgba(239, 68, 68, 0.05); border-left: 3px solid var(--danger-color);"{% endif %}>
-                                <td>{{ r.first_name }} {{ r.last_name }}</td>
+                                <td>{{ r.first_name }} {{ r.middle_name }} {{ r.last_name }}</td>
                                 <td>{{ r.scan_time.strftime('%Y-%m-%d %H:%M') }}</td>
                                 <td>
                                     {% if r.status == 'Present' %}
@@ -162,26 +196,87 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <form method="POST" action="{{ url_for('teacher.update_mark') }}" style="display:inline-flex; gap:0.5rem;">
-                                        <input type="hidden" name="attendance_id" value="{{ r.attendance_id }}">
-                                        <select name="status" class="form-control" style="padding:0.2rem; font-size:0.8rem; width:auto;" required>
-                                            <option value="Present" {% if r.status == 'Present' %}selected{% endif %}>Present</option>
-                                            <option value="Flagged" {% if r.status == 'Flagged' %}selected{% endif %}>Flagged</option>
-                                            <option value="Absent" {% if r.status == 'Absent' %}selected{% endif %}>Absent</option>
-                                            <option value="Late" {% if r.status == 'Late' %}selected{% endif %}>Late</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-primary" style="padding:0.2rem 0.5rem; font-size:0.8rem;">Update</button>
-                                    </form>
+                                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                                        <form method="POST" action="{{ url_for('teacher.update_mark') }}" style="display:inline-flex; gap:0.5rem; margin:0;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <input type="hidden" name="attendance_id" value="{{ r.attendance_id }}">
+                                            <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
+                                            <input type="hidden" name="section" value="{{ selected_class.section }}">
+                                            <select name="status" class="form-control" style="padding:0.2rem; font-size:0.8rem; width:auto;" required>
+                                                <option value="Present" {% if r.status == 'Present' %}selected{% endif %}>Present</option>
+                                                <option value="Flagged" {% if r.status == 'Flagged' %}selected{% endif %}>Flagged</option>
+                                                <option value="Absent" {% if r.status == 'Absent' %}selected{% endif %}>Absent</option>
+                                                <option value="Late" {% if r.status == 'Late' %}selected{% endif %}>Late</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-primary" style="padding:0.2rem 0.5rem; font-size:0.8rem;">Update</button>
+                                        </form>
+                                        
+                                        <form method="POST" action="{{ url_for('teacher.delete_mark') }}" style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this attendance record? This action will be logged.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <input type="hidden" name="attendance_id" value="{{ r.attendance_id }}">
+                                            <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
+                                            <input type="hidden" name="section" value="{{ selected_class.section }}">
+                                            <button type="submit" class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.8rem;" title="Delete Record">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="5" class="text-center">No attendance records found for this class.</td>
+                                <td colspan="6" class="text-center">No attendance records found for this class.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Pagination Controls -->
+                {% if total_pages > 1 %}
+                <div class="pagination-container mt-4" style="display: flex; justify-content: center; gap: 0.5rem; align-items: center; margin-top: 2rem;">
+                    <a href="{{ url_for('teacher.manage_marks', subject_id=selected_class.subject_id, section=selected_class.section, page=current_page-1, search=search, status_filter=status_filter) }}" 
+                       class="btn btn-secondary {% if current_page == 1 %}disabled{% endif %}" 
+                       style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+    
+                    
+                    <div style="display: flex; gap: 0.25rem;">
+                        {% set start = [1, current_page - 2]|max %}
+                        {% set end = [total_pages, current_page + 2]|min %}
+                        
+                        {% if start > 1 %}
+                            <a href="{{ url_for('teacher.manage_marks', subject_id=selected_class.subject_id, section=selected_class.section, page=1, search=search, status_filter=status_filter) }}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">1</a>
+                            {% if start > 2 %}<span style="color: var(--text-secondary);">...</span>{% endif %}
+                        {% endif %}
+
+                        {% for p in range(start, end + 1) %}
+                            {% if p == current_page %}
+                                <span class="btn btn-primary" style="padding: 0.5rem 1rem; cursor: default;">{{ p }}</span>
+                            {% else %}
+                                <a href="{{ url_for('teacher.manage_marks', subject_id=selected_class.subject_id, section=selected_class.section, page=p, search=search, status_filter=status_filter) }}" 
+                                   class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none;">{{ p }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if end < total_pages %}
+                            {% if end < total_pages - 1 %}<span style="color: var(--text-secondary);">...</span>{% endif %}
+                            <a href="{{ url_for('teacher.manage_marks', subject_id=selected_class.subject_id, section=selected_class.section, page=total_pages, search=search, status_filter=status_filter) }}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">{{ total_pages }}</a>
+                        {% endif %}
+                    </div>
+
+                    <a href="{{ url_for('teacher.manage_marks', subject_id=selected_class.subject_id, section=selected_class.section, page=current_page+1, search=search, status_filter=status_filter) }}" 
+                       class="btn btn-secondary {% if current_page == total_pages %}disabled{% endif %}"
+                       style="padding: 0.5rem 1rem;">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+    
+                </div>
+                <p style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem;">
+                    Showing page {{ current_page }} of {{ total_pages }}
+                </p>
+                {% endif %}
             </div>
 
             {% else %}

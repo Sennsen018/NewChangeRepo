@@ -22,6 +22,10 @@ def reg_app():
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 
+    from flask_wtf.csrf import CSRFProtect
+    csrf = CSRFProtect()
+    csrf.init_app(app)
+
     @app.route('/')
     def index():
         return redirect(url_for('auth.student_login'))

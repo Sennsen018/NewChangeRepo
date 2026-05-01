@@ -141,7 +141,7 @@
                     </button>
                     <div id="user-dropdown" class="user-dropdown">
                         <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ teacher.first_name }} {{ teacher.last_name }}</p>
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ teacher.first_name }} {{ teacher.middle_name }} {{ teacher.last_name }}</p>
                             <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Faculty Member</p>
                         </div>
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
@@ -165,7 +165,7 @@
                         <div class="sid-badge"><i class="fas fa-id-badge" style="margin-right:0.4rem;"></i>{{ teacher.uTID }}</div>
                         <h2 style="margin: 0 0 0.3rem; font-size: 1.8rem;">
                             {{ teacher.first_name }}
-                            {% if teacher.middle_name %} {{ teacher.middle_name }}{% endif %}
+                            {{ teacher.middle_name }}
                             {{ teacher.last_name }}
                         </h2>
                         <div style="display:flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;">

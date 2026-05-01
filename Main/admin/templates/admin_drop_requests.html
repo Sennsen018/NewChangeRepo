@@ -34,6 +34,10 @@
             <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
                 <i class="fas fa-calendar-alt"></i> Manage Schedules
             </a>
+            <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item">
+                <i class="fas fa-chart-line"></i> Attendance Analytics
+            </a>
+    
             <a href="{{ url_for('admin.drop_requests') }}" class="nav-item active">
                 <i class="fas fa-user-minus"></i> Drop Requests
             </a>
@@ -54,7 +58,32 @@
             </header>
 
             <div class="main-content-inner">
-                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Review requests from teachers to drop/archive students from their subjects.</p>
+                <div class="flex justify-between items-center mb-4">
+                    <p style="color: var(--text-secondary); margin: 0;">Review requests from teachers to drop/archive students from their subjects.</p>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="glass-panel p-4 mb-4" style="border-radius: 15px;">
+                    <form method="GET" action="{{ url_for('admin.drop_requests') }}" style="display: flex; gap: 1rem; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Search Requests</label>
+                            <div style="position: relative;">
+                                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                                <input type="text" name="search" class="form-control" placeholder="Search by Student, ID or Subject..." value="{{ search }}" style="padding-left: 2.5rem;">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="submit" class="btn btn-primary" style="height: 42px;">
+                                <i class="fas fa-filter mr-1"></i> Apply
+                            </button>
+                            <a href="{{ url_for('admin.drop_requests', clear=1) }}" class="btn btn-secondary" style="height: 42px; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Clear All Filters">
+                                <i class="fas fa-sync-alt"></i>
+                            </a>
+    
+                        </div>
+                    </form>
+                </div>
+            
             
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -83,14 +112,14 @@
                             {% for r in requests %}
                             <tr>
                                 <td>
-                                    <strong>{{ r.s_first }} {{ r.s_last }}</strong><br>
+                                    <strong>{{ r.s_first }} {{ r.s_middle }} {{ r.s_last }}</strong><br>
                                     <small class="badge badge-primary">{{ r.uSID }}</small>
                                 </td>
                                 <td>
                                     <strong>{{ r.subject_code }}</strong><br>
                                     <small>{{ r.subject_name }}</small>
                                 </td>
-                                <td>Prof. {{ r.t_first }} {{ r.t_last }}</td>
+                                <td>Prof. {{ r.t_first }} {{ r.t_middle }} {{ r.t_last }}</td>
                                 <td style="max-width: 250px;">
                                     <p style="font-size: 0.85rem; color: var(--text-secondary); white-space: normal;">{{ r.reason }}</p>
                                 </td>

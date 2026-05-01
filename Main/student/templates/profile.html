@@ -172,7 +172,7 @@
                     </div>
                     <div class="profile-hero-info">
                         <div class="sid-badge"><i class="fas fa-id-badge" style="margin-right:0.4rem;"></i>{{ student.uSID }}</div>
-                        <h2>{{ student.first_name }} {{ student.last_name }}</h2>
+                        <h2>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</h2>
                         <div style="display:flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;">
                             <span style="font-size:0.85rem; color:var(--text-secondary);"><i class="fas fa-graduation-cap" style="margin-right:0.3rem; color:#818cf8;"></i>{{ student.course }}</span>
                             <span style="font-size:0.85rem; color:var(--text-secondary);"><i class="fas fa-layer-group" style="margin-right:0.3rem; color:#34d399;"></i>{{ student.level }}</span>
@@ -245,7 +245,7 @@
                         </div>
                         <div style="text-align:right; flex-shrink:0;">
                             {% if enrollment.first_name %}
-                            <div style="font-size:0.85rem; font-weight:600;">{{ enrollment.first_name }} {{ enrollment.last_name }}</div>
+                            <div style="font-size:0.85rem; font-weight:600;">{{ enrollment.first_name }} {{ enrollment.middle_name }} {{ enrollment.last_name }}</div>
                             <div style="font-size:0.7rem; color:var(--text-secondary);">Instructor</div>
                             {% else %}
                             <div style="font-size:0.8rem; color:var(--text-secondary); font-style:italic;">Not assigned</div>

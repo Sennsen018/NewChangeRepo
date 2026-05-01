@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify
-from Main.db import get_db_connection
+from Main.db import get_db_connection, log_system_action
 from datetime import datetime, timedelta
 import json
 import os
@@ -218,6 +218,11 @@ def scan_qr():
 
 @user.route('/submit_attendance', methods=['POST'])
 def submit_attendance():
+    """
+    Records a student's attendance.
+    Validates session token, prevents duplicate attendance per student/date/subject,
+    calculates distance using Haversine formula, and inserts the record.
+    """
     data = request.json
     session_id = data.get('session_id')
     token = data.get('token')
@@ -251,10 +256,15 @@ def submit_attendance():
         if datetime.now() > ses['expires_at']:
             return jsonify({'success': False, 'message': 'QR Code has expired.'})
 
-        # 2. Check if already marked
-        cursor.execute("SELECT * FROM Attendance WHERE uSID = %s AND session_id = %s", (uSID, session_id))
+        # 2. Check if already marked (Same student + same date + same subject)
+        cursor.execute("""
+            SELECT a.attendance_id 
+            FROM Attendance a
+            JOIN Sessions s ON a.session_id = s.session_id
+            WHERE a.uSID = %s AND s.subject_id = %s AND DATE(a.scan_time) = CURDATE()
+        """, (uSID, ses['subject_id']))
         if cursor.fetchone():
-            return jsonify({'success': False, 'message': 'Attendance already recorded for this session.'})
+            return jsonify({'success': False, 'message': 'Attendance already recorded for this subject today.'})
 
         # 3. Calculate Distance (Haversine Formula)
         import math
@@ -284,6 +294,10 @@ def submit_attendance():
             (session_id, uSID, scan_time, status, remarks, is_valid, student_lat, student_lon, distance_meters, behavior_flags)
             VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s)
         """, (session_id, uSID, status, f"Distance: {round(distance)}m", is_valid, s_lat, s_lon, distance, json.dumps(behavior_flags)))
+        attendance_id = cursor.lastrowid
+        
+        # Audit Logging
+        log_system_action(cursor, 'Attendance', attendance_id, 'Create', uSID, 'student', f"Attendance recorded via QR. Status: {status}")
         
         # 6. Send Notification
         msg = f"Attendance marked as Present for session {session_id}. Validity: {is_valid}."
@@ -307,7 +321,7 @@ def timetable():
     cursor = conn.cursor(dictionary=True)
     
     query = """
-    SELECT s.subject_code, s.subject_name, t.first_name, t.last_name, 
+    SELECT s.subject_code, s.subject_name, t.first_name, t.middle_name, t.last_name, 
            sch.day_of_week, sch.start_time, sch.end_time, sch.room, sch.section
     FROM Enrollments e
     JOIN Subjects s ON e.subject_id = s.subject_id
@@ -391,7 +405,7 @@ def profile():
     
     # Get Enrolled Subjects with Teacher Info
     query = """
-    SELECT s.subject_code, s.subject_name, e.section, t.first_name, t.last_name
+    SELECT s.subject_code, s.subject_name, e.section, t.first_name, t.middle_name, t.last_name
     FROM Enrollments e
     JOIN Subjects s ON e.subject_id = s.subject_id
     LEFT JOIN Teacher_Assignments ta ON e.subject_id = ta.subject_id AND e.section = ta.section
@@ -490,6 +504,9 @@ def submit_excuse():
         
         if not class_data or not message:
             flash('Please select a class and provide a reason.', 'error')
+        elif len(message) > 600:
+            flash('Reason/Message must not exceed 600 characters.', 'error')
+            return redirect(url_for('user.submit_excuse'))
         else:
             try:
                 subject_id, uTID = class_data.split('|')
@@ -507,6 +524,14 @@ def submit_excuse():
                     if ext not in allowed_ext:
                         flash('Invalid file type. Only PDF, Word, and Images are allowed.', 'error')
                         return redirect(url_for('user.submit_excuse'))
+
+                    # Check file size (< 10 MB)
+                    file.seek(0, 2)  # seek to end
+                    file_size = file.tell()
+                    file.seek(0)     # reset
+                    if file_size >= 10 * 1024 * 1024:
+                        flash('File size must be less than 10 MB.', 'error')
+                        return redirect(url_for('user.submit_excuse'))
                         
                     filename = secure_filename(f"{uSID}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
                     file_path = os.path.join(upload_dir, filename)
@@ -518,6 +543,10 @@ def submit_excuse():
                     INSERT INTO Excuse_Letters (uSID, uTID, subject_id, message, file_path)
                     VALUES (%s, %s, %s, %s, %s)
                 """, (uSID, uTID, subject_id, message, filename))
+                letter_id = cursor.lastrowid
+                
+                # Audit Logging
+                log_system_action(cursor, 'Excuse_Letters', letter_id, 'Create', uSID, 'student', f"Excuse letter submitted for Subject {subject_id}")
                 conn.commit()
                 flash('Excuse letter submitted successfully!', 'success')
                 return redirect(url_for('user.submit_excuse'))
@@ -528,7 +557,7 @@ def submit_excuse():
     # GET request: Prepare data for the form
     # 1. Enrollments with Teacher Info
     query = """
-    SELECT s.subject_id, s.subject_code, s.subject_name, ta.uTID, t.first_name, t.last_name
+    SELECT s.subject_id, s.subject_code, s.subject_name, ta.uTID, t.first_name, t.middle_name, t.last_name
     FROM Enrollments e
     JOIN Subjects s ON e.subject_id = s.subject_id
     JOIN Teacher_Assignments ta ON e.subject_id = ta.subject_id AND e.section = ta.section
@@ -540,7 +569,7 @@ def submit_excuse():
     
     # 2. Previous Letters
     cursor.execute("""
-        SELECT el.*, s.subject_code, t.first_name, t.last_name
+        SELECT el.*, s.subject_code, t.first_name, t.middle_name, t.last_name
         FROM Excuse_Letters el
         JOIN Subjects s ON el.subject_id = s.subject_id
         JOIN Teachers t ON el.uTID = t.uTID

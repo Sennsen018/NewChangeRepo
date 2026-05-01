@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS Admins (
 CREATE TABLE IF NOT EXISTS Teachers (
     uTID VARCHAR(20) PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
-    middle_name VARCHAR(50),
+    middle_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     department VARCHAR(100),
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS Teachers (
 CREATE TABLE IF NOT EXISTS Students (
     uSID VARCHAR(20) PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
-    middle_name VARCHAR(50),
+    middle_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -108,6 +108,36 @@ CREATE TABLE IF NOT EXISTS Attendance (
     FOREIGN KEY (session_id) REFERENCES Sessions(session_id),
     FOREIGN KEY (uSID) REFERENCES Students(uSID),
     UNIQUE KEY unique_scan (session_id, uSID) -- Prevent duplicate scans in same session
+);
+
+-- 8.5 Attendance Audit Log Table
+CREATE TABLE IF NOT EXISTS Attendance_Audit_Log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    attendance_id INT,
+    action ENUM('Update', 'Delete') NOT NULL,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50),
+    changed_by_user_id VARCHAR(50) NOT NULL,
+    changed_by_role VARCHAR(20) NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 8.6 OTP Lockouts Table
+CREATE TABLE IF NOT EXISTS otp_lockouts (
+    email VARCHAR(100) PRIMARY KEY,
+    lockout_until DATETIME NOT NULL
+);
+
+-- 8.7 System Audit Log Table
+CREATE TABLE IF NOT EXISTS System_Audit_Log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    table_name VARCHAR(50) NOT NULL,
+    entity_id VARCHAR(50) NOT NULL,
+    action ENUM('Create', 'Update', 'Delete') NOT NULL,
+    performed_by_id VARCHAR(50) NOT NULL,
+    performed_by_role VARCHAR(20) NOT NULL,
+    details TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 9. Notifications Table

@@ -995,18 +995,7 @@ def submit_manual_attendance():
                 VALUES (%s, %s, %s, %s, %s, 'Valid')
             """, (manual_session_id, usid, now, status, remarks))
 
-            # STEP 3: Insert a Notification so the student knows their status.
-            if status == 'Present':
-                msg   = f'You were marked Present by your teacher on {now.strftime("%Y-%m-%d %H:%M")}.'
-                ntype = 'Info'
-            else:
-                msg   = f'You were marked Absent by your teacher on {now.strftime("%Y-%m-%d %H:%M")}.'
-                ntype = 'Warning'
-
-            cursor.execute("""
-                INSERT INTO Notifications (usid, message, type)
-                VALUES (%s, %s, %s)
-            """, (usid, msg, ntype))
+            # STEP 3: Notifications are now handled automatically by the database triggers
 
         conn.commit()
 
@@ -1099,11 +1088,7 @@ def update_excuse_status():
             # Audit Logging
             log_system_action(cursor, 'Excuse_Letters', letter_id, 'Update', utid, 'teacher', f"Excuse letter status updated to {new_status}")
             
-            # Notify student with proper subject name
-            subject_label = f"{letter['subject_code']} - {letter['subject_name']}"
-            msg = f"Your excuse letter for {subject_label} has been {new_status}."
-            cursor.execute("INSERT INTO Notifications (usid, message, type) VALUES (%s, %s, %s)", 
-                           (letter['usid'], msg, 'Info' if new_status == 'Approved' else 'Warning'))
+            # Notification is now handled automatically by database triggers
             
             conn.commit()
             flash(f'Excuse letter {new_status.lower()} successfully.', 'success')

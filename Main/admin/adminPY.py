@@ -1,3 +1,4 @@
+from werkzeug.security import generate_password_hash
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
 import json
 from Main.db import get_db_connection, log_system_action

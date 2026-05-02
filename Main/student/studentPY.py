@@ -300,9 +300,7 @@ def submit_attendance():
         # Audit Logging
         log_system_action(cursor, 'Attendance', attendance_id, 'Create', usid, 'student', f"Attendance recorded via QR. Status: {status}")
         
-        # 6. Send Notification
-        msg = f"Attendance marked as Present for session {session_id}. Validity: {is_valid}."
-        cursor.execute("INSERT INTO Notifications (usid, message, type) VALUES (%s, %s, %s)", (usid, msg, 'Info' if is_valid == 'Valid' else 'Warning'))
+        # Notification is now handled automatically by database triggers
         
         conn.commit()
         return jsonify({'success': True, 'message': 'Attendance recorded successfully.'})

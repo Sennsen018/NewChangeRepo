@@ -10,43 +10,53 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h2 style="color: var(--primary-color);">Attendeez</h2>
-                <p style="font-size: 0.8rem; color: var(--text-secondary);">Admin Portal</p>
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-fingerprint"></i>
+                <span>Attendeez</span>
             </div>
             
-            <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
-            <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
-                <i class="fas fa-user-graduate"></i> Manage Students
-            </a>
-            <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item">
-                <i class="fas fa-chalkboard-teacher"></i> Manage Teachers
-            </a>
-            <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
-                <i class="fas fa-book"></i> Manage Subjects
-            </a>
-            <a href="{{ url_for('admin.assign_classes') }}" class="nav-item">
-                <i class="fas fa-link"></i> Assign Classes
-            </a>
-            <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
-                <i class="fas fa-calendar-alt"></i> Manage Schedules
-            </a>
-            <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item">
-                <i class="fas fa-chart-line"></i> Attendance Analytics
-            </a>
-    
-            <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
-                <i class="fas fa-user-minus"></i> Drop Requests
-            </a>
-            <a href="{{ url_for('admin.audit_logs') }}" class="nav-item active">
-                <i class="fas fa-history"></i> Audit Logs
-            </a>
+            <div class="nav-group">
+                <p class="nav-label">Core</p>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
+                    <i class="fas fa-grid-2"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
+                    <i class="fas fa-user-graduate"></i> Students
+                </a>
+                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item">
+                    <i class="fas fa-chalkboard-teacher"></i> Teachers
+                </a>
+                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
+                    <i class="fas fa-book"></i> Subjects
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <p class="nav-label">Operations</p>
+                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item">
+                    <i class="fas fa-link"></i> Assign Classes
+                </a>
+                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
+                    <i class="fas fa-calendar-range"></i> Schedules
+                </a>
+                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <p class="nav-label">System</p>
+                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
+                    <i class="fas fa-user-minus"></i> Drop Requests
+                </a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item active">
+                    <i class="fas fa-history"></i> Audit Logs
+                </a>
+            </div>
             
             <div style="margin-top: auto;">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </div>
@@ -56,26 +66,44 @@
         <main class="main-content">
             <header class="top-header">
                 <div class="header-left">
-                    <h2 style="margin: 0;">System Audit Logs</h2>
+                    <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Audit Logs</h2>
+                </div>
+
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
                 </div>
             </header>
 
             <div class="main-content-inner">
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Track all administrative and system-wide changes.</p>
+                <div class="mb-8">
+                    <h1 class="auth-title">System Audit Logs</h1>
+                    <p class="text-muted">Monitor and track administrative actions and system modifications.</p>
+                </div>
 
                 <!-- Search and Filter Bar -->
-                <div class="glass-panel p-4 mb-4" style="border-radius: 15px;">
-                    <form method="GET" action="{{ url_for('admin.audit_logs') }}" class="row" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                        <div class="form-group" style="flex: 2; min-width: 200px;">
-                            <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Search Details/User/ID</label>
-                            <div style="position: relative;">
-                                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                                <input type="text" name="search" class="form-control" placeholder="Search logs..." value="{{ search }}" style="padding-left: 2.5rem;">
-                            </div>
+                <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+                    <form method="GET" action="{{ url_for('admin.audit_logs') }}" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                        <div class="form-group">
+                            <label class="form-label">Search Details</label>
+                            <input type="text" name="search" class="form-control" placeholder="User, ID, or Action..." value="{{ search }}">
                         </div>
                         
-                        <div class="form-group" style="flex: 1; min-width: 150px;">
-                            <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Table</label>
+                        <div class="form-group">
+                            <label class="form-label">Table</label>
                             <select name="table_filter" class="form-control">
                                 <option value="">All Tables</option>
                                 {% for t in tables %}
@@ -84,8 +112,8 @@
                             </select>
                         </div>
 
-                        <div class="form-group" style="flex: 1; min-width: 150px;">
-                            <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Action</label>
+                        <div class="form-group">
+                            <label class="form-label">Action</label>
                             <select name="action_filter" class="form-control">
                                 <option value="">All Actions</option>
                                 <option value="Create" {% if action_filter == 'Create' %}selected{% endif %}>Create</option>
@@ -95,14 +123,13 @@
                             </select>
                         </div>
 
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button type="submit" class="btn btn-primary" style="height: 42px;">
-                                <i class="fas fa-filter mr-1"></i> Apply
+                        <div class="flex gap-2">
+                            <button type="submit" class="btn btn-primary" style="height: 42px; width: 42px; padding: 0;">
+                                <i class="fas fa-search"></i>
                             </button>
-                            <a href="{{ url_for('admin.audit_logs', clear=1) }}" class="btn btn-secondary" style="height: 42px; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Clear All Filters">
-                                <i class="fas fa-sync-alt"></i>
+                            <a href="{{ url_for('admin.audit_logs', clear=1) }}" class="btn btn-secondary" style="height: 42px; width: 42px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-rotate"></i>
                             </a>
-    
                         </div>
                     </form>
                 </div>

@@ -10,47 +10,46 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none; position: sticky; top: 0; height: 100vh; overflow-y: auto;">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h2 style="color: var(--primary-color);">Attendeez</h2>
-                <p style="font-size: 0.8rem; color: var(--text-secondary);">Student Portal</p>
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-fingerprint"></i>
+                <span>Attendeez</span>
             </div>
             
-            <div style="margin-bottom: 1.5rem;">
-                <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem; padding-left: 1rem;">Main Menu</p>
-                <a href="{{ url_for('user.dashboard') }}" class="nav-item {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
-                    <i class="fas fa-home"></i> Dashboard
+            <div class="nav-group">
+                <p class="nav-label">Core</p>
+                <a href="{{ url_for('user.dashboard') }}" class="nav-item">
+                    <i class="fas fa-grid-2"></i> Dashboard
                 </a>
-                <a href="{{ url_for('user.profile') }}" class="nav-item {% if request.endpoint == 'user.profile' %}active{% endif %}">
+                <a href="{{ url_for('user.profile') }}" class="nav-item">
                     <i class="fas fa-user"></i> My Profile
                 </a>
-                <a href="{{ url_for('user.timetable') }}" class="nav-item {% if request.endpoint == 'user.timetable' %}active{% endif %}">
-                    <i class="fas fa-calendar-alt"></i> Timetable
-                </a>
-                <a href="{{ url_for('user.notifications_page') }}" class="nav-item {% if request.endpoint == 'user.notifications_page' %}active{% endif %}">
-                    <i class="fas fa-bell"></i> Notifications
-                    {% if unread_count > 0 %}
-                    <span id="notif-badge-sidebar" class="badge badge-danger" style="margin-left: auto; padding: 0.2rem 0.5rem; font-size: 0.65rem;">{{ unread_count }}</span>
-                    {% endif %}
-                </a>
-                <a href="{{ url_for('user.submit_excuse') }}" class="nav-item {% if request.endpoint == 'user.submit_excuse' %}active{% endif %}">
-                    <i class="fas fa-envelope-open-text"></i> Excuse Letter
+                <a href="{{ url_for('user.timetable') }}" class="nav-item active">
+                    <i class="fas fa-calendar-range"></i> Timetable
                 </a>
             </div>
 
-            <div style="margin-bottom: 1.5rem;">
-                <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem; padding-left: 1rem;">My Classes</p>
+            <div class="nav-group">
+                <p class="nav-label">Classes</p>
                 {% for s in subjects %}
-                <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" 
-                   class="nav-item {% if request.endpoint == 'user.subject_performance' and subject and subject.subject_id == s.subject_id %}active{% endif %}" 
-                   style="font-size: 0.85rem; padding: 0.6rem 1rem;">
-                    <i class="fas fa-book" style="font-size: 0.8rem;"></i> {{ s.subject_code }}
+                <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="nav-item">
+                    <i class="fas fa-book"></i> {{ s.subject_code }}
                 </a>
                 {% endfor %}
             </div>
+
+            <div class="nav-group">
+                <p class="nav-label">Support</p>
+                <a href="{{ url_for('user.notifications_page') }}" class="nav-item">
+                    <i class="fas fa-bell"></i> Notifications
+                </a>
+                <a href="{{ url_for('user.submit_excuse') }}" class="nav-item">
+                    <i class="fas fa-envelope-open-text"></i> Submit Excuse
+                </a>
+            </div>
             
-            <div style="margin-top: auto; padding-top: 2rem;">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+            <div style="margin-top: auto;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </div>
@@ -60,22 +59,22 @@
         <main class="main-content">
             <header class="top-header">
                 <div class="header-left">
-                    <h2 style="margin: 0;">Weekly Class Schedule</h2>
+                    <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Weekly Schedule</h2>
                 </div>
 
                 <div class="user-menu-container">
                     <button class="burger-btn" onclick="toggleUserMenu()">
-                        <i class="fas fa-bars"></i>
+                        <i class="fas fa-ellipsis-v"></i>
                     </button>
                     <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ session.get('name', 'Student') }}</p>
-                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Student Member</p>
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Student') }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Student Portal</p>
                         </div>
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
                             <i class="fas fa-key"></i> Change Password
                         </a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
                     </div>
@@ -83,9 +82,12 @@
             </header>
 
             <div class="main-content-inner">
-                <div class="flex justify-between items-center mb-6">
-                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">7:00 AM - 7:00 PM</p>
-                    <div class="badge badge-primary">Academic Year 2024-2025</div>
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="auth-title">My Timetable</h1>
+                        <p class="text-muted">Weekly class schedule and classroom assignments.</p>
+                    </div>
+                    <div class="badge badge-secondary">Academic Year 2024-2025</div>
                 </div>
 
             {% if not schedule %}

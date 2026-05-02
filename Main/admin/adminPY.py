@@ -75,7 +75,7 @@ def dashboard():
     
     cursor.execute("""
         SELECT log_id, timestamp, performed_by_id, action, table_name, details 
-        FROM Audit_Logs 
+        FROM System_Audit_Log 
         ORDER BY timestamp DESC 
         LIMIT 5
     """)

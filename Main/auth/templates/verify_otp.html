@@ -11,7 +11,7 @@
     <div class="auth-container">
         <div class="auth-card glass-panel">
             <div class="auth-header">
-                <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1.5rem;"></i>
+                <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem;"></i>
                 <h1>Verify OTP</h1>
                 <p>A 4-digit code and your Unique ID have been sent to your email. Please check your inbox.</p>
             </div>
@@ -26,19 +26,19 @@
 
             <!-- Attempt tracker -->
             <div style="display: flex; justify-content: space-between; align-items: center;
-                        background: rgba(255,255,255,0.04); border: 1px solid var(--surface-border);
+                        background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
                         border-radius: 10px; padding: 0.7rem 1rem; margin-bottom: 1.2rem; font-size: 0.82rem;">
-                <span style="color: var(--text-secondary);">
-                    <i class="fas fa-key" style="margin-right: 5px; color: var(--primary-color);"></i>
+                <span style="color: var(--text-muted);">
+                    <i class="fas fa-key" style="margin-right: 5px; color: var(--primary);"></i>
                     Attempts left:
-                    <strong style="color: {% if (max_wrong - wrong_count) <= 2 %}#ef4444{% else %}var(--primary-color){% endif %};">
+                    <strong style="color: {% if (max_wrong - wrong_count) <= 2 %}#ef4444{% else %}var(--primary){% endif %};">
                         {{ max_wrong - wrong_count }} / {{ max_wrong }}
                     </strong>
                 </span>
-                <span style="color: var(--text-secondary);">
-                    <i class="fas fa-paper-plane" style="margin-right: 5px; color: var(--primary-color);"></i>
+                <span style="color: var(--text-muted);">
+                    <i class="fas fa-paper-plane" style="margin-right: 5px; color: var(--primary);"></i>
                     Resends left:
-                    <strong style="color: {% if resends_left == 0 %}#ef4444{% else %}var(--primary-color){% endif %};">
+                    <strong style="color: {% if resends_left == 0 %}#ef4444{% else %}var(--primary){% endif %};">
                         {{ resends_left }}
                     </strong>
                 </span>
@@ -54,7 +54,7 @@
                            style="font-size: 2rem; letter-spacing: 1rem; font-weight: bold; padding: 1rem;"
                            autocomplete="one-time-code" inputmode="numeric" autofocus>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">
+                <button type="submit" class="btn btn-primary w-full">
                     <i class="fas fa-check-circle" style="margin-right: 6px;"></i>
                     Verify Code
                 </button>
@@ -63,18 +63,18 @@
             <div class="text-center mt-4">
                 <!-- Resend button with cooldown logic -->
                 {% if resends_left > 0 %}
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
                         Didn't receive the code?
                     </p>
                     <div id="resend-wrapper">
                         <!-- Countdown shown while in cooldown -->
-                        <p id="cooldown-msg" style="color: var(--text-secondary); font-size: 0.85rem; display:none;">
+                        <p id="cooldown-msg" style="color: var(--text-muted); font-size: 0.85rem; display:none;">
                             <i class="fas fa-clock" style="margin-right: 4px;"></i>
                             Resend available in <strong id="countdown-timer">2:00</strong>
                         </p>
                         <!-- Active resend link shown when cooldown has passed -->
                         <a id="resend-link" href="{{ url_for('auth.resend_otp') }}"
-                           style="color: var(--primary-color); text-decoration: none; font-weight: bold; font-size: 0.9rem;">
+                           style="color: var(--primary); text-decoration: none; font-weight: bold; font-size: 0.9rem;">
                             <i class="fas fa-redo" style="margin-right: 4px;"></i>Resend Code
                         </a>
                     </div>
@@ -86,7 +86,7 @@
                 {% endif %}
 
                 <a href="{{ url_for('auth.forgot_password') }}"
-                   style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; display: block; margin-top: 1rem;">
+                   style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; display: block; margin-top: 1rem;">
                     <i class="fas fa-arrow-left" style="margin-right: 4px;"></i>
                     Try a different email
                 </a>

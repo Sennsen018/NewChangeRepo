@@ -10,50 +10,26 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none; position: sticky; top: 0; height: 100vh; overflow-y: auto;">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h2 style="color: var(--primary-color);">Attendeez</h2>
-                <p style="font-size: 0.8rem; color: var(--text-secondary);">Student Portal</p>
+                <aside class="sidebar">
+            <div class="sidebar-logo"><i class="fas fa-fingerprint"></i><span>Attendeez</span></div>
+            <div class="nav-group">
+                <p class="nav-label">Core</p>
+                <a href="{{ url_for('user.dashboard') }}" class="nav-item"><i class="fas fa-grid-2"></i> Dashboard</a>
+                <a href="{{ url_for('user.profile') }}" class="nav-item"><i class="fas fa-user"></i> My Profile</a>
+                <a href="{{ url_for('user.timetable') }}" class="nav-item"><i class="fas fa-calendar-range"></i> Timetable</a>
             </div>
-            
-            <div style="margin-bottom: 1.5rem;">
-                <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem; padding-left: 1rem;">Main Menu</p>
-                <a href="{{ url_for('user.dashboard') }}" class="nav-item {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
-                    <i class="fas fa-home"></i> Dashboard
-                </a>
-                <a href="{{ url_for('user.profile') }}" class="nav-item {% if request.endpoint == 'user.profile' %}active{% endif %}">
-                    <i class="fas fa-user"></i> My Profile
-                </a>
-                <a href="{{ url_for('user.timetable') }}" class="nav-item {% if request.endpoint == 'user.timetable' %}active{% endif %}">
-                    <i class="fas fa-calendar-alt"></i> Timetable
-                </a>
-                <a href="{{ url_for('user.notifications_page') }}" class="nav-item {% if request.endpoint == 'user.notifications_page' %}active{% endif %}">
-                    <i class="fas fa-bell"></i> Notifications
-                    {% if unread_count > 0 %}
-                    <span id="notif-badge-sidebar" class="badge badge-danger" style="margin-left: auto; padding: 0.2rem 0.5rem; font-size: 0.65rem;">{{ unread_count }}</span>
-                    {% endif %}
-                </a>
-                <a href="{{ url_for('user.submit_excuse') }}" class="nav-item {% if request.endpoint == 'user.submit_excuse' %}active{% endif %}">
-                    <i class="fas fa-envelope-open-text"></i> Excuse Letter
-                </a>
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <p style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem; padding-left: 1rem;">My Classes</p>
+            <div class="nav-group">
+                <p class="nav-label">Classes</p>
                 {% for s in subjects %}
-                <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" 
-                   class="nav-item {% if request.endpoint == 'user.subject_performance' and subject and subject.subject_id == s.subject_id %}active{% endif %}" 
-                   style="font-size: 0.85rem; padding: 0.6rem 1rem;">
-                    <i class="fas fa-book" style="font-size: 0.8rem;"></i> {{ s.subject_code }}
-                </a>
+                <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="nav-item"><i class="fas fa-book"></i> {{ s.subject_code }}</a>
                 {% endfor %}
             </div>
-            
-            <div style="margin-top: auto; padding-top: 2rem;">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+            <div class="nav-group">
+                <p class="nav-label">Support</p>
+                <a href="{{ url_for('user.notifications_page') }}" class="nav-item"><i class="fas fa-bell"></i> Notifications</a>
+                <a href="{{ url_for('user.submit_excuse') }}" class="nav-item active"><i class="fas fa-envelope-open-text"></i> Submit Excuse</a>
             </div>
+            <div style="margin-top: auto;"><a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
         </aside>
 
         <!-- Main Content -->
@@ -65,17 +41,17 @@
 
                 <div class="user-menu-container">
                     <button class="burger-btn" onclick="toggleUserMenu()">
-                        <i class="fas fa-bars"></i>
+                        <i class="fas fa-ellipsis-v"></i>
                     </button>
                     <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ session.get('name', 'Student') }}</p>
-                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Student Member</p>
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Student') }}</p>
+                            <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;">Student Member</p>
                         </div>
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
                             <i class="fas fa-key"></i> Change Password
                         </a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
                     </div>
@@ -86,7 +62,7 @@
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 style="margin: 0;">Submit Excuse Letter</h2>
-                        <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Send a formal excuse to your teacher for missing a class.</p>
+                        <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Send a formal excuse to your teacher for missing a class.</p>
                     </div>
                 </div>
 
@@ -103,7 +79,7 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group mb-4">
                             <label for="class_id" class="form-label">Select Class</label>
-                            <select name="class_id" id="class_id" class="form-control" required style="background: var(--surface-color); color: white; border: 1px solid var(--surface-border);">
+                            <select name="class_id" id="class_id" class="form-control" required style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color);">
                                 <option value="" disabled selected>-- Select a Class --</option>
                                 {% for c in enrollments %}
                                 <option value="{{ c.subject_id }}|{{ c.utid }}">
@@ -111,26 +87,26 @@
                                 </option>
                                 {% endfor %}
                             </select>
-                            <small style="color: var(--text-secondary);">Only teachers assigned to your subjects are shown.</small>
+                            <small style="color: var(--text-muted);">Only teachers assigned to your subjects are shown.</small>
                         </div>
 
                         <div class="form-group mb-4">
-                            <label for="message" class="form-label">Reason / Message <span style="font-weight:400; font-size:0.8rem; color: var(--text-secondary);">(max 600 characters)</span></label>
-                            <textarea name="message" id="message" rows="5" class="form-control" placeholder="Explain why you missed the class..." required maxlength="600" oninput="updateCharCount(this)" style="background: var(--surface-color); color: white; border: 1px solid var(--surface-border);"></textarea>
+                            <label for="message" class="form-label">Reason / Message <span style="font-weight:400; font-size:0.8rem; color: var(--text-muted);">(max 600 characters)</span></label>
+                            <textarea name="message" id="message" rows="5" class="form-control" placeholder="Explain why you missed the class..." required maxlength="600" oninput="updateCharCount(this)" style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color);"></textarea>
                             <div style="display:flex; justify-content:flex-end; margin-top:0.35rem;">
-                                <small id="char-count" style="color: var(--text-secondary); font-size:0.78rem;"><span id="chars-used">0</span> / 600</small>
+                                <small id="char-count" style="color: var(--text-muted); font-size:0.78rem;"><span id="chars-used">0</span> / 600</small>
                             </div>
                         </div>
 
                         <div class="form-group mb-6">
                             <label for="excuse_file" class="form-label">Attachment (PDF, Word, or Image)</label>
-                            <div style="border: 2px dashed var(--surface-border); padding: 2rem; border-radius: 12px; text-align: center; position: relative; transition: border-color 0.3s; cursor: pointer;" 
+                            <div style="border: 2px dashed var(--border-color); padding: 2rem; border-radius: 12px; text-align: center; position: relative; transition: border-color 0.3s; cursor: pointer;" 
                                  onclick="document.getElementById('excuse_file').click()"
-                                 onmouseover="this.style.borderColor='var(--primary-color)'"
-                                 onmouseout="this.style.borderColor='var(--surface-border)'">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
-                                <p id="file-name" style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">Click to upload or drag and drop files</p>
-                                <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.5rem;">Accepted: .pdf, .doc, .docx, .png, .jpg &amp;nbsp;&amp;bull;&amp;nbsp; Max size: <strong>10 MB</strong></p>
+                                 onmouseover="this.style.borderColor='var(--primary)'"
+                                 onmouseout="this.style.borderColor='var(--border-color)'">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                                <p id="file-name" style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Click to upload or drag and drop files</p>
+                                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">Accepted: .pdf, .doc, .docx, .png, .jpg &amp;nbsp;&amp;bull;&amp;nbsp; Max size: <strong>10 MB</strong></p>
                                 <input type="file" name="excuse_file" id="excuse_file" style="display: none;" onchange="updateFileName(this)">
                             </div>
                         </div>
@@ -147,7 +123,7 @@
                 <div class="mt-8">
                     <h3>Previous Submissions</h3>
                     <div class="glass-panel overflow-hidden mt-4">
-                        <table class="w-100" style="border-collapse: collapse;">
+                        <table class="w-full" style="border-collapse: collapse;">
                             <thead>
                                 <tr style="background: rgba(255,255,255,0.05); text-align: left;">
                                     <th style="padding: 1rem;">Date</th>
@@ -159,7 +135,7 @@
                             </thead>
                             <tbody>
                                 {% for letter in previous_letters %}
-                                <tr style="border-bottom: 1px solid var(--surface-border);">
+                                <tr style="border-bottom: 1px solid var(--border-color);">
                                     <td style="padding: 1rem;">{{ letter.created_at.strftime('%Y-%m-%d %H:%M') if letter.created_at else 'N/A' }}</td>
                                     <td style="padding: 1rem;">{{ letter.subject_code }}</td>
                                     <td style="padding: 1rem;">{{ letter.first_name }} {{ letter.middle_name }} {{ letter.last_name }}</td>
@@ -170,17 +146,17 @@
                                     </td>
                                     <td style="padding: 1rem;">
                                         {% if letter.file_path %}
-                                        <a href="{{ url_for('static', filename='uploads/excuses/' + letter.file_path.split('/')[-1]) }}" target="_blank" style="color: var(--primary-color); text-decoration: none;">
+                                        <a href="{{ url_for('static', filename='uploads/excuses/' + letter.file_path.split('/')[-1]) }}" target="_blank" style="color: var(--primary); text-decoration: none;">
                                             <i class="fas fa-file-download mr-1"></i> View File
                                         </a>
                                         {% else %}
-                                        <span style="color: var(--text-secondary);">No file</span>
+                                        <span style="color: var(--text-muted);">No file</span>
                                         {% endif %}
                                     </td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No excuse letters submitted yet.</td>
+                                    <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">No excuse letters submitted yet.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -201,7 +177,7 @@
             if (used >= 580) {
                 label.style.color = used >= 600 ? '#ef4444' : '#f59e0b';
             } else {
-                label.style.color = 'var(--text-secondary)';
+                label.style.color = 'var(--text-muted)';
             }
         }
 
@@ -217,10 +193,10 @@
                     return;
                 }
                 fileNameDisplay.textContent = 'Selected: ' + file.name;
-                fileNameDisplay.style.color = 'var(--secondary-color)';
+                fileNameDisplay.style.color = 'var(--text-muted)';
             } else {
                 fileNameDisplay.textContent = 'Click to upload or drag and drop files';
-                fileNameDisplay.style.color = 'var(--text-secondary)';
+                fileNameDisplay.style.color = 'var(--text-muted)';
             }
         }
     </script>

@@ -98,9 +98,9 @@
             
             <style>
                 .timetable-container {
-                    background: var(--surface-color);
+                    background: var(--bg-surface);
                     border-radius: 16px;
-                    border: 1px solid var(--surface-border);
+                    border: 1px solid var(--border-color);
                     overflow: auto;
                     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
                     position: relative;
@@ -120,9 +120,9 @@
                     align-items: center;
                     justify-content: center;
                     background: #1e293b; /* Solid background for sticky headers */
-                    border-bottom: 2px solid var(--primary-color);
+                    border-bottom: 2px solid var(--primary);
                     font-weight: 700;
-                    color: var(--primary-color);
+                    color: var(--primary);
                     position: sticky;
                     top: 0;
                     z-index: 10;
@@ -135,8 +135,8 @@
                     justify-content: center;
                     padding-top: 10px;
                     font-size: 0.65rem;
-                    color: var(--text-secondary);
-                    border-right: 1px solid var(--surface-border);
+                    color: var(--text-muted);
+                    border-right: 1px solid var(--border-color);
                     background: #1e293b; /* Solid background for sticky columns */
                     position: sticky;
                     left: 0;
@@ -145,7 +145,7 @@
                 }
                 .grid-row-line {
                     grid-column: 2 / -1;
-                    border-bottom: 1px solid var(--surface-border);
+                    border-bottom: 1px solid var(--border-color);
                     pointer-events: none;
                     grid-row-end: span 1;
                     grid-row-start: var(--row);
@@ -197,7 +197,7 @@
             <div class="timetable-container">
                 <div class="timetable-grid">
                     <!-- Top Corner -->
-                    <div class="grid-header" style="--col: 1; border-right: 1px solid var(--surface-border); left: 0; z-index: 15;">Time</div>
+                    <div class="grid-header" style="--col: 1; border-right: 1px solid var(--border-color); left: 0; z-index: 15;">Time</div>
                     
                     <!-- Day Headers -->
                     {% for day in days %}

@@ -18,32 +18,26 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar glass-panel"
-            style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h2 style="color: var(--primary-color);">Attendeez</h2>
-                <p style="font-size: 0.8rem; color: var(--text-secondary);">Faculty Portal</p>
+                <aside class="sidebar">
+            <div class="sidebar-logo"><i class="fas fa-fingerprint"></i><span>Attendeez</span></div>
+            <div class="nav-group">
+                <p class="nav-label">Academic</p>
+                <a href="{{ url_for('teacher.dashboard') }}" class="nav-item"><i class="fas fa-grid-2"></i> Dashboard</a>
+                <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item"><i class="fas fa-calendar-days"></i> My Schedule</a>
+                <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item"><i class="fas fa-clipboard-check"></i> Attendance</a>
             </div>
-            <a href="{{ url_for('teacher.dashboard') }}" class="nav-item"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="{{ url_for('teacher.profile') }}" class="nav-item"><i class="fas fa-user"></i> My Profile</a>
-            <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item"><i class="fas fa-calendar-alt"></i> My
-                Schedule</a>
-            <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item"><i class="fas fa-clipboard-check"></i>
-                Manual Attendance</a>
-            <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users"></i> Manage
-                Students</a>
-            <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-check-circle"></i> Manage
-                Marks</a>
-            <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i>
-                Excuse Letters</a>
-            <a href="{{ url_for('teacher.reports') }}" class="nav-item active"><i class="fas fa-chart-bar"></i>
-                Reports</a>
-            <div style="margin-top: auto;">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100"
-                    style="color:white; text-decoration:none;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+            <div class="nav-group">
+                <p class="nav-label">Management</p>
+                <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users-viewfinder"></i> Students</a>
+                <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-pen-to-square"></i> Marks</a>
+                <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> Excuse Letters</a>
+                <a href="{{ url_for('teacher.reports') }}" class="nav-item active"><i class="fas fa-chart-mixed"></i> Analytics</a>
             </div>
+            <div class="nav-group">
+                <p class="nav-label">Account</p>
+                <a href="{{ url_for('teacher.profile') }}" class="nav-item"><i class="fas fa-user-circle"></i> My Profile</a>
+            </div>
+            <div style="margin-top: auto;"><a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
         </aside>
 
         <!-- Main Content -->
@@ -59,7 +53,7 @@
                         </a>
                         <div>
                             <h2 style="margin: 0; line-height: 1.2;">{{ selected_class.subject_name }}</h2>
-                            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">
+                            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">
                                 <span class="badge badge-warning"
                                     style="padding: 0.1rem 0.4rem; font-size: 0.65rem; vertical-align: middle;">{{
                                     selected_class.subject_code }}</span>
@@ -72,17 +66,17 @@
                     {% endif %}
                 </div>
                 <div class="user-menu-container">
-                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-bars"></i></button>
+                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-ellipsis-v"></i></button>
                     <div id="user-dropdown" class="user-dropdown">
                         <div
-                            style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{
+                            style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{
                                 name }}</p>
-                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Faculty Member</p>
+                            <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;">Faculty Member</p>
                         </div>
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item"><i class="fas fa-key"></i>
                             Change Password</a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout"><i
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);"><i
                                 class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
                 </div>
@@ -103,7 +97,7 @@
                         <canvas id="classPieChart"></canvas>
                     </div>
                     {% else %}
-                    <div style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
                         <i class="fas fa-chart-pie"
                             style="font-size: 2rem; display: block; margin-bottom: 1rem; opacity: 0.5;"></i>
                         <p>No attendance data recorded yet for this class.</p>
@@ -131,8 +125,8 @@
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
                                 <input type="hidden" name="section" value="{{ selected_class.section }}">
-                                <textarea name="teacher_message" placeholder="Add a message for the admin (optional)..." style="width: 250px; height: 60px; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--surface-border); background: rgba(255,255,255,0.05); color: var(--text-primary); font-size: 0.8rem; resize: none;"></textarea>
-                                <button type="submit" class="btn btn-primary" style="background: var(--primary-color); width: 100%;">
+                                <textarea name="teacher_message" placeholder="Add a message for the admin (optional)..." style="width: 250px; height: 60px; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-main); font-size: 0.8rem; resize: none;"></textarea>
+                                <button type="submit" class="btn btn-primary" style="background: var(--primary); width: 100%;">
                                     <i class="fas fa-paper-plane"></i> Send to Admin
                                 </button>
                             </form>
@@ -186,7 +180,7 @@
 
                         <!-- Daily Trends -->
                         <div>
-                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;"><i
+                            <h4 style="color: var(--primary); margin-bottom: 1rem;"><i
                                     class="fas fa-calendar-day"></i> Daily Trends</h4>
                             <div class="table-container" style="max-height: 250px; overflow-y: auto;">
                                 <table>
@@ -218,7 +212,7 @@
 
                         <!-- Weekly Trends -->
                         <div>
-                            <h4 style="color: var(--secondary-color); margin-bottom: 1rem;"><i
+                            <h4 style="color: var(--text-muted); margin-bottom: 1rem;"><i
                                     class="fas fa-calendar-week"></i> Weekly Trends</h4>
                             <div class="table-container" style="max-height: 250px; overflow-y: auto;">
                                 <table>
@@ -235,7 +229,7 @@
                                         <tr>
                                             <td>
                                                 <div style="font-weight: 600;">{{ row.period }}</div>
-                                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">
+                                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
                                                     {{ row.week_start }} – {{ row.week_end }}
                                                 </div>
                                             </td>
@@ -312,18 +306,18 @@
                         {% for date, logs in grouped %}
                         {% set logs = logs | list %}
                         <div class="accordion-item"
-                            style="border: 1px solid var(--surface-border); border-radius: 8px; overflow: hidden; margin-bottom: 1rem;">
+                            style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 1rem;">
                             <div class="accordion-header"
                                 style="background: rgba(255,255,255,0.05); padding: 1rem 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s;"
                                 onclick="toggleAccordion('acc-{{ loop.index }}')">
-                                <h4 style="margin: 0; color: var(--text-primary);">
+                                <h4 style="margin: 0; color: var(--text-main);">
                                     <i class="fas fa-calendar-day"
-                                        style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                                        style="color: var(--primary); margin-right: 0.5rem;"></i>
                                     {{ date }}
                                 </h4>
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                                     <span class="badge"
-                                        style="background: rgba(255,255,255,0.1); color: var(--text-secondary);">{{ logs
+                                        style="background: rgba(255,255,255,0.1); color: var(--text-muted);">{{ logs
                                         | length }} Records</span>
                                     <form method="POST" action="{{ url_for('teacher.delete_daily_attendance') }}"
                                         style="margin: 0;"
@@ -389,7 +383,7 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
                         <i class="fas fa-calendar-times"
                             style="font-size: 2rem; display: block; margin-bottom: 1rem; opacity: 0.4;"></i>
                         <p>No attendance logs found for this class.</p>
@@ -424,28 +418,28 @@
                 {% else %}
                 <!-- Class Selection Screen -->
                 <h2 class="mb-4">Generate Reports</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select one of your assigned classes to
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">Select one of your assigned classes to
                     view and export attendance reports.</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
                     {% for c in classes %}
                     <a href="{{ url_for('teacher.reports', subject_id=c.subject_id, section=c.section) }}"
                         class="glass-panel p-6"
-                        style="text-decoration: none; color: inherit; transition: all 0.3s ease; border-left: 4px solid var(--primary-color);">
+                        style="text-decoration: none; color: inherit; transition: all 0.3s ease; border-left: 4px solid var(--primary);">
                         <div class="flex justify-between items-center mb-4">
                             <span class="badge badge-warning" style="font-family: monospace;">{{ c.subject_code
                                 }}</span>
                             <span class="badge badge-success">Section {{ c.section }}</span>
                         </div>
-                        <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-primary);">{{
+                        <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main);">{{
                             c.subject_name }}</h4>
                         <div class="flex items-center"
-                            style="color: var(--primary-color); font-weight: 600; font-size: 0.9rem;">
+                            style="color: var(--primary); font-weight: 600; font-size: 0.9rem;">
                             View Full Report <i class="fas fa-chevron-right"
                                 style="margin-left: 0.5rem; font-size: 0.7rem;"></i>
                         </div>
                     </a>
                     {% else %}
-                    <p style="color: var(--text-secondary);">No classes available.</p>
+                    <p style="color: var(--text-muted);">No classes available.</p>
                     {% endfor %}
                 </div>
                 {% endif %}

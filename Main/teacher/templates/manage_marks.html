@@ -127,7 +127,7 @@
                     <div class="form-group" style="flex: 2; min-width: 200px;">
                         <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Search Student</label>
                         <div style="position: relative;">
-                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                             <input type="text" name="search" class="form-control" placeholder="Name or ID..." value="{{ search }}" style="padding-left: 2.5rem;">
                         </div>
                     </div>
@@ -194,7 +194,7 @@
                                     {% if r.behavior_flags %}
                                         {% set flags = r.behavior_flags %}
                                         {# Behavior flags are stored as JSON string in DB but Flask-MySQL might return it differently. #}
-                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">
                                             {% if r.distance_meters %}
                                                 <div style="margin-bottom: 2px;"><i class="fas fa-map-marker-alt"></i> {{ r.distance_meters | round }}m</div>
                                             {% endif %}
@@ -209,7 +209,7 @@
                                             </div>
                                         </div>
                                     {% else %}
-                                        <span style="color: var(--text-secondary); font-size: 0.75rem;">None</span>
+                                        <span style="color: var(--text-muted); font-size: 0.75rem;">None</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -265,7 +265,7 @@
                         
                         {% if start > 1 %}
                             <a href="{{ url_for('teacher.manage_marks', subject_id=selected_class.subject_id, section=selected_class.section, page=1, search=search, status_filter=status_filter) }}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">1</a>
-                            {% if start > 2 %}<span style="color: var(--text-secondary);">...</span>{% endif %}
+                            {% if start > 2 %}<span style="color: var(--text-muted);">...</span>{% endif %}
                         {% endif %}
 
                         {% for p in range(start, end + 1) %}
@@ -278,7 +278,7 @@
                         {% endfor %}
 
                         {% if end < total_pages %}
-                            {% if end < total_pages - 1 %}<span style="color: var(--text-secondary);">...</span>{% endif %}
+                            {% if end < total_pages - 1 %}<span style="color: var(--text-muted);">...</span>{% endif %}
                             <a href="{{ url_for('teacher.manage_marks', subject_id=selected_class.subject_id, section=selected_class.section, page=total_pages, search=search, status_filter=status_filter) }}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">{{ total_pages }}</a>
                         {% endif %}
                     </div>
@@ -290,7 +290,7 @@
                     </a>
     
                 </div>
-                <p style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem;">
+                <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem;">
                     Showing page {{ current_page }} of {{ total_pages }}
                 </p>
                 {% endif %}
@@ -298,22 +298,22 @@
 
             {% else %}
             <h2 class="mb-4">Manage Attendance Marks</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Select a class to manage and override attendance records for a specific subject and section.</p>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Select a class to manage and override attendance records for a specific subject and section.</p>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
                 {% for c in classes %}
-                <a href="{{ url_for('teacher.manage_marks', subject_id=c.subject_id, section=c.section) }}" class="glass-panel p-6" style="text-decoration: none; color: inherit; transition: all 0.3s ease; border-left: 4px solid var(--primary-color);">
+                <a href="{{ url_for('teacher.manage_marks', subject_id=c.subject_id, section=c.section) }}" class="glass-panel p-6" style="text-decoration: none; color: inherit; transition: all 0.3s ease; border-left: 4px solid var(--primary);">
                     <div class="flex justify-between items-center mb-4">
                         <span class="badge badge-warning" style="font-family: monospace;">{{ c.subject_code }}</span>
                         <span class="badge badge-success">Section {{ c.section }}</span>
                     </div>
-                    <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-primary);">{{ c.subject_name }}</h4>
-                    <div class="flex items-center" style="color: var(--primary-color); font-weight: 600; font-size: 0.9rem;">
+                    <h4 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main);">{{ c.subject_name }}</h4>
+                    <div class="flex items-center" style="color: var(--primary); font-weight: 600; font-size: 0.9rem;">
                         Manage Attendance Marks <i class="fas fa-chevron-right" style="margin-left: 0.5rem; font-size: 0.7rem;"></i>
                     </div>
                 </a>
                 {% else %}
-                <p style="color: var(--text-secondary);">No classes available.</p>
+                <p style="color: var(--text-muted);">No classes available.</p>
                 {% endfor %}
             </div>
             {% endif %}

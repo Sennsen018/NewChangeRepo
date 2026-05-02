@@ -10,7 +10,7 @@
         .monitoring-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
         .student-track-card { 
             padding: 1.5rem; border-radius: 16px; transition: all 0.3s ease; 
-            border: 1px solid var(--surface-border); background: var(--surface-color);
+            border: 1px solid var(--border-color); background: var(--bg-surface);
         }
         .status-pill { padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
         .status-present { background: rgba(16, 185, 129, 0.1); color: #10b981; }
@@ -27,42 +27,26 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h2 style="color: var(--primary-color);">Attendeez</h2>
-                <p style="font-size: 0.8rem; color: var(--text-secondary);">Faculty Portal</p>
+                <aside class="sidebar">
+            <div class="sidebar-logo"><i class="fas fa-fingerprint"></i><span>Attendeez</span></div>
+            <div class="nav-group">
+                <p class="nav-label">Academic</p>
+                <a href="{{ url_for('teacher.dashboard') }}" class="nav-item"><i class="fas fa-grid-2"></i> Dashboard</a>
+                <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item"><i class="fas fa-calendar-days"></i> My Schedule</a>
+                <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item active"><i class="fas fa-clipboard-check"></i> Attendance</a>
             </div>
-            
-            <a href="{{ url_for('teacher.dashboard') }}" class="nav-item">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
-            <a href="{{ url_for('teacher.profile') }}" class="nav-item">
-                <i class="fas fa-user"></i> My Profile
-            </a>
-            <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item">
-                <i class="fas fa-calendar-alt"></i> My Schedule
-            </a>
-            <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item">
-                <i class="fas fa-clipboard-check"></i> Manual Attendance
-            </a>
-            <a href="{{ url_for('teacher.manage_students') }}" class="nav-item">
-                <i class="fas fa-users"></i> Manage Students
-            </a>
-            <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item">
-                <i class="fas fa-check-circle"></i> Manage Marks
-            </a>
-            <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item">
-                <i class="fas fa-envelope-open-text"></i> Excuse Letters
-            </a>
-            <a href="{{ url_for('teacher.reports') }}" class="nav-item">
-                <i class="fas fa-chart-bar"></i> Reports
-            </a>
-            
-            <div style="margin-top: auto;">
-                <button onclick="endSessionManually()" class="btn btn-danger w-100">
-                    <i class="fas fa-stop-circle"></i> End Session
-                </button>
+            <div class="nav-group">
+                <p class="nav-label">Management</p>
+                <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users-viewfinder"></i> Students</a>
+                <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-pen-to-square"></i> Marks</a>
+                <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> Excuse Letters</a>
+                <a href="{{ url_for('teacher.reports') }}" class="nav-item"><i class="fas fa-chart-mixed"></i> Analytics</a>
             </div>
+            <div class="nav-group">
+                <p class="nav-label">Account</p>
+                <a href="{{ url_for('teacher.profile') }}" class="nav-item"><i class="fas fa-user-circle"></i> My Profile</a>
+            </div>
+            <div style="margin-top: auto;"><a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
         </aside>
 
         <!-- Main Content -->
@@ -70,19 +54,19 @@
             <header class="top-header">
                 <div class="header-left">
                     <h2 style="margin: 0;">Live Tracking: {{ session.subject_code }}</h2>
-                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">{{ session.subject_name }} · Section {{ session.section }}</p>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">{{ session.subject_name }} · Section {{ session.section }}</p>
                 </div>
 
                     <div class="text-center">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase;">Present</p>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0; text-transform: uppercase;">Present</p>
                         <h3 id="stat-present" style="margin: 0; color: #10b981;">0</h3>
                     </div>
                     <div class="text-center">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase;">Flagged</p>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0; text-transform: uppercase;">Flagged</p>
                         <h3 id="stat-flagged" style="margin: 0; color: #f43f5e;">0</h3>
                     </div>
                     <div class="text-center">
-                        <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0; text-transform: uppercase;">Total</p>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0; text-transform: uppercase;">Total</p>
                         <h3 id="stat-total" style="margin: 0;">0</h3>
                     </div>
                 </div>
@@ -92,8 +76,8 @@
                 <div id="monitoring-list" class="monitoring-grid">
                     <!-- Loaded via AJAX -->
                     <div style="grid-column: 1/-1; text-align: center; padding: 4rem;">
-                        <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
-                        <p style="margin-top: 1rem; color: var(--text-secondary);">Connecting to live stream...</p>
+                        <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+                        <p style="margin-top: 1rem; color: var(--text-muted);">Connecting to live stream...</p>
                     </div>
                 </div>
             </div>
@@ -139,13 +123,13 @@
                         <div class="flex justify-between items-start mb-3">
                             <div>
                                 <h4 style="margin: 0;">${s.last_name}, ${s.first_name} ${s.middle_name}</h4>
-                                <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">${s.usid}</p>
+                                <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;">${s.usid}</p>
                             </div>
                             <span class="status-pill ${s.status === 'Present' ? 'status-present' : (s.status === 'Flagged' ? 'critical-tag' : 'status-absent')}">
                                 ${s.status || 'Waiting...'}
                             </span>
                         </div>
-                        ${s.scan_time ? `<p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;"><i class="far fa-clock"></i> Scanned at ${new Date(s.scan_time).toLocaleTimeString()}</p>` : ''}
+                        ${s.scan_time ? `<p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;"><i class="far fa-clock"></i> Scanned at ${new Date(s.scan_time).toLocaleTimeString()}</p>` : ''}
                         <div class="flex flex-wrap gap-2">
                             ${warningsHtml}
                         </div>

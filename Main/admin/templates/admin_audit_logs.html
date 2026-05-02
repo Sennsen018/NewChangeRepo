@@ -153,7 +153,7 @@
                                     <td>
                                         <div style="display: flex; flex-direction: column;">
                                             <span style="font-weight: 600;">{{ log.performed_by_id }}</span>
-                                            <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">{{ log.performed_by_role }}</span>
+                                            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">{{ log.performed_by_role }}</span>
                                         </div>
                                     </td>
                                     <td>
@@ -164,7 +164,7 @@
                                     <td>
                                         <div style="display: flex; flex-direction: column;">
                                             <span style="font-family: monospace; font-size: 0.9rem;">{{ log.table_name }}</span>
-                                            <span style="font-size: 0.7rem; color: var(--text-secondary);">ID: {{ log.entity_id }}</span>
+                                            <span style="font-size: 0.7rem; color: var(--text-muted);">ID: {{ log.entity_id }}</span>
                                         </div>
                                     </td>
                                     <td style="max-width: 400px; font-size: 0.9rem;">{{ log.details }}</td>
@@ -193,7 +193,7 @@
                             
                             {% if start > 1 %}
                                 <a href="{{ url_for('admin.audit_logs', page=1, search=search, table_filter=table_filter, action_filter=action_filter) }}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">1</a>
-                                {% if start > 2 %}<span style="color: var(--text-secondary);">...</span>{% endif %}
+                                {% if start > 2 %}<span style="color: var(--text-muted);">...</span>{% endif %}
                             {% endif %}
 
                             {% for p in range(start, end + 1) %}
@@ -206,7 +206,7 @@
                             {% endfor %}
 
                             {% if end < total_pages %}
-                                {% if end < total_pages - 1 %}<span style="color: var(--text-secondary);">...</span>{% endif %}
+                                {% if end < total_pages - 1 %}<span style="color: var(--text-muted);">...</span>{% endif %}
                                 <a href="{{ url_for('admin.audit_logs', page=total_pages, search=search, table_filter=table_filter, action_filter=action_filter) }}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">{{ total_pages }}</a>
                             {% endif %}
                         </div>
@@ -217,7 +217,7 @@
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     </div>
-                    <p style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem;">
+                    <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem;">
                         Showing page {{ current_page }} of {{ total_pages }}
                     </p>
                     {% endif %}

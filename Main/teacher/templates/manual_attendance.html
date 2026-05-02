@@ -16,15 +16,15 @@
             display: block;
             padding: 1rem 1.25rem;
             border-radius: 12px;
-            border: 1px solid var(--surface-border);
-            background: var(--surface-color);
-            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
+            color: var(--text-main);
             text-decoration: none;
             transition: all 0.2s ease;
             cursor: pointer;
         }
-        .class-btn:hover  { border-color: var(--primary-color); transform: translateY(-2px); }
-        .class-btn.active { border-color: var(--primary-color); background: rgba(79,70,229,0.15); }
+        .class-btn:hover  { border-color: var(--primary); transform: translateY(-2px); }
+        .class-btn.active { border-color: var(--primary); background: rgba(79,70,229,0.15); }
 
         /* ---- Checklist table rows ---- */
         .student-row { transition: background 0.15s; }
@@ -34,7 +34,7 @@
         .check-cell input[type="checkbox"] {
             width: 20px; height: 20px;
             cursor: pointer;
-            accent-color: var(--secondary-color);
+            accent-color: var(--text-muted);
         }
 
         /* ---- Live counter bar ---- */
@@ -43,12 +43,12 @@
             padding: 0.75rem 1.25rem;
             background: rgba(255,255,255,0.04);
             border-radius: 10px;
-            border: 1px solid var(--surface-border);
+            border: 1px solid var(--border-color);
             margin-bottom: 1.25rem;
         }
         .counter-item { font-size: 1.1rem; font-weight: 600; }
-        .counter-total   { color: var(--text-secondary); }
-        .counter-present { color: var(--secondary-color); }
+        .counter-total   { color: var(--text-muted); }
+        .counter-present { color: var(--text-muted); }
         .counter-absent  { color: var(--danger-color); }
 
         /* ---- Progress bar inside counter ---- */
@@ -59,7 +59,7 @@
         }
         #progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, var(--secondary-color), #34d399);
+            background: linear-gradient(90deg, var(--text-muted), #34d399);
             border-radius: 99px;
             transition: width 0.25s ease;
         }
@@ -68,14 +68,14 @@
         .toggle-all-btn {
             padding: 0.35rem 0.9rem;
             border-radius: 8px;
-            border: 1px solid var(--surface-border);
+            border: 1px solid var(--border-color);
             background: transparent;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             cursor: pointer;
             font-size: 0.82rem;
             transition: all 0.2s;
         }
-        .toggle-all-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+        .toggle-all-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -181,7 +181,7 @@
 
         <!-- ---- Class selector ---- -->
         <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem;">
-            <h3 style="margin-bottom:1rem; font-size:1rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">
+            <h3 style="margin-bottom:1rem; font-size:1rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
                 Select a Class
             </h3>
             {% if classes %}
@@ -194,12 +194,12 @@
                         {{ c.subject_code }}
                     </span>
                     <div style="font-weight:600; margin-bottom:0.2rem;">{{ c.subject_name }}</div>
-                    <small style="color:var(--text-secondary);">Section {{ c.section }}</small>
+                    <small style="color:var(--text-muted);">Section {{ c.section }}</small>
                 </a>
                 {% endfor %}
             </div>
             {% else %}
-                <p style="color:var(--text-secondary);">No classes assigned yet. Ask your admin to assign you to a class.</p>
+                <p style="color:var(--text-muted);">No classes assigned yet. Ask your admin to assign you to a class.</p>
             {% endif %}
         </div>
 
@@ -211,7 +211,7 @@
                     {{ selected_class.subject_name }}
                     <span class="badge badge-success" style="margin-left:0.5rem;">Section {{ selected_section }}</span>
                 </h3>
-                <div style="font-size:0.85rem; color:var(--text-secondary);">
+                <div style="font-size:0.85rem; color:var(--text-muted);">
                     {{ now() if now is defined else '' }}
                     <!-- Display today's date next to the class name -->
                     Today: <strong id="today-date"></strong>
@@ -264,7 +264,7 @@
 
                 <!-- Table header with Select All / Deselect All controls -->
                 <div class="flex justify-between items-center" style="margin-bottom:0.5rem;">
-                    <div style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">
+                    <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
                         {{ students|length }} Student(s) Enrolled
                     </div>
                     <div style="display:flex; gap:0.5rem;">
@@ -310,7 +310,7 @@
                                 <td><span class="badge badge-primary">{{ s.usid }}</span></td>
                                 <td><strong>{{ s.last_name }}</strong>, {{ s.first_name }} {{ s.middle_name }}</td>
                                 <td>{{ s.level }}</td>
-                                <td style="font-size:0.85rem; color:var(--text-secondary);">{{ s.email }}</td>
+                                <td style="font-size:0.85rem; color:var(--text-muted);">{{ s.email }}</td>
 
                                 <!-- Live status badge — updates instantly when checkbox is toggled -->
                                 <td id="status-{{ s.usid }}">
@@ -340,7 +340,7 @@
 
             {% else %}
             <!-- No students enrolled in this class yet -->
-            <div style="text-align:center; padding:3rem 1rem; color:var(--text-secondary);">
+            <div style="text-align:center; padding:3rem 1rem; color:var(--text-muted);">
                 <i class="fas fa-user-slash" style="font-size:3rem; margin-bottom:1rem; display:block;"></i>
                 No students are enrolled in this class yet.
             </div>
@@ -349,14 +349,14 @@
 
         {% elif selected_subject_id %}
         <!-- Class was selected but no students found -->
-        <div class="glass-panel" style="padding:2rem; text-align:center; color:var(--text-secondary);">
+        <div class="glass-panel" style="padding:2rem; text-align:center; color:var(--text-muted);">
             <i class="fas fa-search" style="font-size:2rem; margin-bottom:0.75rem; display:block;"></i>
             No students found for the selected class.
         </div>
 
         {% else %}
         <!-- Default state — no class chosen yet -->
-        <div class="glass-panel" style="padding:2rem; text-align:center; color:var(--text-secondary);">
+        <div class="glass-panel" style="padding:2rem; text-align:center; color:var(--text-muted);">
             <i class="fas fa-arrow-up" style="font-size:2rem; margin-bottom:0.75rem; display:block;"></i>
             Select a class above to load the student checklist.
         </div>

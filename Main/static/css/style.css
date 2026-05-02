@@ -423,6 +423,107 @@ td {
     .main-content-inner { padding: 1rem; }
     .top-header { padding: 0 1rem; }
     .stats-grid { grid-template-columns: 1fr; }
+    .auth-card { padding: 1.5rem; }
+}
+
+/* =========================================
+   TABLE CONTAINER (overflow scroll)
+   ========================================= */
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Row hover */
+tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* =========================================
+   LOADING OVERLAY
+   ========================================= */
+#loading-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(9, 9, 11, 0.85);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1.5rem;
+    z-index: 9999;
+}
+
+.spinner-container {
+    position: relative;
+    width: 50px; height: 50px;
+}
+
+.spinner-ring {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: 3px solid transparent;
+    border-radius: 50%;
+}
+
+.spinner-ring:first-child {
+    border-top-color: var(--primary);
+    animation: spin 1s linear infinite;
+}
+
+.spinner-ring:last-child {
+    border-bottom-color: var(--accent);
+    animation: spin 1s linear infinite reverse;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
+
+/* =========================================
+   PAGINATION
+   ========================================= */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 1.5rem 0;
+}
+
+.pagination a, .pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.pagination a:hover {
+    background: var(--bg-surface-soft);
+    color: var(--text-main);
+}
+
+.pagination .active {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
 }
 
 /* =========================================
@@ -431,20 +532,33 @@ td {
 .hidden { display: none; }
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
 .items-center { align-items: center; }
+.items-start { align-items: flex-start; }
 .items-end { align-items: flex-end; }
 .justify-between { justify-content: space-between; }
 .justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
 .gap-2 { gap: 0.5rem; }
 .gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
 .mt-4 { margin-top: 1rem; }
 .mt-8 { margin-top: 2rem; }
+.mb-2 { margin-bottom: 0.5rem; }
 .mb-4 { margin-bottom: 1rem; }
 .mb-6 { margin-bottom: 1.5rem; }
 .mb-8 { margin-bottom: 2rem; }
+.mb-0 { margin-bottom: 0; }
+.pt-6 { padding-top: 1.5rem; }
 .w-full { width: 100%; }
 .text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+.text-center { text-align: center; }
 .text-muted { color: var(--text-muted); }
 .text-main { color: var(--text-main); }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
 .p-4 { padding: 1rem; }
 .p-6 { padding: 1.5rem; }
+.p-8 { padding: 2rem; }
+.p-12 { padding: 3rem; }

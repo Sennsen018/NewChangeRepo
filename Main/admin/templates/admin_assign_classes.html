@@ -10,40 +10,53 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h2 style="color: var(--primary-color);">Attendeez</h2>
-                <p style="font-size: 0.8rem; color: var(--text-secondary);">Admin Portal</p>
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-fingerprint"></i>
+                <span>Attendeez</span>
             </div>
             
-            <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
-            <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
-                <i class="fas fa-user-graduate"></i> Manage Students
-            </a>
-            <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item">
-                <i class="fas fa-chalkboard-teacher"></i> Manage Teachers
-            </a>
-            <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
-                <i class="fas fa-book"></i> Manage Subjects
-            </a>
-            <a href="{{ url_for('admin.assign_classes') }}" class="nav-item active">
-                <i class="fas fa-link"></i> Assign Classes
-            </a>
-            <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
-                <i class="fas fa-calendar-alt"></i> Manage Schedules
-            </a>
-            <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item">
-                <i class="fas fa-chart-line"></i> Attendance Analytics
-            </a>
-    
-            <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
-                <i class="fas fa-user-minus"></i> Drop Requests
-            </a>
+            <div class="nav-group">
+                <p class="nav-label">Core</p>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
+                    <i class="fas fa-grid-2"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
+                    <i class="fas fa-user-graduate"></i> Students
+                </a>
+                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item">
+                    <i class="fas fa-chalkboard-teacher"></i> Teachers
+                </a>
+                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
+                    <i class="fas fa-book"></i> Subjects
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <p class="nav-label">Operations</p>
+                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item active">
+                    <i class="fas fa-link"></i> Assign Classes
+                </a>
+                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
+                    <i class="fas fa-calendar-range"></i> Schedules
+                </a>
+                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <p class="nav-label">System</p>
+                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
+                    <i class="fas fa-user-minus"></i> Drop Requests
+                </a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item">
+                    <i class="fas fa-history"></i> Audit Logs
+                </a>
+            </div>
             
             <div style="margin-top: auto;">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </div>
@@ -53,22 +66,22 @@
         <main class="main-content">
             <header class="top-header">
                 <div class="header-left">
-                    <h2 style="margin: 0;">Assign Classes</h2>
+                    <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Assign Classes</h2>
                 </div>
 
                 <div class="user-menu-container">
                     <button class="burger-btn" onclick="toggleUserMenu()">
-                        <i class="fas fa-bars"></i>
+                        <i class="fas fa-ellipsis-v"></i>
                     </button>
                     <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--surface-border); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">{{ session.get('name', 'Admin') }}</p>
-                            <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">Administrator</p>
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
                         </div>
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
                             <i class="fas fa-key"></i> Change Password
                         </a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item logout">
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
                     </div>
@@ -76,7 +89,10 @@
             </header>
 
             <div class="main-content-inner">
-                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Link teachers to their specific subjects and sections.</p>
+                <div class="mb-8">
+                    <h1 class="auth-title">Class Assignments</h1>
+                    <p class="text-muted">Link teachers to their specific subjects and sections.</p>
+                </div>
             
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -88,10 +104,10 @@
                 {% endif %}
             {% endwith %}
             
-            <div class="glass-panel p-4 mb-4" style="padding: 1.5rem;">
-                <form method="POST" action="{{ url_for('admin.assign_classes') }}" class="flex gap-4 items-center">
+            <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+                <form method="POST" action="{{ url_for('admin.assign_classes') }}" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: end;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <div class="form-group w-100" style="margin-bottom: 0;">
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Select Teacher</label>
                         <select name="utid" class="form-control" required>
                             <option value="">-- Choose Teacher --</option>
@@ -100,7 +116,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="form-group w-100" style="margin-bottom: 0;">
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Select Subject</label>
                         <select name="subject_id" class="form-control" required>
                             <option value="">-- Choose Subject --</option>
@@ -109,40 +125,36 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="form-group w-100" style="margin-bottom: 0;">
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Section</label>
                         <input type="text" name="section" class="form-control" placeholder="e.g. A" required>
                     </div>
-                    <div style="margin-top: 1.5rem;">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Assign</button>
+                    <div>
+                        <button type="submit" class="btn btn-primary" style="height: 42px;"><i class="fas fa-plus"></i> Assign</button>
                     </div>
                 </form>
             </div>
 
             <!-- Search Bar -->
-            <div class="glass-panel p-4 mb-4" style="border-radius: 15px;">
-                <form method="GET" action="{{ url_for('admin.assign_classes') }}" style="display: flex; gap: 1rem; align-items: flex-end;">
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Search Assignments</label>
-                        <div style="position: relative;">
-                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                            <input type="text" name="search" class="form-control" placeholder="Search by Code, Subject, Teacher or Section..." value="{{ search }}" style="padding-left: 2.5rem;">
-                        </div>
+            <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+                <form method="GET" action="{{ url_for('admin.assign_classes') }}" style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Search Assignments</label>
+                        <input type="text" name="search" class="form-control" placeholder="Code, Subject, Teacher or Section..." value="{{ search }}">
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button type="submit" class="btn btn-primary" style="height: 42px;">
-                            <i class="fas fa-filter mr-1"></i> Apply
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn btn-primary" style="height: 42px; width: 42px; padding: 0;">
+                            <i class="fas fa-search"></i>
                         </button>
-                        <a href="{{ url_for('admin.assign_classes', clear=1) }}" class="btn btn-secondary" style="height: 42px; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Clear All Filters">
-                            <i class="fas fa-sync-alt"></i>
+                        <a href="{{ url_for('admin.assign_classes', clear=1) }}" class="btn btn-secondary" style="height: 42px; width: 42px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-rotate"></i>
                         </a>
-    
                     </div>
                 </form>
             </div>
             
 
-            <div class="glass-panel p-4" style="padding: 1.5rem;">
+            <div class="glass-panel" style="padding: 1.5rem;">
                 <div class="table-container">
                     <table>
                         <thead>
@@ -163,8 +175,7 @@
                                 <td>{{ a.section }}</td>
                                 <td>
                                     <a href="{{ url_for('admin.remove_assignment', assignment_id=a.assignment_id) }}" 
-                                       class="btn btn-danger" 
-                                       style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                       class="btn btn-danger btn-sm"
                                        onclick="return confirm('Are you sure to remove the subject to the assigned teacher?')">
                                         <i class="fas fa-trash"></i> Remove
                                     </a>
@@ -172,7 +183,7 @@
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="5" class="text-center">No classes assigned yet.</td>
+                                <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">No classes assigned yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

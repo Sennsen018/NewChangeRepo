@@ -9,57 +9,48 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar glass-panel" style="border-radius: 0; border-left: none; border-top: none; border-bottom: none;">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h2 style="color: var(--primary-color);">Attendeez</h2>
-                <p style="font-size: 0.8rem; color: var(--text-secondary);">Admin Portal</p>
+        <aside class="sidebar">
+            <div class="sidebar-logo"><i class="fas fa-fingerprint"></i><span>Attendeez</span></div>
+            <div class="nav-group">
+                <p class="nav-label">Core</p>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-grid-2"></i> Dashboard</a>
+                <a href="{{ url_for('admin.manage_students') }}" class="nav-item"><i class="fas fa-user-graduate"></i> Students</a>
+                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i> Teachers</a>
+                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item"><i class="fas fa-book"></i> Subjects</a>
             </div>
-            
-            <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
-            <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
-                <i class="fas fa-user-graduate"></i> Manage Students
-            </a>
-            <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item">
-                <i class="fas fa-chalkboard-teacher"></i> Manage Teachers
-            </a>
-            <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
-                <i class="fas fa-book"></i> Manage Subjects
-            </a>
-            <a href="{{ url_for('admin.assign_classes') }}" class="nav-item">
-                <i class="fas fa-link"></i> Assign Classes
-            </a>
-            <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
-                <i class="fas fa-calendar-alt"></i> Manage Schedules
-            </a>
-            <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item active">
-                <i class="fas fa-chart-line"></i> Attendance Analytics
-            </a>
-            <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
-                <i class="fas fa-user-minus"></i> Drop Requests
-            </a>
-            <a href="{{ url_for('admin.audit_logs') }}" class="nav-item">
-                <i class="fas fa-history"></i> Audit Logs
-            </a>
-            
-            <div style="margin-top: auto;">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100" style="color:white; text-decoration:none;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+            <div class="nav-group">
+                <p class="nav-label">Operations</p>
+                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item"><i class="fas fa-link"></i> Assign Classes</a>
+                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item"><i class="fas fa-calendar-range"></i> Schedules</a>
+                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item active"><i class="fas fa-chart-line"></i> Analytics</a>
             </div>
+            <div class="nav-group">
+                <p class="nav-label">System</p>
+                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item"><i class="fas fa-user-minus"></i> Drop Requests</a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item"><i class="fas fa-history"></i> Audit Logs</a>
+            </div>
+            <div style="margin-top: auto;"><a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
         </aside>
-
-        <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
-                <div class="header-left">
-                    <h2 style="margin: 0;">Attendance Analytics</h2>
+                <div class="header-left"><h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Analytics</h2></div>
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-ellipsis-v"></i></button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item"><i class="fas fa-key"></i> Change Password</a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
                 </div>
             </header>
-
             <div class="main-content-inner">
+                <div class="mb-8">
+                    <h1 class="auth-title">Attendance Analytics</h1>
+                    <p class="text-muted">View weekly and monthly attendance trends by class.</p>
+                </div>
                 
                 <!-- Class Selector -->
                 <div class="glass-panel p-6 mb-6">
@@ -68,10 +59,10 @@
                         {% for c in all_classes %}
                         <a href="{{ url_for('admin.attendance_analytics', subject_id=c.subject_id, utid=c.utid, section=c.section) }}" 
                            class="glass-panel p-4 {% if selected_class and selected_class.subject_id == c.subject_id and selected_class.utid == c.utid and selected_class.section == c.section %}active-class-box{% endif %}"
-                           style="text-decoration: none; color: inherit; transition: all 0.2s; border-left: 4px solid var(--primary-color);">
+                           style="text-decoration: none; color: inherit; transition: all 0.2s; border-left: 4px solid var(--primary);">
                             <div class="badge badge-warning mb-2">{{ c.subject_code }}</div>
                             <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;">{{ c.subject_name }}</div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Prof. {{ c.last_name }}, {{ c.first_name }}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">Prof. {{ c.last_name }}, {{ c.first_name }}</div>
                             <div style="font-size: 0.8rem; margin-top: 0.5rem;"><span class="badge">Section {{ c.section }}</span></div>
                         </a>
                         {% endfor %}
@@ -82,7 +73,7 @@
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 style="margin: 0;">{{ selected_class.subject_name }}</h2>
-                        <p style="color: var(--text-secondary);">Analytical trends for <strong>Prof. {{ selected_class.first_name }} {{ selected_class.last_name }}</strong> (Section {{ selected_class.section }})</p>
+                        <p style="color: var(--text-muted);">Analytical trends for <strong>Prof. {{ selected_class.first_name }} {{ selected_class.last_name }}</strong> (Section {{ selected_class.section }})</p>
                     </div>
                 </div>
 
@@ -105,7 +96,7 @@
                                     <tr>
                                         <td>
                                             <div style="font-weight: 600;">{{ row.period }}</div>
-                                            <small style="color: var(--text-secondary);">{{ row.week_start.strftime('%b %d') if row.week_start else '' }} - {{ row.week_end.strftime('%b %d, %Y') if row.week_end else '' }}</small>
+                                            <small style="color: var(--text-muted);">{{ row.week_start.strftime('%b %d') if row.week_start else '' }} - {{ row.week_end.strftime('%b %d, %Y') if row.week_end else '' }}</small>
                                         </td>
                                         <td class="text-center" style="color: #10b981; font-weight: 600;">{{ row.present_count }}</td>
                                         <td class="text-center" style="color: #ef4444; font-weight: 600;">{{ row.absent_count }}</td>
@@ -149,7 +140,7 @@
                     </div>
                 </div>
                 {% else %}
-                <div class="glass-panel p-12 text-center" style="color: var(--text-secondary);">
+                <div class="glass-panel p-12 text-center" style="color: var(--text-muted);">
                     <i class="fas fa-chart-bar fa-3x mb-4" style="opacity: 0.2;"></i>
                     <p>Select a class above to view detailed attendance analytics.</p>
                 </div>
@@ -162,11 +153,11 @@
     <style>
         .active-class-box {
             background: rgba(79, 70, 229, 0.1) !important;
-            border-color: var(--primary-color) !important;
+            border-color: var(--primary) !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        .text-primary { color: var(--primary-color); }
-        .text-secondary { color: var(--secondary-color); }
+        .text-primary { color: var(--primary); }
+        .text-secondary { color: var(--text-muted); }
         .text-center { text-align: center; }
     </style>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

@@ -1136,7 +1136,7 @@ def bulk_enroll():
             query += " AND course = %s"
             params.append(course_filter)
             
-        query += " ORDER BY RAND() LIMIT %s"
+        query += " ORDER BY RANDOM() LIMIT %s"
         params.append(count)
         
         cursor.execute(query, tuple(params))
@@ -1278,13 +1278,13 @@ def attendance_analytics():
         if selected_class:
             # Weekly Trends
             cursor.execute("""
-                SELECT CONCAT('Week ', CEIL(DAY(a.scan_time) / 7), ' - ', MONTHNAME(a.scan_time), ' ', YEAR(a.scan_time)) as period,
-                       YEAR(a.scan_time) as yr,
-                       MONTH(a.scan_time) as mo,
-                       CEIL(DAY(a.scan_time) / 7) as wk,
-                       MIN(DATE(a.scan_time)) as week_start,
-                       MAX(DATE(a.scan_time)) as week_end,
-                       COUNT(DISTINCT a.usid, DATE(a.scan_time)) as total_students,
+                SELECT CONCAT('Week ', CEIL(EXTRACT(DAY FROM a.scan_time) / 7), ' - ', TO_CHAR(a.scan_time, 'Month'), ' ', EXTRACT(YEAR FROM a.scan_time)) as period,
+                       EXTRACT(YEAR FROM a.scan_time) as yr,
+                       EXTRACT(MONTH FROM a.scan_time) as mo,
+                       CEIL(EXTRACT(DAY FROM a.scan_time) / 7) as wk,
+                       MIN(a.scan_time::date) as week_start,
+                       MAX(a.scan_time::date) as week_end,
+                       COUNT(DISTINCT (a.usid, a.scan_time::date)) as total_students,
                        SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count,
                        SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) as absent_count,
                        SUM(CASE WHEN a.status = 'Late' THEN 1 ELSE 0 END) as late_count
@@ -1298,10 +1298,10 @@ def attendance_analytics():
             
             # Monthly Trends
             cursor.execute("""
-                SELECT CONCAT(MONTHNAME(a.scan_time), ' ', YEAR(a.scan_time)) as period,
-                       YEAR(a.scan_time) as yr,
-                       MONTH(a.scan_time) as mo,
-                       COUNT(DISTINCT a.usid, DATE(a.scan_time)) as total_students,
+                SELECT CONCAT(TO_CHAR(a.scan_time, 'Month'), ' ', EXTRACT(YEAR FROM a.scan_time)) as period,
+                       EXTRACT(YEAR FROM a.scan_time) as yr,
+                       EXTRACT(MONTH FROM a.scan_time) as mo,
+                       COUNT(DISTINCT (a.usid, a.scan_time::date)) as total_students,
                        SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count,
                        SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) as absent_count,
                        SUM(CASE WHEN a.status = 'Late' THEN 1 ELSE 0 END) as late_count

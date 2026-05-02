@@ -47,7 +47,7 @@ def dashboard():
             SELECT a.status, COUNT(*) as count 
             FROM Attendance a
             JOIN Sessions s ON a.session_id = s.session_id
-            WHERE s.utid = %s AND s.subject_id = %s AND s.section = %s AND DATE(a.scan_time) = CURRENT_DATE
+            WHERE s.utid = %s AND s.subject_id = %s AND s.section = %s AND a.scan_time::date = CURRENT_DATE
             GROUP BY a.status
         """, (utid, c['subject_id'], c['section']))
         stats = {row['status']: row['count'] for row in cursor.fetchall()}
@@ -393,7 +393,7 @@ def reports():
                     FROM Attendance a2
                     JOIN Sessions ses2 ON a2.session_id = ses2.session_id
                     WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
-                    GROUP BY DATE(a2.scan_time), a2.usid
+                    GROUP BY a2.scan_time::date, a2.usid
                 )
             WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
             GROUP BY s.usid
@@ -409,14 +409,14 @@ def reports():
 
             # Daily Report: Raw Logs
             query_daily = """
-            SELECT DATE(a.scan_time) as date, s.first_name, s.middle_name, s.last_name, a.status, a.is_valid
+            SELECT a.scan_time::date as date, s.first_name, s.middle_name, s.last_name, a.status, a.is_valid
             FROM Attendance a
             JOIN (
                 SELECT MAX(a2.attendance_id) as max_id
                 FROM Attendance a2
                 JOIN Sessions ses2 ON a2.session_id = ses2.session_id
                 WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
-                GROUP BY DATE(a2.scan_time), a2.usid
+                GROUP BY a2.scan_time::date, a2.usid
             ) max_a ON a.attendance_id = max_a.max_id
             JOIN Students s ON a.usid = s.usid
             ORDER BY date DESC, s.last_name ASC, s.first_name ASC
@@ -430,7 +430,7 @@ def reports():
 
             # Daily Trends
             cursor.execute("""
-                SELECT DATE(a.scan_time) as period,
+                SELECT a.scan_time::date as period,
                        COUNT(a.attendance_id) as total_scans,
                        SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count,
                        SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) as absent_count,
@@ -442,9 +442,9 @@ def reports():
                     FROM Attendance a2
                     JOIN Sessions ses2 ON a2.session_id = ses2.session_id
                     WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
-                    GROUP BY DATE(a2.scan_time), a2.usid
+                    GROUP BY a2.scan_time::date, a2.usid
                 ) max_a ON a.attendance_id = max_a.max_id
-                GROUP BY DATE(a.scan_time)
+                GROUP BY a.scan_time::date
                 ORDER BY period DESC
             """, (utid, subject_id, section))
             daily_trends = cursor.fetchall()
@@ -455,8 +455,8 @@ def reports():
                        EXTRACT(YEAR FROM a.scan_time) as yr,
                        EXTRACT(MONTH FROM a.scan_time) as mo,
                        CEIL(EXTRACT(DAY FROM a.scan_time) / 7) as wk,
-                       MIN(DATE(a.scan_time)) as week_start,
-                       MAX(DATE(a.scan_time)) as week_end,
+                       MIN(a.scan_time::date) as week_start,
+                       MAX(a.scan_time::date) as week_end,
                        COUNT(a.attendance_id) as total_scans,
                        SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count,
                        SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) as absent_count,
@@ -468,7 +468,7 @@ def reports():
                     FROM Attendance a2
                     JOIN Sessions ses2 ON a2.session_id = ses2.session_id
                     WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
-                    GROUP BY DATE(a2.scan_time), a2.usid
+                    GROUP BY a2.scan_time::date, a2.usid
                 ) max_a ON a.attendance_id = max_a.max_id
                 GROUP BY EXTRACT(YEAR FROM a.scan_time), EXTRACT(MONTH FROM a.scan_time), CEIL(EXTRACT(DAY FROM a.scan_time) / 7), period
                 ORDER BY yr ASC, mo ASC, wk ASC
@@ -496,7 +496,7 @@ def reports():
                     FROM Attendance a2
                     JOIN Sessions ses2 ON a2.session_id = ses2.session_id
                     WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
-                    GROUP BY DATE(a2.scan_time), a2.usid
+                    GROUP BY a2.scan_time::date, a2.usid
                 ) max_a ON a.attendance_id = max_a.max_id
                 GROUP BY EXTRACT(YEAR FROM a.scan_time), EXTRACT(MONTH FROM a.scan_time), period
                 ORDER BY yr ASC, mo ASC
@@ -513,7 +513,7 @@ def reports():
                     FROM Attendance a2
                     JOIN Sessions ses2 ON a2.session_id = ses2.session_id
                     WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
-                    GROUP BY DATE(a2.scan_time), a2.usid
+                    GROUP BY a2.scan_time::date, a2.usid
                 ) max_a ON a.attendance_id = max_a.max_id
                 GROUP BY a.status
             """, (utid, subject_id, section))
@@ -567,7 +567,7 @@ def submit_report():
             FROM Attendance a2
             JOIN Sessions ses2 ON a2.session_id = ses2.session_id
             WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
-            GROUP BY DATE(a2.scan_time), a2.usid
+            GROUP BY a2.scan_time::date, a2.usid
         )
     WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
     GROUP BY s.usid
@@ -622,7 +622,7 @@ def delete_daily_attendance():
             SELECT a.attendance_id, a.status 
             FROM Attendance a
             JOIN Sessions ses ON a.session_id = ses.session_id
-            WHERE ses.utid = %s AND ses.subject_id = %s AND ses.section = %s AND DATE(a.scan_time) = %s
+            WHERE ses.utid = %s AND ses.subject_id = %s AND ses.section = %s AND a.scan_time::date = %s
         """, (utid, subject_id, section, date_str))
         records_to_delete = cursor.fetchall()
         
@@ -630,7 +630,7 @@ def delete_daily_attendance():
             cursor.execute("""
                 DELETE FROM Attendance a
                 USING Sessions ses
-                WHERE a.session_id = ses.session_id AND ses.utid = %s AND ses.subject_id = %s AND ses.section = %s AND DATE(a.scan_time) = %s
+                WHERE a.session_id = ses.session_id AND ses.utid = %s AND ses.subject_id = %s AND ses.section = %s AND a.scan_time::date = %s
             """, (utid, subject_id, section, date_str))
             
             for rec in records_to_delete:
@@ -715,7 +715,7 @@ def manage_marks():
                 FROM Attendance a2
                 JOIN Sessions ses2 ON a2.session_id = ses2.session_id
                 WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
-                GROUP BY DATE(a2.scan_time), a2.usid
+                GROUP BY a2.scan_time::date, a2.usid
             """
             
             # Base query
@@ -745,7 +745,7 @@ def manage_marks():
 
             # Select data
             select_query = "SELECT a.attendance_id, s.first_name, s.middle_name, s.last_name, s.usid, sub.subject_name, a.scan_time, a.status, a.is_valid, a.remarks, a.behavior_flags, a.distance_meters " + query
-            select_query += " ORDER BY DATE(a.scan_time) DESC, s.last_name ASC, s.first_name ASC LIMIT %s OFFSET %s"
+            select_query += " ORDER BY a.scan_time::date DESC, s.last_name ASC, s.first_name ASC LIMIT %s OFFSET %s"
             params.extend([per_page, offset])
 
             cursor.execute(select_query, params)

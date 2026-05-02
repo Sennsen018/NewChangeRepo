@@ -32,8 +32,13 @@ def dashboard():
     
     # For each class, get some stats for the cards
     for c in classes:
-        # Get count of enrolled students
-        cursor.execute("SELECT COUNT(*) as count FROM Enrollments WHERE subject_id = %s AND section = %s", (c['subject_id'], c['section']))
+        # Get count of enrolled students (Only Active ones)
+        cursor.execute("""
+            SELECT COUNT(*) as count 
+            FROM Enrollments e
+            JOIN Students s ON e.uSID = s.uSID
+            WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
+        """, (c['subject_id'], c['section']))
         c['student_count'] = cursor.fetchone()['count']
         
         # Get today's attendance summary for this specific class
@@ -161,8 +166,9 @@ def end_session():
             INSERT INTO Attendance (session_id, uSID, scan_time, status, remarks, is_valid)
             SELECT %s, e.uSID, NOW(), 'Absent', 'Auto-marked: Session ended', 'Valid'
             FROM Enrollments e
+            JOIN Students s ON e.uSID = s.uSID
             LEFT JOIN Attendance a ON e.uSID = a.uSID AND a.session_id = %s
-            WHERE e.subject_id = %s AND e.section = %s AND a.attendance_id IS NULL
+            WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active' AND a.attendance_id IS NULL
         """, (session_id, session_id, ses['subject_id'], ses['section']))
         
         conn.commit()
@@ -205,7 +211,7 @@ def get_session_stats(session_id):
         JOIN Enrollments e ON ses.subject_id = e.subject_id AND ses.section = e.section
         JOIN Students s ON e.uSID = s.uSID
         LEFT JOIN Attendance a ON s.uSID = a.uSID AND a.session_id = ses.session_id
-        WHERE ses.session_id = %s
+        WHERE ses.session_id = %s AND s.status = 'Active'
         ORDER BY s.last_name, s.first_name
     """, (session_id,))
     students = cursor.fetchall()
@@ -314,7 +320,7 @@ def manage_students():
                 SELECT s.* 
                 FROM Students s
                 JOIN Enrollments e ON s.uSID = e.uSID
-                WHERE e.subject_id = %s AND e.section = %s
+                WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
             """
             params = [subject_id, section]
             
@@ -388,7 +394,7 @@ def reports():
                     WHERE ses2.uTID = %s AND ses2.subject_id = %s AND ses2.section = %s
                     GROUP BY DATE(a2.scan_time), a2.uSID
                 )
-            WHERE e.subject_id = %s AND e.section = %s
+            WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
             GROUP BY s.uSID
             """
             cursor.execute(query_summary, (uTID, subject_id, section, subject_id, section))
@@ -562,7 +568,7 @@ def submit_report():
             WHERE ses2.uTID = %s AND ses2.subject_id = %s AND ses2.section = %s
             GROUP BY DATE(a2.scan_time), a2.uSID
         )
-    WHERE e.subject_id = %s AND e.section = %s
+    WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
     GROUP BY s.uSID
     """
     cursor.execute(query_summary, (uTID, subject_id, section, subject_id, section))
@@ -718,7 +724,7 @@ def manage_marks():
             JOIN Students s ON a.uSID = s.uSID
             JOIN Sessions ses ON a.session_id = ses.session_id
             JOIN Subjects sub ON ses.subject_id = sub.subject_id
-            WHERE 1=1
+            WHERE s.status = 'Active'
             """
             params = [uTID, subject_id, section]
 

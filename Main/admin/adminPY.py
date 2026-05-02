@@ -1067,10 +1067,19 @@ def approve_drop(request_id):
     req = cursor.fetchone()
     
     if req:
+        # 1. Update drop request status
         cursor.execute("UPDATE Drop_Requests SET status = 'Approved' WHERE request_id = %s", (request_id,))
+        
+        # 2. Find the section if possible (or just remove by uSID and subject_id)
+        # Assuming we want to remove them from the specific subject they dropped
+        cursor.execute("DELETE FROM Enrollments WHERE uSID = %s AND subject_id = %s", (req['uSID'], req['subject_id']))
+        
+        # 3. Optional: Global Archive (Keeping it as per previous logic, but usually a drop is per subject)
+        # If the user wants the student to be 'Archived' globally, we keep this.
         cursor.execute("UPDATE Students SET status = 'Archived' WHERE uSID = %s", (req['uSID'],))
+        
         conn.commit()
-        flash('Drop request approved and student archived.', 'success')
+        flash('Drop request approved. Student has been unenrolled from the subject and archived.', 'success')
     
     cursor.close()
     conn.close()

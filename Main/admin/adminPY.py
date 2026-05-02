@@ -870,8 +870,9 @@ def manage_schedules():
                 cursor.execute("""
                     INSERT INTO schedule (subject_id, utid, section, day_of_week, start_time, end_time, room)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    RETURNING schedule_id
                 """, (ta['subject_id'], ta['utid'], ta['section'], day, start, end, room))
-                schedule_id = cursor.lastrowid
+                schedule_id = cursor.fetchone()['schedule_id']
                 
                 # Audit Logging
                 log_system_action(cursor, 'schedule', schedule_id, 'Create', session['user_id'], session['role'], f"Schedule created for {ta['subject_id']} - {ta['section']} on {day} ({start}-{end})")

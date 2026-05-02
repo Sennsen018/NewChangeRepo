@@ -1,1 +1,1 @@
-#GUMAGANA
+print("gumagana")

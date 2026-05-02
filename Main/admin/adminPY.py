@@ -219,7 +219,7 @@ def manage_students():
     status_param = request.args.get('status_filter')
     if status_param is not None:
         session['students_status'] = status_param.strip()
-    status_filter = session.get('students_status', 'Active')
+    status_filter = session.get('students_status', 'All')
     
     # Base query for students
     
@@ -501,7 +501,7 @@ def manage_teachers():
     status_param = request.args.get('status_filter')
     if status_param is not None:
         session['teachers_status'] = status_param.strip()
-    status_filter = session.get('teachers_status', 'Active')
+    status_filter = session.get('teachers_status', 'All')
     
     # Base query for teachers
     
@@ -802,7 +802,7 @@ def enroll_student():
             
             conn.commit()
             flash('Student successfully enrolled in the subject.', 'success')
-            
+        
     except Exception as e:
         flash(f'Error enrolling student: {str(e)}', 'error')
     finally:
@@ -945,6 +945,10 @@ def archive_student(uSID):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE Students SET status = 'Archived' WHERE uSID = %s", (uSID,))
+    
+    # Audit Logging
+    log_system_action(cursor, 'Students', uSID, 'Update', session['user_id'], session['role'], f"Student archived: {uSID}")
+    
     conn.commit()
     cursor.close()
     conn.close()
@@ -956,6 +960,10 @@ def unarchive_student(uSID):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE Students SET status = 'Active' WHERE uSID = %s", (uSID,))
+    
+    # Audit Logging
+    log_system_action(cursor, 'Students', uSID, 'Update', session['user_id'], session['role'], f"Student unarchived: {uSID}")
+    
     conn.commit()
     cursor.close()
     conn.close()
@@ -967,6 +975,10 @@ def archive_teacher(uTID):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE Teachers SET status = 'Archived' WHERE uTID = %s", (uTID,))
+    
+    # Audit Logging
+    log_system_action(cursor, 'Teachers', uTID, 'Update', session['user_id'], session['role'], f"Teacher archived: {uTID}")
+    
     conn.commit()
     cursor.close()
     conn.close()
@@ -978,6 +990,10 @@ def unarchive_teacher(uTID):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE Teachers SET status = 'Active' WHERE uTID = %s", (uTID,))
+    
+    # Audit Logging
+    log_system_action(cursor, 'Teachers', uTID, 'Update', session['user_id'], session['role'], f"Teacher unarchived: {uTID}")
+    
     conn.commit()
     cursor.close()
     conn.close()

@@ -307,8 +307,14 @@
                                                     onclick="openEditModal('{{ estudent.uSID }}', '{{ estudent.first_name }}', '{{ estudent.middle_name }}', '{{ estudent.last_name }}', '{{ estudent.email }}', '{{ estudent.course }}', '{{ estudent.level }}', '{{ estudent.section }}', '{{ estudent.status }}')">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
-                                            <a href="{{ url_for('admin.remove_enrollment', enrollment_id=estudent.enrollment_id if estudent.enrollment_id else 0) }}" 
+                                            <a href="{{ url_for('admin.archive_student', uSID=estudent.uSID) }}" 
                                                class="btn btn-warning" 
+                                               style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                               onclick="return confirm('Are you sure you want to archive this student?')">
+                                                <i class="fas fa-archive"></i> Archive
+                                            </a>
+                                            <a href="{{ url_for('admin.remove_enrollment', enrollment_id=estudent.enrollment_id if estudent.enrollment_id else 0) }}" 
+                                               class="btn btn-secondary" 
                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                                onclick="return confirm('Remove this student from this subject?')">
                                                 <i class="fas fa-user-minus"></i> Unenroll

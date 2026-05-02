@@ -128,6 +128,14 @@ body {
     background: #dc2626;
 }
 
+.btn-warning {
+    background: var(--warning-color);
+    color: white;
+}
+.btn-warning:hover {
+    background: #d97706;
+}
+
 .btn-success {
     background: var(--success-color);
     color: white;

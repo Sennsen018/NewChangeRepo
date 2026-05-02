@@ -114,7 +114,7 @@ def subject_performance(subject_id):
     """, (usid,))
     subjects = cursor.fetchall()
     
-    cursor.execute("SELECT * FROM Notifications WHERE usid = %s AND is_read = 0", (usid,))
+    cursor.execute("SELECT * FROM Notifications WHERE usid = %s AND is_read = FALSE", (usid,))
     unread_count = len(cursor.fetchall())
     
     cursor.close()
@@ -262,7 +262,7 @@ def submit_attendance():
             SELECT a.attendance_id 
             FROM Attendance a
             JOIN Sessions s ON a.session_id = s.session_id
-            WHERE a.usid = %s AND s.subject_id = %s AND DATE(a.scan_time) = CURRENT_DATE
+            WHERE a.usid = %s AND s.subject_id = %s AND a.scan_time::date = CURRENT_DATE
         """, (usid, ses['subject_id']))
         if cursor.fetchone():
             return jsonify({'success': False, 'message': 'Attendance already recorded for this subject today.'})
@@ -339,8 +339,12 @@ def timetable():
     for item in schedule_raw:
         # Helper to convert time/timedelta to row index
         def get_row_index(t):
-            # MySQL TIME columns return timedelta objects
-            total_seconds = t.total_seconds() if hasattr(t, 'total_seconds') else (t.hour * 3600 + t.minute * 60)
+            # Postgres TIME columns return datetime.time objects
+            if hasattr(t, 'total_seconds'): # MySQL compatibility
+                total_seconds = t.total_seconds()
+            else:
+                total_seconds = (t.hour * 3600 + t.minute * 60 + t.second)
+            
             hours = int(total_seconds // 3600)
             minutes = int((total_seconds // 60) % 60)
             # Row index calculation: 7am is row 2. 30min intervals.
@@ -586,7 +590,7 @@ def submit_excuse():
     """, (usid,))
     subjects = cursor.fetchall()
     
-    cursor.execute("SELECT COUNT(*) as count FROM Notifications WHERE usid = %s AND is_read = 0", (usid,))
+    cursor.execute("SELECT COUNT(*) as count FROM Notifications WHERE usid = %s AND is_read = FALSE", (usid,))
     unread_count = cursor.fetchone()['count']
     
     cursor.close()

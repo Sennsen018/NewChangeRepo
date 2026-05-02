@@ -907,7 +907,7 @@ def manual_attendance():
             SELECT COUNT(*) as count 
             FROM Sessions 
             WHERE utid = %s AND subject_id = %s AND section = %s 
-              AND DATE(start_time) = CURRENT_DATE
+              AND start_time::date = CURRENT_DATE
         """, (utid, selected_subject_id, selected_section))
         already_recorded = cursor.fetchone()['count'] > 0
 
@@ -960,7 +960,7 @@ def submit_manual_attendance():
             SELECT COUNT(*) as count 
             FROM Sessions 
             WHERE utid = %s AND subject_id = %s AND section = %s 
-              AND DATE(start_time) = CURRENT_DATE
+              AND start_time::date = CURRENT_DATE
         """, (utid, subject_id, section))
         
         if cursor.fetchone()['count'] > 0:
@@ -1112,7 +1112,15 @@ def my_schedule():
     FROM schedule sch
     JOIN Subjects s ON sch.subject_id = s.subject_id
     WHERE sch.utid = %s
-    ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'), start_time
+    ORDER BY CASE day_of_week
+        WHEN 'Monday' THEN 1
+        WHEN 'Tuesday' THEN 2
+        WHEN 'Wednesday' THEN 3
+        WHEN 'Thursday' THEN 4
+        WHEN 'Friday' THEN 5
+        WHEN 'Saturday' THEN 6
+        WHEN 'Sunday' THEN 7
+    END, start_time
     """
     cursor.execute(query, (utid,))
     schedule_raw = cursor.fetchall()
@@ -1125,8 +1133,12 @@ def my_schedule():
     for item in schedule_raw:
         # Helper to convert time/timedelta to row index
         def get_row_index(t):
-            # MySQL TIME columns return timedelta objects
-            total_seconds = t.total_seconds() if hasattr(t, 'total_seconds') else (t.hour * 3600 + t.minute * 60)
+            # Postgres TIME columns return datetime.time objects
+            if hasattr(t, 'total_seconds'): # MySQL compatibility
+                total_seconds = t.total_seconds()
+            else:
+                total_seconds = (t.hour * 3600 + t.minute * 60 + t.second)
+            
             hours = int(total_seconds // 3600)
             minutes = int((total_seconds // 60) % 60)
             # Row index calculation: 7am is row 2. 30min intervals.

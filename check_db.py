@@ -1,20 +1,39 @@
-import mysql.connector
-from Main.__init__ import db_config
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def check_schema():
     try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
+        conn = psycopg2.connect(
+            host=os.getenv('DB_HOST'),
+            database=os.getenv('DB_NAME'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD'),
+            port=os.getenv('DB_PORT', '5432')
+        )
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        print("Schema for Submitted_Reports:")
-        cursor.execute("DESCRIBE Submitted_Reports")
+        print("Checking tables in database...")
+        cursor.execute("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public'
+        """)
+        for row in cursor.fetchall():
+            print(f"Table: {row['table_name']}")
+            
+        print("\nSchema for Submitted_Reports:")
+        cursor.execute("""
+            SELECT column_name, data_type, is_nullable
+            FROM information_schema.columns
+            WHERE table_name = 'submitted_reports'
+        """)
         for row in cursor.fetchall():
             print(row)
             
-        print("\nChecking for any potentially broken pages...")
-        # Check if attendance_analytics template exists (done)
-        # Check if all links in sidebar are valid
-        
         cursor.close()
         conn.close()
     except Exception as e:

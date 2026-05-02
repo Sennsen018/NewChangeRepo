@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify
 from Main.db import get_db_connection, log_system_action
+from psycopg2.extras import RealDictCursor
 from datetime import datetime, timedelta
 import json
 import os
@@ -17,7 +18,7 @@ def require_login():
 def dashboard():
     uSID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Get Enrolled Subjects with their specific stats
     cursor.execute("""
@@ -81,7 +82,7 @@ def dashboard():
 def subject_performance(subject_id):
     uSID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Get Subject Info
     cursor.execute("SELECT * FROM Subjects WHERE subject_id = %s", (subject_id,))
@@ -130,7 +131,7 @@ def subject_performance(subject_id):
 def mark_notifications_read():
     uSID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("UPDATE Notifications SET is_read = TRUE WHERE uSID = %s", (uSID,))
     conn.commit()
     cursor.close()
@@ -141,7 +142,7 @@ def mark_notifications_read():
 def get_notifications():
     uSID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("SELECT * FROM Notifications WHERE uSID = %s ORDER BY created_at DESC LIMIT 10", (uSID,))
     notifications = cursor.fetchall()
     
@@ -158,7 +159,7 @@ def get_notifications():
 def notifications_page():
     uSID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Get Enrolled Subjects for Sidebar
     cursor.execute("""
@@ -187,7 +188,7 @@ def notifications_page():
 def scan_qr():
     uSID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Get Enrolled Subjects for Sidebar
     cursor.execute("""
@@ -237,7 +238,7 @@ def submit_attendance():
     uSID = session['user_id']
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
         # 1. Validate Session and Token
@@ -261,7 +262,7 @@ def submit_attendance():
             SELECT a.attendance_id 
             FROM Attendance a
             JOIN Sessions s ON a.session_id = s.session_id
-            WHERE a.uSID = %s AND s.subject_id = %s AND DATE(a.scan_time) = CURDATE()
+            WHERE a.uSID = %s AND s.subject_id = %s AND DATE(a.scan_time) = CURRENT_DATE
         """, (uSID, ses['subject_id']))
         if cursor.fetchone():
             return jsonify({'success': False, 'message': 'Attendance already recorded for this subject today.'})
@@ -292,9 +293,9 @@ def submit_attendance():
         cursor.execute("""
             INSERT INTO Attendance 
             (session_id, uSID, scan_time, status, remarks, is_valid, student_lat, student_lon, distance_meters, behavior_flags)
-            VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s) RETURNING attendance_id
         """, (session_id, uSID, status, f"Distance: {round(distance)}m", is_valid, s_lat, s_lon, distance, json.dumps(behavior_flags)))
-        attendance_id = cursor.lastrowid
+        attendance_id = cursor.fetchone()['attendance_id']
         
         # Audit Logging
         log_system_action(cursor, 'Attendance', attendance_id, 'Create', uSID, 'student', f"Attendance recorded via QR. Status: {status}")
@@ -318,7 +319,7 @@ def submit_attendance():
 def timetable():
     uSID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     query = """
     SELECT s.subject_code, s.subject_name, t.first_name, t.middle_name, t.last_name, 
@@ -397,7 +398,7 @@ def timetable():
 def profile():
     uSID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Get Student Profile
     cursor.execute("SELECT * FROM Students WHERE uSID = %s", (uSID,))
@@ -472,7 +473,7 @@ def verify_email_change():
         new_email = session.get('pending_new_email')
         
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         try:
             cursor.execute("UPDATE Students SET email = %s WHERE uSID = %s", (new_email, uSID))
             conn.commit()
@@ -495,7 +496,7 @@ def verify_email_change():
 def submit_excuse():
     uSID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     if request.method == 'POST':
         class_data = request.form.get('class_id') # Format: subject_id|uTID
@@ -541,9 +542,9 @@ def submit_excuse():
 
                 cursor.execute("""
                     INSERT INTO Excuse_Letters (uSID, uTID, subject_id, message, file_path)
-                    VALUES (%s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s) RETURNING letter_id
                 """, (uSID, uTID, subject_id, message, filename))
-                letter_id = cursor.lastrowid
+                letter_id = cursor.fetchone()['letter_id']
                 
                 # Audit Logging
                 log_system_action(cursor, 'Excuse_Letters', letter_id, 'Create', uSID, 'student', f"Excuse letter submitted for Subject {subject_id}")

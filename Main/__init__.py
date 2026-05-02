@@ -2,13 +2,6 @@ from flask import Flask, redirect, url_for
 import os
 from datetime import timedelta
 
-db_config = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
-    "database": os.getenv("DB_NAME", "atendeez_db"),
-    "port": int(os.getenv("DB_PORT", 3306))
-}
 
 def reg_app():
     app = Flask(__name__)

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify
 import json
 from Main.db import get_db_connection, log_system_action
+from psycopg2.extras import RealDictCursor
 import uuid
 import random
 import string
@@ -18,7 +19,7 @@ def require_login():
 def dashboard():
     uTID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Get Assigned Classes
     query = """
@@ -46,7 +47,7 @@ def dashboard():
             SELECT a.status, COUNT(*) as count 
             FROM Attendance a
             JOIN Sessions s ON a.session_id = s.session_id
-            WHERE s.uTID = %s AND s.subject_id = %s AND s.section = %s AND DATE(a.scan_time) = CURDATE()
+            WHERE s.uTID = %s AND s.subject_id = %s AND s.section = %s AND DATE(a.scan_time) = CURRENT_DATE
             GROUP BY a.status
         """, (uTID, c['subject_id'], c['section']))
         stats = {row['status']: row['count'] for row in cursor.fetchall()}
@@ -66,7 +67,7 @@ def dashboard():
 def profile():
     uTID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     cursor.execute("SELECT * FROM Teachers WHERE uTID = %s", (uTID,))
     teacher_data = cursor.fetchone()
@@ -119,7 +120,7 @@ def start_session():
     expires_at = start_time + timedelta(minutes=duration_mins)
     
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("""
             INSERT INTO Sessions (session_id, uTID, subject_id, section, random_token, start_time, expires_at, latitude, longitude, status)
@@ -147,7 +148,7 @@ def end_session():
     session_id = data.get('session_id')
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         # 1. Get session info
         cursor.execute("SELECT * FROM Sessions WHERE session_id = %s", (session_id,))
@@ -183,7 +184,7 @@ def end_session():
 @teacher.route('/session_monitoring/<session_id>')
 def session_monitoring(session_id):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT ses.*, sub.subject_name, sub.subject_code 
         FROM Sessions ses
@@ -202,7 +203,7 @@ def session_monitoring(session_id):
 @teacher.route('/api/session_stats/<session_id>')
 def get_session_stats(session_id):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT 
             s.uSID, s.first_name, s.middle_name, s.last_name,
@@ -239,7 +240,7 @@ def manage_students():
     section = request.args.get('section')
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     # Fetch all assigned classes for the selector view
     cursor.execute("""
@@ -253,10 +254,10 @@ def manage_students():
     section = request.args.get('section')
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     if request.method == 'POST':
-        sid = request.form.get('uSID')
+        sid = request.form.get('usid')
         action = request.form.get('action')
         reason = request.form.get('reason', 'No reason provided')
         subj_id = request.form.get('subject_id')
@@ -350,7 +351,7 @@ def reports():
     section = request.args.get('section')
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Fetch all assigned classes to show in the selector
     cursor.execute("""
@@ -450,10 +451,10 @@ def reports():
 
             # Weekly Trends - Week 1-4 of each month with actual date range
             cursor.execute("""
-                SELECT CONCAT('Week ', CEIL(DAY(a.scan_time) / 7), ' - ', MONTHNAME(a.scan_time), ' ', YEAR(a.scan_time)) as period,
-                       YEAR(a.scan_time) as yr,
-                       MONTH(a.scan_time) as mo,
-                       CEIL(DAY(a.scan_time) / 7) as wk,
+                SELECT CONCAT('Week ', CEIL(EXTRACT(DAY FROM a.scan_time) / 7), ' - ', trim(to_char(a.scan_time, 'Month')), ' ', EXTRACT(YEAR FROM a.scan_time)) as period,
+                       EXTRACT(YEAR FROM a.scan_time) as yr,
+                       EXTRACT(MONTH FROM a.scan_time) as mo,
+                       CEIL(EXTRACT(DAY FROM a.scan_time) / 7) as wk,
                        MIN(DATE(a.scan_time)) as week_start,
                        MAX(DATE(a.scan_time)) as week_end,
                        COUNT(a.attendance_id) as total_scans,
@@ -469,7 +470,7 @@ def reports():
                     WHERE ses2.uTID = %s AND ses2.subject_id = %s AND ses2.section = %s
                     GROUP BY DATE(a2.scan_time), a2.uSID
                 ) max_a ON a.attendance_id = max_a.max_id
-                GROUP BY YEAR(a.scan_time), MONTH(a.scan_time), CEIL(DAY(a.scan_time) / 7), period
+                GROUP BY EXTRACT(YEAR FROM a.scan_time), EXTRACT(MONTH FROM a.scan_time), CEIL(EXTRACT(DAY FROM a.scan_time) / 7), period
                 ORDER BY yr ASC, mo ASC, wk ASC
             """, (uTID, subject_id, section))
             weekly_trends = cursor.fetchall()
@@ -481,9 +482,9 @@ def reports():
 
             # Monthly Trends - January through December with year
             cursor.execute("""
-                SELECT CONCAT(MONTHNAME(a.scan_time), ' ', YEAR(a.scan_time)) as period,
-                       YEAR(a.scan_time) as yr,
-                       MONTH(a.scan_time) as mo,
+                SELECT CONCAT(trim(to_char(a.scan_time, 'Month')), ' ', EXTRACT(YEAR FROM a.scan_time)) as period,
+                       EXTRACT(YEAR FROM a.scan_time) as yr,
+                       EXTRACT(MONTH FROM a.scan_time) as mo,
                        COUNT(a.attendance_id) as total_scans,
                        SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_count,
                        SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) as absent_count,
@@ -497,7 +498,7 @@ def reports():
                     WHERE ses2.uTID = %s AND ses2.subject_id = %s AND ses2.section = %s
                     GROUP BY DATE(a2.scan_time), a2.uSID
                 ) max_a ON a.attendance_id = max_a.max_id
-                GROUP BY YEAR(a.scan_time), MONTH(a.scan_time), period
+                GROUP BY EXTRACT(YEAR FROM a.scan_time), EXTRACT(MONTH FROM a.scan_time), period
                 ORDER BY yr ASC, mo ASC
             """, (uTID, subject_id, section))
             monthly_trends = cursor.fetchall()
@@ -548,7 +549,7 @@ def submit_report():
     teacher_message = request.form.get('teacher_message', '').strip()
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Calculate the summary (snapshot of current status)
     query_summary = """
@@ -614,7 +615,7 @@ def delete_daily_attendance():
     date_str = request.form.get('date')
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         # Fetch records to delete for logging
         cursor.execute("""
@@ -627,9 +628,9 @@ def delete_daily_attendance():
         
         if records_to_delete:
             cursor.execute("""
-                DELETE a FROM Attendance a
-                JOIN Sessions ses ON a.session_id = ses.session_id
-                WHERE ses.uTID = %s AND ses.subject_id = %s AND ses.section = %s AND DATE(a.scan_time) = %s
+                DELETE FROM Attendance a
+                USING Sessions ses
+                WHERE a.session_id = ses.session_id AND ses.uTID = %s AND ses.subject_id = %s AND ses.section = %s AND DATE(a.scan_time) = %s
             """, (uTID, subject_id, section, date_str))
             
             for rec in records_to_delete:
@@ -658,7 +659,7 @@ def manage_marks():
     section = request.args.get('section')
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Fetch all assigned classes for the selector
     cursor.execute("""
@@ -774,7 +775,7 @@ def update_mark():
     new_status = request.form.get('status')
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     cursor.execute("SELECT status FROM Attendance WHERE attendance_id = %s", (attendance_id,))
     record = cursor.fetchone()
@@ -817,7 +818,7 @@ def delete_mark():
     attendance_id = request.form.get('attendance_id')
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
         cursor.execute("SELECT status FROM Attendance WHERE attendance_id = %s", (attendance_id,))
@@ -863,7 +864,7 @@ def delete_mark():
 def manual_attendance():
     uTID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     # Fetch all classes (subject + section) assigned to this teacher
     cursor.execute("""
@@ -906,7 +907,7 @@ def manual_attendance():
             SELECT COUNT(*) as count 
             FROM Sessions 
             WHERE uTID = %s AND subject_id = %s AND section = %s 
-              AND DATE(start_time) = CURDATE()
+              AND DATE(start_time) = CURRENT_DATE
         """, (uTID, selected_subject_id, selected_section))
         already_recorded = cursor.fetchone()['count'] > 0
 
@@ -951,7 +952,7 @@ def submit_manual_attendance():
     manual_session_id = f"MANUAL-{uTID}-{subject_id}-{section}-{now.strftime('%Y%m%d%H%M%S')}"
 
     conn   = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     try:
         # Prevent duplication: check if attendance already exists for today
@@ -959,7 +960,7 @@ def submit_manual_attendance():
             SELECT COUNT(*) as count 
             FROM Sessions 
             WHERE uTID = %s AND subject_id = %s AND section = %s 
-              AND DATE(start_time) = CURDATE()
+              AND DATE(start_time) = CURRENT_DATE
         """, (uTID, subject_id, section))
         
         if cursor.fetchone()['count'] > 0:
@@ -1036,7 +1037,7 @@ def submit_manual_attendance():
 def view_excuses():
     uTID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     if request.args.get('clear'):
         session.pop('excuses_search', None)
@@ -1078,7 +1079,7 @@ def update_excuse_status():
     uTID = session['user_id']
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
         # Verify teacher owns this letter and get subject name
@@ -1102,7 +1103,7 @@ def update_excuse_status():
             subject_label = f"{letter['subject_code']} - {letter['subject_name']}"
             msg = f"Your excuse letter for {subject_label} has been {new_status}."
             cursor.execute("INSERT INTO Notifications (uSID, message, type) VALUES (%s, %s, %s)", 
-                           (letter['uSID'], msg, 'Info' if new_status == 'Approved' else 'Warning'))
+                           (letter['usid'], msg, 'Info' if new_status == 'Approved' else 'Warning'))
             
             conn.commit()
             flash(f'Excuse letter {new_status.lower()} successfully.', 'success')
@@ -1119,7 +1120,7 @@ def update_excuse_status():
 def my_schedule():
     uTID = session['user_id']
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     query = """
     SELECT s.subject_code, s.subject_name, sch.day_of_week, sch.start_time, sch.end_time, sch.room, sch.section

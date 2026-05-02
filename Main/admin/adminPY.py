@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
 import json
 from Main.db import get_db_connection, log_system_action
-from werkzeug.security import generate_password_hash
+from psycopg2.extras import RealDictCursor
 import re
 
 def validate_user_data(first_name, middle_name, last_name, email):
@@ -43,7 +43,7 @@ def require_login():
 @admin.route('/dashboard')
 def dashboard():
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     cursor.execute("SELECT COUNT(*) as count FROM Students")
     student_count = cursor.fetchone()['count']
@@ -96,7 +96,7 @@ def dashboard():
 @admin.route('/view_report/<int:report_id>')
 def view_report(report_id):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     cursor.execute("""
         SELECT sr.*, t.first_name, t.middle_name, t.last_name, s.subject_code, s.subject_name
@@ -133,7 +133,7 @@ def manage_students():
     from datetime import datetime
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     if request.method == 'POST':
         # Auto-generation logic for Student ID (S-YYYY-XXX)
@@ -144,7 +144,7 @@ def manage_students():
         last_student = cursor.fetchone()
         
         if last_student:
-            last_id_num = int(last_student['uSID'].split('-')[2])
+            last_id_num = int(last_student['usid'].split('-')[2])
             new_id_num = last_id_num + 1
         else:
             new_id_num = 1
@@ -275,12 +275,12 @@ def manage_students():
 
     cursor.execute(f"""
         SELECT s.*, 
-               GROUP_CONCAT(CONCAT(t.first_name, ' ', t.middle_name, ' ', t.last_name) SEPARATOR ', ') as teachers,
+               STRING_AGG(CONCAT(t.first_name, ' ', t.middle_name, ' ', t.last_name), ', ') as teachers,
                ({subject_count_subquery}) as student_count
         FROM Subjects s
         LEFT JOIN Teacher_Assignments ta ON s.subject_id = ta.subject_id
         LEFT JOIN Teachers t ON ta.uTID = t.uTID
-        GROUP BY s.subject_id
+        GROUP BY s.subject_id, s.subject_code, s.subject_name
     """, tuple(subject_count_params))
     subjects = cursor.fetchall()
 
@@ -356,7 +356,7 @@ def edit_student(uSID):
     first_name, middle_name, last_name, email = validated_data
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Check duplicate email in Students and Teachers
     cursor.execute("SELECT email FROM Students WHERE email = %s AND uSID != %s UNION SELECT email FROM Teachers WHERE email = %s", (email, uSID, email))
@@ -392,11 +392,11 @@ def delete_student(uSID):
     Deletes a student record only if they have no attendance history.
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         # Check for attendance records
-        cursor.execute("SELECT COUNT(*) FROM Attendance WHERE uSID = %s", (uSID,))
-        if cursor.fetchone()[0] > 0:
+        cursor.execute("SELECT COUNT(*) as count FROM Attendance WHERE uSID = %s", (uSID,))
+        if cursor.fetchone()['count'] > 0:
             flash('Cannot delete: student has attendance records', 'error')
             return redirect(url_for('admin.manage_students'))
             
@@ -423,7 +423,7 @@ def manage_teachers():
     from datetime import datetime
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     if request.method == 'POST':
         # Auto-generation logic for Teacher ID (T-YYYY-XXX)
@@ -434,7 +434,7 @@ def manage_teachers():
         last_teacher = cursor.fetchone()
         
         if last_teacher:
-            last_id_num = int(last_teacher['uTID'].split('-')[2])
+            last_id_num = int(last_teacher['utid'].split('-')[2])
             new_id_num = last_id_num + 1
         else:
             new_id_num = 1
@@ -573,7 +573,7 @@ def edit_teacher(uTID):
     first_name, middle_name, last_name, email = validated_data
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Check duplicate email
     cursor.execute("SELECT email FROM Teachers WHERE email = %s AND uTID != %s UNION SELECT email FROM Students WHERE email = %s", (email, uTID, email))
@@ -609,11 +609,11 @@ def delete_teacher(uTID):
     Deletes a teacher record only if they have no active assignments.
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         # Check for assignments or sessions
-        cursor.execute("SELECT COUNT(*) FROM Teacher_Assignments WHERE uTID = %s", (uTID,))
-        if cursor.fetchone()[0] > 0:
+        cursor.execute("SELECT COUNT(*) as count FROM Teacher_Assignments WHERE uTID = %s", (uTID,))
+        if cursor.fetchone()['count'] > 0:
             flash('Cannot delete: teacher has assigned classes.', 'error')
             return redirect(url_for('admin.manage_teachers'))
             
@@ -634,14 +634,14 @@ def delete_teacher(uTID):
 @admin.route('/manage_subjects', methods=['GET', 'POST'])
 def manage_subjects():
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     if request.method == 'POST':
         subject_code = request.form.get('subject_code')
         subject_name = request.form.get('subject_name')
         
-        cursor.execute("INSERT INTO Subjects (subject_code, subject_name) VALUES (%s, %s)", (subject_code, subject_name))
-        subject_id = cursor.lastrowid
+        cursor.execute("INSERT INTO Subjects (subject_code, subject_name) VALUES (%s, %s) RETURNING subject_id", (subject_code, subject_name))
+        subject_id = cursor.fetchone()['subject_id']
         
         # Audit Logging
         log_system_action(cursor, 'Subjects', subject_id, 'Create', session['user_id'], session['role'], f"Subject created: {subject_code} - {subject_name}")
@@ -680,7 +680,7 @@ def edit_subject(subject_id):
     subject_name = request.form.get('subject_name')
     
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("UPDATE Subjects SET subject_code = %s, subject_name = %s WHERE subject_id = %s", 
                    (subject_code, subject_name, subject_id))
     
@@ -696,7 +696,7 @@ def edit_subject(subject_id):
 @admin.route('/delete_subject/<int:subject_id>')
 def delete_subject(subject_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
         cursor.execute("DELETE FROM Subjects WHERE subject_id = %s", (subject_id,))
         
@@ -716,15 +716,15 @@ def delete_subject(subject_id):
 @admin.route('/assign_classes', methods=['GET', 'POST'])
 def assign_classes():
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     if request.method == 'POST':
-        uTID = request.form.get('uTID')
+        uTID = request.form.get('utid')
         subject_id = request.form.get('subject_id')
         section = request.form.get('section')
         
-        cursor.execute("INSERT INTO Teacher_Assignments (uTID, subject_id, section) VALUES (%s, %s, %s)", (uTID, subject_id, section))
-        assignment_id = cursor.lastrowid
+        cursor.execute("INSERT INTO Teacher_Assignments (uTID, subject_id, section) VALUES (%s, %s, %s) RETURNING assignment_id", (uTID, subject_id, section))
+        assignment_id = cursor.fetchone()['assignment_id']
         
         # Audit Logging
         log_system_action(cursor, 'Teacher_Assignments', assignment_id, 'Create', session['user_id'], session['role'], f"Class assigned to teacher {uTID}: Subject ID {subject_id}, Section {section}")
@@ -772,11 +772,11 @@ def assign_classes():
 
 @admin.route('/enroll_student', methods=['POST'])
 def enroll_student():
-    uSID = request.form.get('uSID')
+    uSID = request.form.get('usid')
     assignment_id = request.form.get('assignment_id') # Selected from Teacher_Assignments
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
         # Get assignment details
@@ -793,9 +793,9 @@ def enroll_student():
         if cursor.fetchone():
             flash('Student is already enrolled in this subject and section.', 'warning')
         else:
-            cursor.execute("INSERT INTO Enrollments (uSID, subject_id, section) VALUES (%s, %s, %s)", 
+            cursor.execute("INSERT INTO Enrollments (uSID, subject_id, section) VALUES (%s, %s, %s) RETURNING enrollment_id", 
                            (uSID, assignment['subject_id'], assignment['section']))
-            enrollment_id = cursor.lastrowid
+            enrollment_id = cursor.fetchone()['enrollment_id']
             
             # Audit Logging
             log_system_action(cursor, 'Enrollments', enrollment_id, 'Create', session['user_id'], session['role'], f"Student {uSID} enrolled in Subject {assignment['subject_id']}, Section {assignment['section']}")
@@ -818,7 +818,7 @@ def manage_schedules():
     Validates that the time falls within school hours (07:00 to 18:00).
     """
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     if request.method == 'POST':
         assignment_id = request.form.get('assignment_id')
@@ -860,17 +860,17 @@ def manage_schedules():
                 AND (%s < sch.end_time AND %s > sch.start_time)
                 AND (sch.uTID = %s OR sch.room = %s)
             """
-            cursor.execute(conflict_query, (day, start, end, ta['uTID'], room))
+            cursor.execute(conflict_query, (day, start, end, ta['utid'], room))
             conflict = cursor.fetchone()
             
             if conflict:
-                conflict_type = "Teacher" if conflict['uTID'] == ta['uTID'] else "Room"
+                conflict_type = "Teacher" if conflict['utid'] == ta['utid'] else "Room"
                 flash(f"Conflict Detected! {conflict_type} is already busy with {conflict['subject_code']} at this time.", "error")
             else:
                 cursor.execute("""
                     INSERT INTO schedule (subject_id, uTID, section, day_of_week, start_time, end_time, room)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """, (ta['subject_id'], ta['uTID'], ta['section'], day, start, end, room))
+                """, (ta['subject_id'], ta['utid'], ta['section'], day, start, end, room))
                 schedule_id = cursor.lastrowid
                 
                 # Audit Logging
@@ -921,7 +921,7 @@ def manage_schedules():
 @admin.route('/remove_schedule/<int:schedule_id>')
 def remove_schedule(schedule_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("DELETE FROM schedule WHERE schedule_id = %s", (schedule_id,))
     conn.commit()
     cursor.close()
@@ -932,7 +932,7 @@ def remove_schedule(schedule_id):
 @admin.route('/remove_enrollment/<int:enrollment_id>')
 def remove_enrollment(enrollment_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("DELETE FROM Enrollments WHERE enrollment_id = %s", (enrollment_id,))
     conn.commit()
     cursor.close()
@@ -943,7 +943,7 @@ def remove_enrollment(enrollment_id):
 @admin.route('/archive_student/<uSID>')
 def archive_student(uSID):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("UPDATE Students SET status = 'Archived' WHERE uSID = %s", (uSID,))
     
     # Audit Logging
@@ -958,7 +958,7 @@ def archive_student(uSID):
 @admin.route('/unarchive_student/<uSID>')
 def unarchive_student(uSID):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("UPDATE Students SET status = 'Active' WHERE uSID = %s", (uSID,))
     
     # Audit Logging
@@ -973,7 +973,7 @@ def unarchive_student(uSID):
 @admin.route('/archive_teacher/<uTID>')
 def archive_teacher(uTID):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("UPDATE Teachers SET status = 'Archived' WHERE uTID = %s", (uTID,))
     
     # Audit Logging
@@ -988,7 +988,7 @@ def archive_teacher(uTID):
 @admin.route('/unarchive_teacher/<uTID>')
 def unarchive_teacher(uTID):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("UPDATE Teachers SET status = 'Active' WHERE uTID = %s", (uTID,))
     
     # Audit Logging
@@ -1003,7 +1003,7 @@ def unarchive_teacher(uTID):
 @admin.route('/remove_assignment/<int:assignment_id>')
 def remove_assignment(assignment_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
         cursor.execute("DELETE FROM Teacher_Assignments WHERE assignment_id = %s", (assignment_id,))
@@ -1020,7 +1020,7 @@ def remove_assignment(assignment_id):
 @admin.route('/drop_requests')
 def drop_requests():
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     if request.args.get('clear'):
         session.pop('drops_search', None)
@@ -1061,7 +1061,7 @@ def drop_requests():
 @admin.route('/approve_drop/<int:request_id>')
 def approve_drop(request_id):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     cursor.execute("SELECT * FROM Drop_Requests WHERE request_id = %s", (request_id,))
     req = cursor.fetchone()
@@ -1072,11 +1072,11 @@ def approve_drop(request_id):
         
         # 2. Find the section if possible (or just remove by uSID and subject_id)
         # Assuming we want to remove them from the specific subject they dropped
-        cursor.execute("DELETE FROM Enrollments WHERE uSID = %s AND subject_id = %s", (req['uSID'], req['subject_id']))
+        cursor.execute("DELETE FROM Enrollments WHERE uSID = %s AND subject_id = %s", (req['usid'], req['subject_id']))
         
         # 3. Optional: Global Archive (Keeping it as per previous logic, but usually a drop is per subject)
         # If the user wants the student to be 'Archived' globally, we keep this.
-        cursor.execute("UPDATE Students SET status = 'Archived' WHERE uSID = %s", (req['uSID'],))
+        cursor.execute("UPDATE Students SET status = 'Archived' WHERE uSID = %s", (req['usid'],))
         
         conn.commit()
         flash('Drop request approved. Student has been unenrolled from the subject and archived.', 'success')
@@ -1088,7 +1088,7 @@ def approve_drop(request_id):
 @admin.route('/reject_drop/<int:request_id>')
 def reject_drop(request_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("UPDATE Drop_Requests SET status = 'Rejected' WHERE request_id = %s", (request_id,))
     conn.commit()
     cursor.close()
@@ -1110,7 +1110,7 @@ def bulk_enroll():
         return redirect(url_for('admin.manage_students'))
         
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
         # Get assignment details
@@ -1144,7 +1144,7 @@ def bulk_enroll():
             flash('No eligible students found for bulk enrollment matching your criteria.', 'warning')
         else:
             enroll_query = "INSERT INTO Enrollments (uSID, subject_id, section) VALUES (%s, %s, %s)"
-            enroll_data = [(s['uSID'], assignment['subject_id'], assignment['section']) for s in students_to_enroll]
+            enroll_data = [(s['usid'], assignment['subject_id'], assignment['section']) for s in students_to_enroll]
             
             cursor.executemany(enroll_query, enroll_data)
             conn.commit()
@@ -1192,7 +1192,7 @@ def audit_logs():
     
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Base query
     query = "FROM System_Audit_Log WHERE 1=1"
@@ -1245,11 +1245,11 @@ def audit_logs():
 @admin.route('/attendance_analytics')
 def attendance_analytics():
     subject_id = request.args.get('subject_id', type=int)
-    uTID = request.args.get('uTID')
+    uTID = request.args.get('utid')
     section = request.args.get('section')
     
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # Fetch all assigned classes for the selector
     cursor.execute("""
@@ -1269,7 +1269,7 @@ def attendance_analytics():
     if subject_id and uTID and section:
         # Find selected class details
         for c in all_classes:
-            if c['subject_id'] == subject_id and c['uTID'] == uTID and c['section'] == section:
+            if c['subject_id'] == subject_id and c['utid'] == uTID and c['section'] == section:
                 selected_class = c
                 break
         
@@ -1318,4 +1318,4 @@ def attendance_analytics():
                            all_classes=all_classes,
                            selected_class=selected_class,
                            weekly_trends=weekly_trends,
-                           monthly_trends=monthly_trends)
+                           monthly_trends=monthly_trends)

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 from Main.db import get_db_connection
+from psycopg2.extras import RealDictCursor
 from datetime import datetime, timedelta
 import secrets
 import smtplib
@@ -101,8 +102,8 @@ def _set_otp_lockout(conn, cursor, email):
     cursor.execute(
         """INSERT INTO otp_lockouts (email, lockout_until)
            VALUES (%s, %s)
-           ON DUPLICATE KEY UPDATE lockout_until = %s""",
-        (email, until, until)
+           ON CONFLICT (email) DO UPDATE SET lockout_until = EXCLUDED.lockout_until""",
+        (email, until)
     )
     conn.commit()
     # Clear OTP session so user can't keep trying
@@ -145,7 +146,7 @@ def student_login():
             flash('Database connection failed', 'error')
             return render_template('student_login.html')
             
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute("SELECT * FROM Students WHERE uSID = %s", (email,))
         student = cursor.fetchone()
         
@@ -156,9 +157,9 @@ def student_login():
                 flash(f'Account locked. Try again after {student["lockout_time"]}', 'error')
             elif check_password_hash(student['password_hash'], password):
                 # Reset attempts
-                cursor.execute("UPDATE Students SET failed_attempts = 0, lockout_time = NULL WHERE uSID = %s", (student['uSID'],))
+                cursor.execute("UPDATE Students SET failed_attempts = 0, lockout_time = NULL WHERE uSID = %s", (student['usid'],))
                 conn.commit()
-                session['user_id'] = student['uSID']
+                session['user_id'] = student['usid']
                 session['role'] = 'student'
                 session['name'] = f"{student['first_name']} {student['middle_name']} {student['last_name']}"
                 return redirect(url_for('user.dashboard'))
@@ -170,7 +171,7 @@ def student_login():
                     flash('Account locked for 3 minutes due to multiple failed attempts.', 'error')
                 else:
                     flash('Invalid credentials.', 'error')
-                cursor.execute("UPDATE Students SET failed_attempts = %s, lockout_time = %s WHERE uSID = %s", (attempts, lockout, student['uSID']))
+                cursor.execute("UPDATE Students SET failed_attempts = %s, lockout_time = %s WHERE uSID = %s", (attempts, lockout, student['usid']))
                 conn.commit()
         else:
             flash('Student not found.', 'error')
@@ -195,7 +196,7 @@ def teacher_login():
             flash('Database connection failed', 'error')
             return render_template('teacher_login.html')
             
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute("SELECT * FROM Teachers WHERE uTID = %s", (email,))
         teacher = cursor.fetchone()
         
@@ -205,9 +206,9 @@ def teacher_login():
             elif teacher['lockout_time'] and teacher['lockout_time'] > datetime.now():
                 flash(f'Account locked. Try again after {teacher["lockout_time"]}', 'error')
             elif check_password_hash(teacher['password_hash'], password):
-                cursor.execute("UPDATE Teachers SET failed_attempts = 0, lockout_time = NULL WHERE uTID = %s", (teacher['uTID'],))
+                cursor.execute("UPDATE Teachers SET failed_attempts = 0, lockout_time = NULL WHERE uTID = %s", (teacher['utid'],))
                 conn.commit()
-                session['user_id'] = teacher['uTID']
+                session['user_id'] = teacher['utid']
                 session['role'] = 'teacher'
                 session['name'] = f"{teacher['first_name']} {teacher['middle_name']} {teacher['last_name']}"
                 return redirect(url_for('teacher.dashboard'))
@@ -219,7 +220,7 @@ def teacher_login():
                     flash('Account locked for 3 minutes.', 'error')
                 else:
                     flash('Invalid credentials.', 'error')
-                cursor.execute("UPDATE Teachers SET failed_attempts = %s, lockout_time = %s WHERE uTID = %s", (attempts, lockout, teacher['uTID']))
+                cursor.execute("UPDATE Teachers SET failed_attempts = %s, lockout_time = %s WHERE uTID = %s", (attempts, lockout, teacher['utid']))
                 conn.commit()
         else:
             flash('Teacher not found.', 'error')
@@ -240,7 +241,7 @@ def admin_login():
         password = request.form.get('password')
         
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute("SELECT * FROM Admins WHERE username = %s", (username,))
         admin = cursor.fetchone()
         
@@ -260,7 +261,7 @@ def forgot_password():
         email = request.form.get('email', '').strip()
         
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         # --- Check lockout first ---
         lockout_until = _get_otp_lockout(cursor, email)
@@ -288,7 +289,7 @@ def forgot_password():
         user = cursor.fetchone()
         if user:
             user_type = 'student'
-            unique_id = user['uSID']
+            unique_id = user['usid']
         
         if not user:
             # Check Teachers
@@ -296,7 +297,7 @@ def forgot_password():
             user = cursor.fetchone()
             if user:
                 user_type = 'teacher'
-                unique_id = user['uTID']
+                unique_id = user['utid']
             
         if not user:
             # Check Admins
@@ -343,7 +344,7 @@ def resend_otp():
         return redirect(url_for('auth.forgot_password'))
     
     conn   = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     # --- Check DB lockout ---
     lockout_until = _get_otp_lockout(cursor, email)
@@ -430,7 +431,7 @@ def verify_otp():
         # --- Check DB lockout first ---
         if email:
             conn   = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             lockout_until = _get_otp_lockout(cursor, email)
             conn.commit()
             cursor.close()
@@ -463,7 +464,7 @@ def verify_otp():
                 # Lock account for 12 hours
                 if email:
                     conn   = get_db_connection()
-                    cursor = conn.cursor(dictionary=True)
+                    cursor = conn.cursor(cursor_factory=RealDictCursor)
                     _set_otp_lockout(conn, cursor, email)
                     cursor.close()
                     conn.close()
@@ -504,7 +505,7 @@ def reset_password():
         user_type = session.get('reset_type')
         
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         hashed_pw = generate_password_hash(new_password)
         
@@ -559,7 +560,7 @@ def change_password():
         uID = session.get('user_id')
         
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         table = 'Students' if role == 'student' else 'Teachers' if role == 'teacher' else 'Admins'
         id_col = 'uSID' if role == 'student' else 'uTID' if role == 'teacher' else 'admin_id'

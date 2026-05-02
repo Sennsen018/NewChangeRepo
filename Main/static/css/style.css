@@ -433,6 +433,13 @@ td {
     background: radial-gradient(circle at center, var(--primary-soft) 0%, transparent 40%);
     z-index: 0;
     pointer-events: none;
+    animation: pulseGlow 15s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+    0% { transform: scale(0.9) translate(0, 0); opacity: 0.8; }
+    50% { transform: scale(1.1) translate(-2%, 2%); opacity: 1; }
+    100% { transform: scale(1) translate(2%, -2%); opacity: 0.8; }
 }
 
 .admin-auth-page::before {
@@ -444,7 +451,7 @@ td {
     z-index: 10;
     width: 100%;
     max-width: 440px;
-    background: var(--bg-surface);
+    background: rgba(24, 24, 27, 0.65); /* Transparent for glassmorphism */
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 3rem;
@@ -549,6 +556,62 @@ td {
 .flex-1 {
     flex: 1;
 }
+
+/* Floating Labels */
+.floating-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.floating-group .form-control {
+    height: 3.5rem;
+    padding: 1.25rem 1rem 0.5rem 2.75rem; /* Extra left padding for icon */
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.floating-group .form-control:focus {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.floating-label {
+    position: absolute;
+    left: 2.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: var(--transition);
+    font-size: 0.95rem;
+}
+
+.floating-group .form-control:focus ~ .floating-label,
+.floating-group .form-control:not(:placeholder-shown) ~ .floating-label {
+    top: 0.8rem;
+    font-size: 0.75rem;
+    color: var(--primary);
+}
+
+/* Entrance Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-up {
+    opacity: 0;
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
 
 /* =========================================
    MOBILE RESPONSIVENESS

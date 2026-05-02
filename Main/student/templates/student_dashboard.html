@@ -133,7 +133,7 @@
                         <h3 style="font-size: 1.25rem; margin-bottom: 1.5rem;">Current Subjects</h3>
                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
                             {% for s in subjects %}
-                            <div class="glass-panel clickable-panel" style="padding: 1.5rem; cursor: pointer;" onclick="window.location.href='{{ url_for('user.subject_performance', subject_id=s.subject_id) }}'">
+                            <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="glass-panel clickable-panel" style="padding: 1.5rem; display: block; color: inherit; text-decoration: none;">
                                 <div class="flex justify-between items-start mb-4">
                                     <div>
                                         <div style="font-weight: 700; color: var(--primary); font-size: 0.8rem;">{{ s.subject_code }}</div>
@@ -149,7 +149,7 @@
                                     <span>L: {{ s.stats.get('Late', 0) }}</span>
                                 </div>
                                 <div class="btn btn-outline-primary btn-sm w-full">View Progress</div>
-                            </div>
+                            </a>
                             {% endfor %}
                         </div>
                     </div>
@@ -278,4 +278,3 @@
     </script>
 </body>
 </html>
->

@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="auth-page admin-auth-page">
-    <div class="auth-card">
-        <div class="auth-header">
+    <div class="auth-card animate-fade-up">
+        <div class="auth-header animate-fade-up delay-100">
             <div class="auth-logo auth-logo-danger">
                 <i class="fas fa-shield-halved"></i>
             </div>
@@ -27,29 +27,29 @@
             {% endif %}
         {% endwith %}
 
-        <form method="POST" action="{{ url_for('auth.admin_login') }}">
+        <form method="POST" action="{{ url_for('auth.admin_login') }}" class="animate-fade-up delay-200">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="form-group">
-                <label class="form-label">Username</label>
+            <div class="form-group floating-group">
                 <div class="input-with-icon">
                     <i class="fas fa-user-shield"></i>
-                    <input type="text" name="username" class="form-control" required placeholder="Administrator" autocomplete="username">
+                    <input type="text" name="username" class="form-control" required placeholder=" " autocomplete="username">
+                    <label class="floating-label">Administrator Username</label>
                 </div>
             </div>
-            <div class="form-group">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="form-label" style="margin: 0;">Password</label>
-                    <a href="{{ url_for('auth.forgot_password') }}" class="text-sm auth-link">Forgot?</a>
+            <div class="form-group floating-group">
+                <div class="flex justify-end mb-2">
+                    <a href="{{ url_for('auth.forgot_password') }}" class="text-sm auth-link">Forgot password?</a>
                 </div>
                 <div class="input-with-icon">
                     <i class="fas fa-lock"></i>
-                    <input type="password" name="password" class="form-control" required placeholder="••••••••">
+                    <input type="password" name="password" class="form-control" required placeholder=" ">
+                    <label class="floating-label">Password</label>
                 </div>
             </div>
             <button type="submit" class="btn btn-danger w-full mt-6 auth-btn">Login to System</button>
         </form>
         
-        <div class="auth-footer">
+        <div class="auth-footer animate-fade-up delay-300">
             <p class="text-muted text-sm mb-4">Other Access Portals</p>
             <div class="auth-links">
                 <a href="{{ url_for('auth.student_login') }}" class="btn btn-secondary flex-1">

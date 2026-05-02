@@ -212,7 +212,6 @@
                     <span class="badge badge-success" style="margin-left:0.5rem;">Section {{ selected_section }}</span>
                 </h3>
                 <div style="font-size:0.85rem; color:var(--text-muted);">
-                    {{ now() if now is defined else '' }}
                     <!-- Display today's date next to the class name -->
                     Today: <strong id="today-date"></strong>
                 </div>
@@ -368,8 +367,10 @@
 <!-- ===================== JAVASCRIPT ===================== -->
 <script>
     // Display today's date in the header
-    document.getElementById('today-date').textContent =
-        new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    const todayDateEl = document.getElementById('today-date');
+    if (todayDateEl) {
+        todayDateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    }
 
     // Total number of students rendered in this class
     const totalStudents = Number('{{ students | length }}');

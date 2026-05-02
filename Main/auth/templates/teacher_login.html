@@ -8,12 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="auth-page">
-    <a href="{{ url_for('auth.admin_login') }}" class="btn btn-secondary btn-sm" style="position: absolute; top: 2rem; left: 2rem; opacity: 0.7;">
-        <i class="fas fa-shield-halved"></i> Admin Portal
-    </a>
-
     <div class="auth-card">
         <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
             <h1 class="auth-title">Attendeez</h1>
             <p class="auth-subtitle">Faculty Access Portal</p>
         </div>
@@ -32,21 +31,34 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <label class="form-label">Teacher ID</label>
-                <input type="text" name="email" class="form-control" required placeholder="e.g. T-2024-001" autocomplete="off">
+                <div class="input-with-icon">
+                    <i class="fas fa-id-badge"></i>
+                    <input type="text" name="email" class="form-control" required placeholder="e.g. T-2024-001" autocomplete="off">
+                </div>
             </div>
             <div class="form-group">
                 <div class="flex justify-between items-center mb-2">
                     <label class="form-label" style="margin: 0;">Password</label>
-                    <a href="{{ url_for('auth.forgot_password') }}" class="text-sm" style="color: var(--primary);">Forgot?</a>
+                    <a href="{{ url_for('auth.forgot_password') }}" class="text-sm auth-link">Forgot?</a>
                 </div>
-                <input type="password" name="password" class="form-control" required placeholder="••••••••">
+                <div class="input-with-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" class="form-control" required placeholder="••••••••">
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary w-full mt-4">Sign In</button>
+            <button type="submit" class="btn btn-primary w-full mt-6 auth-btn">Sign In as Faculty</button>
         </form>
         
-        <div class="mt-8 pt-6" style="border-top: 1px solid var(--border-color); text-align: center;">
-            <p class="text-muted text-sm mb-4">Are you a student?</p>
-            <a href="{{ url_for('auth.student_login') }}" class="btn btn-secondary w-full">Switch to Student Login</a>
+        <div class="auth-footer">
+            <p class="text-muted text-sm mb-4">Other Access Portals</p>
+            <div class="auth-links">
+                <a href="{{ url_for('auth.student_login') }}" class="btn btn-secondary flex-1">
+                    <i class="fas fa-user-graduate"></i> Student
+                </a>
+                <a href="{{ url_for('auth.admin_login') }}" class="btn btn-secondary flex-1">
+                    <i class="fas fa-shield-halved"></i> Admin
+                </a>
+            </div>
         </div>
     </div>
 </body>

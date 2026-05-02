@@ -147,7 +147,7 @@ def student_login():
             return render_template('student_login.html')
             
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT * FROM Students WHERE uSID = %s", (email,))
+        cursor.execute("SELECT * FROM Students WHERE usid = %s", (email,))
         student = cursor.fetchone()
         
         if student:
@@ -157,7 +157,7 @@ def student_login():
                 flash(f'Account locked. Try again after {student["lockout_time"]}', 'error')
             elif check_password_hash(student['password_hash'], password):
                 # Reset attempts
-                cursor.execute("UPDATE Students SET failed_attempts = 0, lockout_time = NULL WHERE uSID = %s", (student['usid'],))
+                cursor.execute("UPDATE Students SET failed_attempts = 0, lockout_time = NULL WHERE usid = %s", (student['usid'],))
                 conn.commit()
                 session['user_id'] = student['usid']
                 session['role'] = 'student'
@@ -171,7 +171,7 @@ def student_login():
                     flash('Account locked for 3 minutes due to multiple failed attempts.', 'error')
                 else:
                     flash('Invalid credentials.', 'error')
-                cursor.execute("UPDATE Students SET failed_attempts = %s, lockout_time = %s WHERE uSID = %s", (attempts, lockout, student['usid']))
+                cursor.execute("UPDATE Students SET failed_attempts = %s, lockout_time = %s WHERE usid = %s", (attempts, lockout, student['usid']))
                 conn.commit()
         else:
             flash('Student not found.', 'error')
@@ -197,7 +197,7 @@ def teacher_login():
             return render_template('teacher_login.html')
             
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT * FROM Teachers WHERE uTID = %s", (email,))
+        cursor.execute("SELECT * FROM Teachers WHERE utid = %s", (email,))
         teacher = cursor.fetchone()
         
         if teacher:
@@ -206,7 +206,7 @@ def teacher_login():
             elif teacher['lockout_time'] and teacher['lockout_time'] > datetime.now():
                 flash(f'Account locked. Try again after {teacher["lockout_time"]}', 'error')
             elif check_password_hash(teacher['password_hash'], password):
-                cursor.execute("UPDATE Teachers SET failed_attempts = 0, lockout_time = NULL WHERE uTID = %s", (teacher['utid'],))
+                cursor.execute("UPDATE Teachers SET failed_attempts = 0, lockout_time = NULL WHERE utid = %s", (teacher['utid'],))
                 conn.commit()
                 session['user_id'] = teacher['utid']
                 session['role'] = 'teacher'
@@ -220,7 +220,7 @@ def teacher_login():
                     flash('Account locked for 3 minutes.', 'error')
                 else:
                     flash('Invalid credentials.', 'error')
-                cursor.execute("UPDATE Teachers SET failed_attempts = %s, lockout_time = %s WHERE uTID = %s", (attempts, lockout, teacher['utid']))
+                cursor.execute("UPDATE Teachers SET failed_attempts = %s, lockout_time = %s WHERE utid = %s", (attempts, lockout, teacher['utid']))
                 conn.commit()
         else:
             flash('Teacher not found.', 'error')
@@ -285,7 +285,7 @@ def forgot_password():
         unique_id = None
         
         # Check Students
-        cursor.execute("SELECT uSID, email FROM Students WHERE email = %s", (email,))
+        cursor.execute("SELECT usid, email FROM Students WHERE email = %s", (email,))
         user = cursor.fetchone()
         if user:
             user_type = 'student'
@@ -293,7 +293,7 @@ def forgot_password():
         
         if not user:
             # Check Teachers
-            cursor.execute("SELECT uTID, email FROM Teachers WHERE email = %s", (email,))
+            cursor.execute("SELECT utid, email FROM Teachers WHERE email = %s", (email,))
             user = cursor.fetchone()
             if user:
                 user_type = 'teacher'
@@ -563,7 +563,7 @@ def change_password():
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         table = 'Students' if role == 'student' else 'Teachers' if role == 'teacher' else 'Admins'
-        id_col = 'uSID' if role == 'student' else 'uTID' if role == 'teacher' else 'admin_id'
+        id_col = 'usid' if role == 'student' else 'utid' if role == 'teacher' else 'admin_id'
         
         cursor.execute(f"SELECT * FROM {table} WHERE {id_col} = %s", (uID,))
         user = cursor.fetchone()

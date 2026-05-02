@@ -66,8 +66,8 @@
                     <h3 class="mb-4">Select Subject & Teacher</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
                         {% for c in all_classes %}
-                        <a href="{{ url_for('admin.attendance_analytics', subject_id=c.subject_id, uTID=c.uTID, section=c.section) }}" 
-                           class="glass-panel p-4 {% if selected_class and selected_class.subject_id == c.subject_id and selected_class.uTID == c.uTID and selected_class.section == c.section %}active-class-box{% endif %}"
+                        <a href="{{ url_for('admin.attendance_analytics', subject_id=c.subject_id, utid=c.utid, section=c.section) }}" 
+                           class="glass-panel p-4 {% if selected_class and selected_class.subject_id == c.subject_id and selected_class.utid == c.utid and selected_class.section == c.section %}active-class-box{% endif %}"
                            style="text-decoration: none; color: inherit; transition: all 0.2s; border-left: 4px solid var(--primary-color);">
                             <div class="badge badge-warning mb-2">{{ c.subject_code }}</div>
                             <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;">{{ c.subject_name }}</div>

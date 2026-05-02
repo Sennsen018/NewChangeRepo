@@ -139,7 +139,7 @@
                         <div class="flex justify-between items-start mb-3">
                             <div>
                                 <h4 style="margin: 0;">${s.last_name}, ${s.first_name} ${s.middle_name}</h4>
-                                <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">${s.uSID}</p>
+                                <p style="font-size: 0.7rem; color: var(--text-secondary); margin: 0;">${s.usid}</p>
                             </div>
                             <span class="status-pill ${s.status === 'Present' ? 'status-present' : (s.status === 'Flagged' ? 'critical-tag' : 'status-absent')}">
                                 ${s.status || 'Waiting...'}

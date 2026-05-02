@@ -147,7 +147,7 @@
                         {% for student in students if student.status == 'Active' %}
                         <tr>
                             <td>
-                                <span class="badge badge-primary">{{ student.uSID }}</span>
+                                <span class="badge badge-primary">{{ student.usid }}</span>
                             </td>
                             <td>
                                 <strong>{{ student.last_name }}</strong>, {{ student.first_name }} {{ student.middle_name }}
@@ -164,7 +164,7 @@
                                  {% if student.status == 'Active' %}
                                  <button class="btn btn-warning" 
                                          style="padding: 0.25rem 0.6rem; font-size: 0.8rem;"
-                                         onclick="openDropModal('{{ student.uSID }}', '{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}')">
+                                         onclick="openDropModal('{{ student.usid }}', '{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}')">
                                      <i class="fas fa-user-minus"></i> Request Drop
                                  </button>
                                  {% else %}
@@ -225,7 +225,7 @@
                 <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input type="hidden" name="action" value="request_drop">
-                    <input type="hidden" name="uSID" id="drop_uSID">
+                    <input type="hidden" name="usid" id="drop_usid">
                     <input type="hidden" name="subject_id" value="{{ selected_class.subject_id if selected_class else '' }}">
                     
                     <p style="font-size: 0.9rem; margin-bottom: 1rem;">Student: <strong id="drop_student_name"></strong></p>
@@ -245,7 +245,7 @@
 
         <script>
             function openDropModal(sid, name) {
-                document.getElementById('drop_uSID').value = sid;
+                document.getElementById('drop_usid').value = sid;
                 document.getElementById('drop_student_name').innerText = name;
                 document.getElementById('dropModal').style.display = 'flex';
             }

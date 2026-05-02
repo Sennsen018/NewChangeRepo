@@ -93,10 +93,10 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="form-group w-100" style="margin-bottom: 0;">
                         <label class="form-label">Select Teacher</label>
-                        <select name="uTID" class="form-control" required>
+                        <select name="utid" class="form-control" required>
                             <option value="">-- Choose Teacher --</option>
                             {% for t in teachers %}
-                                <option value="{{ t.uTID }}">{{ t.first_name }} {{ t.middle_name }} {{ t.last_name }}</option>
+                                <option value="{{ t.utid }}">{{ t.first_name }} {{ t.middle_name }} {{ t.last_name }}</option>
                             {% endfor %}
                         </select>
                     </div>

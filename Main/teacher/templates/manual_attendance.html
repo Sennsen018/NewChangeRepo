@@ -239,7 +239,7 @@
 
                 <!-- Hidden inputs list ALL student IDs so backend knows who was shown -->
                 {% for s in students %}
-                <input type="hidden" name="all_ids" value="{{ s.uSID }}">
+                <input type="hidden" name="all_ids" value="{{ s.usid }}">
                 {% endfor %}
 
                 <!-- Table header with Select All / Deselect All controls -->
@@ -275,25 +275,25 @@
                         </thead>
                         <tbody id="student-tbody">
                             {% for s in students %}
-                            <tr class="student-row" id="row-{{ s.uSID }}">
+                            <tr class="student-row" id="row-{{ s.usid }}">
 
-                                <!-- Present checkbox — name="present_ids" value=uSID -->
+                                <!-- Present checkbox — name="present_ids" value=usid -->
                                 <!-- Only checked rows are submitted; backend infers unchecked = Absent -->
                                 <td class="check-cell" style="text-align:center;">
                                     <input type="checkbox"
                                            name="present_ids"
-                                           value="{{ s.uSID }}"
-                                           id="chk-{{ s.uSID }}"
+                                           value="{{ s.usid }}"
+                                           id="chk-{{ s.usid }}"
                                            onchange="updateCounter()">
                                 </td>
 
-                                <td><span class="badge badge-primary">{{ s.uSID }}</span></td>
+                                <td><span class="badge badge-primary">{{ s.usid }}</span></td>
                                 <td><strong>{{ s.last_name }}</strong>, {{ s.first_name }} {{ s.middle_name }}</td>
                                 <td>{{ s.level }}</td>
                                 <td style="font-size:0.85rem; color:var(--text-secondary);">{{ s.email }}</td>
 
                                 <!-- Live status badge — updates instantly when checkbox is toggled -->
-                                <td id="status-{{ s.uSID }}">
+                                <td id="status-{{ s.usid }}">
                                     <span class="badge" style="background:rgba(239,68,68,0.15); color:#f87171;">
                                         Absent
                                     </span>

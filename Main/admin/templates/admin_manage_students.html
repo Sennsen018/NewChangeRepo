@@ -178,7 +178,7 @@
                             <tbody>
                                 {% for student in students if student.status == 'Active' %}
                                 <tr>
-                                    <td>{{ student.uSID }}</td>
+                                    <td>{{ student.usid }}</td>
                                     <td>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</td>
                                     <td>{{ student.course }} - {{ student.level }}</td>
                                     <td>{{ student.email }}</td>
@@ -190,21 +190,21 @@
                                     <td>
                                         <button class="btn btn-secondary" 
                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
-                                                onclick="openEditModal('{{ student.uSID }}', '{{ student.first_name }}', '{{ student.middle_name }}', '{{ student.last_name }}', '{{ student.email }}', '{{ student.course }}', '{{ student.level }}', '{{ student.section }}', '{{ student.status }}')">
+                                                onclick="openEditModal('{{ student.usid }}', '{{ student.first_name }}', '{{ student.middle_name }}', '{{ student.last_name }}', '{{ student.email }}', '{{ student.course }}', '{{ student.level }}', '{{ student.section }}', '{{ student.status }}')">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
                                          <button class="btn btn-primary" 
                                                  style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
-                                                 onclick="openEnrollModal('{{ student.uSID }}', '{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}')">
+                                                 onclick="openEnrollModal('{{ student.usid }}', '{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}')">
                                             <i class="fas fa-user-plus"></i> Enroll
                                          </button>
-                                         <a href="{{ url_for('admin.archive_student', uSID=student.uSID) }}" 
+                                         <a href="{{ url_for('admin.archive_student', usid=student.usid) }}" 
                                             class="btn btn-warning" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                             onclick="return confirm('Are you sure you want to archive this student?')">
                                              <i class="fas fa-archive"></i> Archive
                                          </a>
-                                         <a href="{{ url_for('admin.delete_student', uSID=student.uSID) }}" 
+                                         <a href="{{ url_for('admin.delete_student', usid=student.usid) }}" 
                                             class="btn btn-danger" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                             onclick="return confirm('Are you sure you want to PERMANENTLY delete this student?')">
@@ -292,7 +292,7 @@
                                     {% if estudent.subject_id == subject.subject_id %}
                                     {% set ns.found = true %}
                                     <tr>
-                                        <td>{{ estudent.uSID }}</td>
+                                        <td>{{ estudent.usid }}</td>
                                         <td>{{ estudent.first_name }} {{ estudent.middle_name }} {{ estudent.last_name }}</td>
                                         <td>{{ estudent.section }}</td>
                                         <td>{{ estudent.email }}</td>
@@ -304,10 +304,10 @@
                                         <td>
                                             <button class="btn btn-secondary" 
                                                     style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
-                                                    onclick="openEditModal('{{ estudent.uSID }}', '{{ estudent.first_name }}', '{{ estudent.middle_name }}', '{{ estudent.last_name }}', '{{ estudent.email }}', '{{ estudent.course }}', '{{ estudent.level }}', '{{ estudent.section }}', '{{ estudent.status }}')">
+                                                    onclick="openEditModal('{{ estudent.usid }}', '{{ estudent.first_name }}', '{{ estudent.middle_name }}', '{{ estudent.last_name }}', '{{ estudent.email }}', '{{ estudent.course }}', '{{ estudent.level }}', '{{ estudent.section }}', '{{ estudent.status }}')">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
-                                            <a href="{{ url_for('admin.archive_student', uSID=estudent.uSID) }}" 
+                                            <a href="{{ url_for('admin.archive_student', usid=estudent.usid) }}" 
                                                class="btn btn-warning" 
                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                                onclick="return confirm('Are you sure you want to archive this student?')">
@@ -319,7 +319,7 @@
                                                onclick="return confirm('Remove this student from this subject?')">
                                                 <i class="fas fa-user-minus"></i> Unenroll
                                             </a>
-                                            <a href="{{ url_for('admin.delete_student', uSID=estudent.uSID) }}" 
+                                            <a href="{{ url_for('admin.delete_student', usid=estudent.usid) }}" 
                                                class="btn btn-danger" 
                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                                onclick="return confirm('Are you sure you want to PERMANENTLY delete this student?')">
@@ -364,12 +364,12 @@
                             <tbody>
                                 {% for student in students if student.status == 'Archived' %}
                                 <tr>
-                                    <td>{{ student.uSID }}</td>
+                                    <td>{{ student.usid }}</td>
                                     <td>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</td>
                                     <td>{{ student.course }} - {{ student.level }}</td>
                                     <td>{{ student.email }}</td>
                                     <td>
-                                        <a href="{{ url_for('admin.unarchive_student', uSID=student.uSID) }}" 
+                                        <a href="{{ url_for('admin.unarchive_student', usid=student.usid) }}" 
                                            class="btn btn-success" 
                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
                                             <i class="fas fa-undo"></i> Unarchive
@@ -519,7 +519,7 @@
             <h3 class="mb-4">Enroll <span id="enroll_student_name"></span></h3>
             <form method="POST" action="{{ url_for('admin.enroll_student') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <input type="hidden" name="uSID" id="enroll_uSID">
+                <input type="hidden" name="usid" id="enroll_usid">
                 <div class="form-group mb-4">
                     <label class="form-label">Select Subject & Section</label>
                     <select name="assignment_id" class="form-control" required>
@@ -621,7 +621,7 @@
         }
 
         function openEnrollModal(sid, name) {
-            document.getElementById('enroll_uSID').value = sid;
+            document.getElementById('enroll_usid').value = sid;
             document.getElementById('enroll_student_name').innerText = name;
             document.getElementById('enrollStudentModal').style.display = 'flex';
         }

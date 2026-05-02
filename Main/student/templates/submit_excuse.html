@@ -106,7 +106,7 @@
                             <select name="class_id" id="class_id" class="form-control" required style="background: var(--surface-color); color: white; border: 1px solid var(--surface-border);">
                                 <option value="" disabled selected>-- Select a Class --</option>
                                 {% for c in enrollments %}
-                                <option value="{{ c.subject_id }}|{{ c.uTID }}">
+                                <option value="{{ c.subject_id }}|{{ c.utid }}">
                                     {{ c.subject_code }} - {{ c.subject_name }} ({{ c.first_name }} {{ c.middle_name }} {{ c.last_name }})
                                 </option>
                                 {% endfor %}

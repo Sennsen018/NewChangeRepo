@@ -370,6 +370,7 @@ def manage_students():
                            all_assignments=all_assignments,
                            courses=courses,
                            total_pages=total_pages,
+                           total_count=total_count,
                            current_page=page,
                            search=search,
                            course_filter=course_filter,

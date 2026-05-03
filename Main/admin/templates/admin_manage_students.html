@@ -128,11 +128,12 @@
                             All Students <span class="badge badge-secondary" style="margin-left: 0.5rem;">{{ total_count }}</span>
                         </button>
                         {% for subject in subjects %}
-                            <button class="tab-btn" onclick="showTab('sub-{{ subject.subject_id }}')">
-                                {{ subject.subject_code }} 
+                            <button class="tab-btn" onclick="showTab('sub-{{ subject.assignment_id }}')">
+                                {{ subject.subject_code }} - {{ subject.section }}
                                 <span class="badge {% if subject.student_count == 0 %}badge-danger{% else %}badge-success{% endif %}" style="margin-left: 0.5rem;">
                                     {{ subject.student_count }}
                                 </span>
+                                <small style="display: block; font-size: 0.65rem; opacity: 0.8;">{{ subject.teacher_name }}</small>
                             </button>
                         {% endfor %}
                         <button class="tab-btn" onclick="showTab('unassigned')" style="border: 1px dashed var(--primary); color: var(--primary);">
@@ -243,20 +244,21 @@
 
             <!-- Subject Specific Tabs -->
             {% for subject in subjects %}
-            <div id="tab-sub-{{ subject.subject_id }}" class="tab-content" style="display: none;">
+            <div id="tab-sub-{{ subject.assignment_id }}" class="tab-content" style="display: none;">
                 <div class="glass-panel p-4" style="padding: 1.5rem;">
                     <div class="flex justify-between items-center mb-3">
                         <div>
                             <h4 style="margin: 0;">{{ subject.subject_name }} ({{ subject.subject_code }})</h4>
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-                                <i class="fas fa-chalkboard-teacher mr-1"></i> 
-                                Instructor(s): 
-                                {% if subject.teachers %}
-                                    {{ subject.teachers }}
-                                {% else %}
-                                    <span style="font-style: italic;">Not assigned</span>
-                                {% endif %}
-                            </p>
+                            <div class="flex gap-4 mt-1">
+                                <p style="font-size: 0.85rem; color: var(--text-main);">
+                                    <i class="fas fa-chalkboard-teacher mr-1" style="color: var(--primary);"></i> 
+                                    <strong>Instructor:</strong> {{ subject.teacher_name }}
+                                </p>
+                                <p style="font-size: 0.85rem; color: var(--text-main);">
+                                    <i class="fas fa-users mr-1" style="color: var(--primary);"></i> 
+                                    <strong>Section:</strong> {{ subject.section }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <div class="table-container">
@@ -274,7 +276,7 @@
                             <tbody>
                                 {% set ns = namespace(found=false) %}
                                 {% for estudent in enrolled_students %}
-                                    {% if estudent.subject_id == subject.subject_id %}
+                                    {% if estudent.assignment_id == subject.assignment_id %}
                                     {% set ns.found = true %}
                                     <tr>
                                         <td>{{ estudent.usid }}</td>

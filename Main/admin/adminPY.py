@@ -290,38 +290,46 @@ def manage_students():
     cursor.execute(query, query_params)
     students = cursor.fetchall()
 
-    # Fetch subjects with their assigned teachers (grouped) and enrollment counts (respecting search/filters)
-    subject_count_subquery = """
-        SELECT COUNT(*) FROM Enrollments e 
-        JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
-        JOIN Students st ON e.usid = st.usid 
-        WHERE ta.subject_id = s.subject_id
+    # Fetch specific class assignments (Teacher + Subject + Section) with enrollment counts
+    assignment_query = """
+        SELECT ta.assignment_id, s.subject_id, s.subject_code, s.subject_name, ta.section,
+               CONCAT(t.first_name, ' ', t.middle_name, ' ', t.last_name) as teacher_name,
+               (
+                   SELECT COUNT(*) FROM Enrollments e 
+                   JOIN Students st ON e.usid = st.usid 
+                   WHERE e.assignment_id = ta.assignment_id
     """
-    subject_count_params = []
+    assignment_params = []
     if search:
-        subject_count_subquery += " AND (st.usid LIKE %s OR st.first_name LIKE %s OR st.middle_name LIKE %s OR st.last_name LIKE %s OR st.email LIKE %s)"
-        subject_count_params.extend([search_val, search_val, search_val, search_val, search_val])
+        search_val = f"%{search}%"
+        assignment_query += " AND (st.usid LIKE %s OR st.first_name LIKE %s OR st.middle_name LIKE %s OR st.last_name LIKE %s OR st.email LIKE %s)"
+        assignment_params.extend([search_val, search_val, search_val, search_val, search_val])
     if course_filter:
-        subject_count_subquery += " AND st.course = %s"
-        subject_count_params.append(course_filter)
+        assignment_query += " AND st.course = %s"
+        assignment_params.append(course_filter)
     if status_filter and status_filter != 'All':
-        subject_count_subquery += " AND st.status = %s"
-        subject_count_params.append(status_filter)
+        assignment_query += " AND st.status = %s"
+        assignment_params.append(status_filter)
+        
+    assignment_query += """
+               ) as student_count
+        FROM Teacher_Assignments ta
+        JOIN Subjects s ON ta.subject_id = s.subject_id
+        JOIN Teachers t ON ta.utid = t.utid
+    """
+    
+    # Apply subject search to the outer query as well
+    if search:
+        assignment_query += " WHERE (s.subject_code LIKE %s OR s.subject_name LIKE %s OR t.first_name LIKE %s OR t.last_name LIKE %s)"
+        search_val = f"%{search}%"
+        assignment_params.extend([search_val, search_val, search_val, search_val])
 
-    cursor.execute(f"""
-        SELECT s.*, 
-               STRING_AGG(CONCAT(t.first_name, ' ', t.middle_name, ' ', t.last_name), ', ') as teachers,
-               ({subject_count_subquery}) as student_count
-        FROM Subjects s
-        LEFT JOIN Teacher_Assignments ta ON s.subject_id = ta.subject_id
-        LEFT JOIN Teachers t ON ta.utid = t.utid
-        GROUP BY s.subject_id, s.subject_code, s.subject_name
-    """, tuple(subject_count_params))
-    subjects = cursor.fetchall()
+    cursor.execute(assignment_query, tuple(assignment_params))
+    subjects = cursor.fetchall() # We keep the name 'subjects' but it now contains assignments
 
-    # Fetch students grouped by subjects (respecting search/filters)
+    # Fetch students grouped by assignments (respecting search/filters)
     enrolled_query = """
-        SELECT s.*, sub.subject_name, sub.subject_code, ta.subject_id, e.enrollment_id
+        SELECT s.*, sub.subject_name, sub.subject_code, ta.assignment_id, e.enrollment_id, ta.section
         FROM Students s
         JOIN Enrollments e ON s.usid = e.usid
         JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id

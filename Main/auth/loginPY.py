@@ -540,6 +540,8 @@ def logout():
     session.clear()
     if role == 'admin':
         return redirect(url_for('auth.admin_login'))
+    elif role == 'teacher':
+        return redirect(url_for('auth.teacher_login'))
     return redirect(url_for('auth.student_login'))
 
 @auth.route('/change-password', methods=['GET', 'POST'])

@@ -1218,7 +1218,7 @@ def bulk_enroll():
         cursor.close()
         conn.close()
         
-    return redirect(url_for('admin.manage_students'))
+    return redirect(url_for('admin.manual_enroll'))
 
 @admin.route('/bulk_enroll_selected', methods=['POST'])
 def bulk_enroll_selected():
@@ -1227,7 +1227,7 @@ def bulk_enroll_selected():
     
     if not assignment_id or not selected_usids or selected_usids == ['']:
         flash('Please select at least one student and a target class.', 'error')
-        return redirect(url_for('admin.manage_students'))
+        return redirect(url_for('admin.manual_enroll'))
         
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -1268,7 +1268,7 @@ def bulk_enroll_selected():
         cursor.close()
         conn.close()
         
-    return redirect(url_for('admin.manage_students'))
+    return redirect(url_for('admin.manual_enroll'))
 
 @admin.route('/audit_logs')
 def audit_logs():
@@ -1553,17 +1553,17 @@ def manual_enroll():
         assignment = cursor.fetchone()
         
         if assignment:
-            # Check if already enrolled in this specific Subject + Section
-            cursor.execute("SELECT * FROM Enrollments WHERE usid = %s AND subject_id = %s AND section = %s", 
-                           (usid, assignment['subject_id'], assignment['section']))
+            # Check if already enrolled in this specific Assignment
+            cursor.execute("SELECT * FROM Enrollments WHERE usid = %s AND assignment_id = %s", 
+                           (usid, assignment_id))
             if not cursor.fetchone():
-                cursor.execute("INSERT INTO Enrollments (usid, subject_id, section) VALUES (%s, %s, %s) RETURNING enrollment_id", 
-                               (usid, assignment['subject_id'], assignment['section']))
+                cursor.execute("INSERT INTO Enrollments (usid, assignment_id) VALUES (%s, %s) RETURNING enrollment_id", 
+                               (usid, assignment_id))
                 enrollment_id = cursor.fetchone()['enrollment_id']
                 
                 # Audit Logging
                 log_system_action(cursor, 'Enrollments', enrollment_id, 'Create', session['user_id'], session['role'], 
-                                   f"Manual Enrollment: Student {usid} enrolled in Subject ID {assignment['subject_id']} (Section {assignment['section']})")
+                                   f"Manual Enrollment: Student {usid} enrolled in Assignment ID {assignment_id}")
                 
                 conn.commit()
                 flash('Student successfully enrolled.', 'success')

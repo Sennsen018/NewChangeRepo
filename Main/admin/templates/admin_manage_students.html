@@ -339,18 +339,12 @@
                             <h3 style="margin: 0; color: var(--primary);">Manual Enrollment</h3>
                             <p class="text-muted" style="font-size: 0.85rem;">Showing students who are not yet enrolled in any subjects or sections.</p>
                         </div>
-                        <div id="bulk-actions" style="display: none;">
-                            <button class="btn btn-primary" onclick="openBulkSelectedModal()">
-                                <i class="fas fa-plus-circle mr-1"></i> Enroll Selected (<span id="selected-count">0</span>)
-                            </button>
-                        </div>
                     </div>
                     
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 40px;"><input type="checkbox" id="select-all-manual" onclick="toggleSelectAllManual(this)"></th>
                                     <th>Student ID</th>
                                     <th>Full Name</th>
                                     <th>Course & Year</th>
@@ -361,7 +355,6 @@
                             <tbody>
                                 {% for student in unassigned_students %}
                                 <tr>
-                                    <td><input type="checkbox" class="student-checkbox" value="{{ student.usid }}" onclick="updateBulkSelectedCount()"></td>
                                     <td style="font-weight: 600;">{{ student.usid }}</td>
                                     <td>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</td>
                                     <td>{{ student.course }} - {{ student.level }}</td>
@@ -635,33 +628,6 @@
         </div>
     </div>
 
-    <!-- Bulk Enroll Selected Modal -->
-    <div id="bulkEnrollSelectedModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
-        <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
-            <button onclick="closeModal('bulkEnrollSelectedModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
-            <h3 class="mb-4">Enroll Selected Students</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">You are about to enroll <span id="modal-selected-count">0</span> students into the selected class.</p>
-            
-            <form method="POST" action="{{ url_for('admin.bulk_enroll_selected') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <input type="hidden" name="selected_usids" id="selected_usids_input">
-                <div class="form-group mb-4">
-                    <label class="form-label">Select Subject & Section</label>
-                    <select name="assignment_id" class="form-control" required>
-                        <option value="">-- Choose Class --</option>
-                        {% for a in all_assignments %}
-                            <option value="{{ a.assignment_id }}">{{ a.subject_code }} - {{ a.section }} ({{ a.first_name }} {{ a.middle_name }} {{ a.last_name }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="flex justify-end gap-2">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('bulkEnrollSelectedModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Enroll Students</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
     <script>
         function showTab(tabId) {
             // Hide all tab contents
@@ -678,35 +644,7 @@
             document.getElementById('tab-' + tabId).style.display = 'block';
             
             // Activate the clicked button
-            if (event) event.currentTarget.classList.add('active');
-
-            // Clear checkboxes when switching tabs
-            if (tabId === 'unassigned') {
-                document.getElementById('select-all-manual').checked = false;
-                document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
-                updateBulkSelectedCount();
-            }
-        }
-
-        function toggleSelectAllManual(source) {
-            document.querySelectorAll('.student-checkbox').forEach(cb => {
-                cb.checked = source.checked;
-            });
-            updateBulkSelectedCount();
-        }
-
-        function updateBulkSelectedCount() {
-            const selected = document.querySelectorAll('.student-checkbox:checked');
-            const count = selected.length;
-            document.getElementById('selected-count').innerText = count;
-            document.getElementById('bulk-actions').style.display = count > 0 ? 'block' : 'none';
-        }
-
-        function openBulkSelectedModal() {
-            const selected = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
-            document.getElementById('selected_usids_input').value = selected.join(',');
-            document.getElementById('modal-selected-count').innerText = selected.length;
-            document.getElementById('bulkEnrollSelectedModal').style.display = 'flex';
+            event.currentTarget.classList.add('active');
         }
 
         function openModal() {

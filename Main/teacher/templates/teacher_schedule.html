@@ -10,26 +10,23 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-                <aside class="sidebar">
-            <div class="sidebar-logo"><i class="fas fa-fingerprint"></i><span>Attendeez</span></div>
-            <div class="nav-group">
-                <p class="nav-label">Academic</p>
-                <a href="{{ url_for('teacher.dashboard') }}" class="nav-item"><i class="fas fa-grid-2"></i> Dashboard</a>
-                <a href="{{ url_for('teacher.my_schedule') }}" class="nav-item active"><i class="fas fa-calendar-days"></i> My Schedule</a>
-                <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item"><i class="fas fa-clipboard-check"></i> Attendance</a>
+                        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-fingerprint"></i>
+                <span>Attendeez</span>
             </div>
-            <div class="nav-group">
-                <p class="nav-label">Management</p>
-                <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users-viewfinder"></i> Students</a>
-                <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-pen-to-square"></i> Marks</a>
-                <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> Excuse Letters</a>
-                <a href="{{ url_for('teacher.reports') }}" class="nav-item"><i class="fas fa-chart-mixed"></i> Analytics</a>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('teacher.dashboard') }}" class="nav-item active"><i class="fas fa-house"></i> Teacher Dashboard</a>
+                <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users"></i> Manage Students</a>
+                <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item"><i class="fas fa-clipboard-check"></i> Manual Attendance</a>
+                <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i> Manage Marks</a>
+                <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
+                <a href="{{ url_for('teacher.reports') }}" class="nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+            </nav>
+            <div class="sidebar-bottom-actions">
+                <a href="{{ url_for('teacher.profile') }}" class="btn btn-secondary w-full"><i class="fas fa-user-circle"></i> My Profile</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
-            <div class="nav-group">
-                <p class="nav-label">Account</p>
-                <a href="{{ url_for('teacher.profile') }}" class="nav-item"><i class="fas fa-user-circle"></i> My Profile</a>
-            </div>
-            <div style="margin-top: auto;"><a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
         </aside>
 
         <!-- Main Content -->

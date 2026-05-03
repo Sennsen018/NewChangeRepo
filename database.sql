@@ -5,7 +5,9 @@ CREATE TABLE IF NOT EXISTS Admins (
     admin_id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL
+    email VARCHAR(100) UNIQUE NOT NULL,
+    failed_attempts INT DEFAULT 0,
+    lockout_time TIMESTAMP NULL
 );
 
 -- 2. Teachers Table

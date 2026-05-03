@@ -158,6 +158,27 @@ def view_report(report_id):
     conn.close()
     return render_template('admin_view_report.html', report=report, summary=summary, report_stats=report_stats)
 
+@admin.route('/unlock_user/<user_type>/<user_id>')
+def unlock_user(user_type, user_id):
+    """
+    Unlocks a student or teacher account by resetting failed attempts and clearing lockout time.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    table = 'Students' if user_type == 'student' else 'Teachers' if user_type == 'teacher' else 'Admins'
+    id_col = 'usid' if user_type == 'student' else 'utid' if user_type == 'teacher' else 'admin_id'
+    
+    cursor.execute(f"UPDATE {table} SET failed_attempts = 0, lockout_time = NULL WHERE {id_col} = %s", (user_id,))
+    
+    log_system_action(cursor, table, user_id, 'Update', session['user_id'], session['role'], f"Account unlocked by admin")
+    
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash(f'Account {user_id} has been unlocked.', 'success')
+    return redirect(request.referrer or url_for('admin.dashboard'))
+
 @admin.route('/manage_students', methods=['GET', 'POST'])
 def manage_students():
     """
@@ -385,7 +406,8 @@ def manage_students():
                            current_page=page,
                            search=search,
                            course_filter=course_filter,
-                           status_filter=status_filter)
+                           status_filter=status_filter,
+                           now=datetime.now())
 
 @admin.route('/edit_student/<usid>', methods=['POST'])
 def edit_student(usid):
@@ -605,7 +627,8 @@ def manage_teachers():
                            search=search,
                            dept_filter=dept_filter,
                            status_filter=status_filter,
-                           departments=departments)
+                           departments=departments,
+                           now=datetime.now())
 
 @admin.route('/edit_teacher/<utid>', methods=['POST'])
 def edit_teacher(utid):

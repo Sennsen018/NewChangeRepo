@@ -157,8 +157,20 @@
                                     <span class="badge {% if teacher.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
                                         {{ teacher.status }}
                                     </span>
+                                    {% if teacher.lockout_time and teacher.lockout_time > now %}
+                                        <span class="badge badge-danger" style="margin-top: 0.25rem; display: block;">
+                                            <i class="fas fa-lock"></i> Locked
+                                        </span>
+                                    {% endif %}
                                 </td>
                                 <td>
+                                        {% if teacher.lockout_time and teacher.lockout_time > now %}
+                                        <a href="{{ url_for('admin.unlock_user', user_type='teacher', user_id=teacher.utid) }}" 
+                                           class="btn btn-success" 
+                                           style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
+                                            <i class="fas fa-unlock"></i> Unlock
+                                        </a>
+                                        {% endif %}
                                         {% set m_name = teacher.middle_name if teacher.middle_name else '' %}
                                         {% set dept = teacher.department if teacher.department else '' %}
                                          <button class="btn btn-secondary" 

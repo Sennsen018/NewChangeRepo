@@ -172,8 +172,20 @@
                                         <span class="badge {% if student.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
                                             {{ student.status }}
                                         </span>
+                                        {% if student.lockout_time and student.lockout_time > now %}
+                                            <span class="badge badge-danger" style="margin-top: 0.25rem; display: block;">
+                                                <i class="fas fa-lock"></i> Locked
+                                            </span>
+                                        {% endif %}
                                     </td>
                                     <td>
+                                        {% if student.lockout_time and student.lockout_time > now %}
+                                        <a href="{{ url_for('admin.unlock_user', user_type='student', user_id=student.usid) }}" 
+                                           class="btn btn-success" 
+                                           style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
+                                            <i class="fas fa-unlock"></i> Unlock
+                                        </a>
+                                        {% endif %}
                                         <button class="btn btn-secondary" 
                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
                                                 onclick="openEditModal(`{{ student.usid }}`, `{{ student.first_name }}`, `{{ student.middle_name }}`, `{{ student.last_name }}`, `{{ student.email }}`, `{{ student.course }}`, `{{ student.level }}`, `{{ student.section }}`, `{{ student.status }}`)">

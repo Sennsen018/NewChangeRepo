@@ -166,11 +166,11 @@ def student_login():
             else:
                 attempts = student['failed_attempts'] + 1
                 lockout = None
-                if attempts >= 3:
-                    lockout = datetime.now() + timedelta(minutes=3)
-                    flash('Account locked for 3 minutes due to multiple failed attempts.', 'error')
+                if attempts >= 10:
+                    lockout = datetime.now() + timedelta(hours=2)
+                    flash('Account locked for 2 hours due to 10 failed attempts. Contact admin to unlock.', 'error')
                 else:
-                    flash('Invalid credentials.', 'error')
+                    flash(f'Invalid credentials. {10 - attempts} attempts remaining.', 'error')
                 cursor.execute("UPDATE Students SET failed_attempts = %s, lockout_time = %s WHERE usid = %s", (attempts, lockout, student['usid']))
                 conn.commit()
         else:
@@ -215,11 +215,11 @@ def teacher_login():
             else:
                 attempts = teacher['failed_attempts'] + 1
                 lockout = None
-                if attempts >= 3:
-                    lockout = datetime.now() + timedelta(minutes=3)
-                    flash('Account locked for 3 minutes.', 'error')
+                if attempts >= 10:
+                    lockout = datetime.now() + timedelta(hours=2)
+                    flash('Account locked for 2 hours due to 10 failed attempts. Contact admin to unlock.', 'error')
                 else:
-                    flash('Invalid credentials.', 'error')
+                    flash(f'Invalid credentials. {10 - attempts} attempts remaining.', 'error')
                 cursor.execute("UPDATE Teachers SET failed_attempts = %s, lockout_time = %s WHERE utid = %s", (attempts, lockout, teacher['utid']))
                 conn.commit()
         else:
@@ -245,11 +245,27 @@ def admin_login():
         cursor.execute("SELECT * FROM Admins WHERE username = %s", (username,))
         admin = cursor.fetchone()
         
-        if admin and check_password_hash(admin['password_hash'], password):
-            session['user_id'] = admin['admin_id']
-            session['role'] = 'admin'
-            return redirect(url_for('admin.dashboard'))
-        flash('Invalid credentials.', 'error')
+        if admin:
+            if admin['lockout_time'] and admin['lockout_time'] > datetime.now():
+                flash(f'Account locked. Try again after {admin["lockout_time"]}', 'error')
+            elif check_password_hash(admin['password_hash'], password):
+                cursor.execute("UPDATE Admins SET failed_attempts = 0, lockout_time = NULL WHERE admin_id = %s", (admin['admin_id'],))
+                conn.commit()
+                session['user_id'] = admin['admin_id']
+                session['role'] = 'admin'
+                return redirect(url_for('admin.dashboard'))
+            else:
+                attempts = admin['failed_attempts'] + 1
+                lockout = None
+                if attempts >= 10:
+                    lockout = datetime.now() + timedelta(hours=2)
+                    flash('Account locked for 2 hours due to 10 failed attempts.', 'error')
+                else:
+                    flash(f'Invalid credentials. {10 - attempts} attempts remaining.', 'error')
+                cursor.execute("UPDATE Admins SET failed_attempts = %s, lockout_time = %s WHERE admin_id = %s", (attempts, lockout, admin['admin_id']))
+                conn.commit()
+        else:
+            flash('Invalid credentials.', 'error')
         cursor.close()
         conn.close()
     return render_template('admin_login.html')

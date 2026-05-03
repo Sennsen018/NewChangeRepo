@@ -4,6 +4,7 @@ import json
 from Main.db import get_db_connection, log_system_action
 from psycopg2.extras import RealDictCursor
 import re
+from datetime import datetime, timedelta
 
 def validate_user_data(first_name, middle_name, last_name, email):
     """
@@ -712,6 +713,9 @@ def manage_subjects():
         search_val = f"%{search}%"
         params.extend([search_val, search_val])
         
+    cursor.execute(query, params)
+    subjects = cursor.fetchall()
+    
     cursor.execute("SELECT COUNT(*) as total FROM Subjects")
     total_count = cursor.fetchone()['total']
     

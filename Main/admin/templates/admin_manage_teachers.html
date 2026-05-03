@@ -248,7 +248,7 @@
         <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
             <button onclick="closeModal('addTeacherModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Add New Teacher</h3>
-            <form method="POST" action="{{ url_for('admin.manage_teachers') }}">
+            <form method="POST" action="{{ url_for('admin.manage_teachers') }}" onsubmit="return validateTeacherForm(this)">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group mb-3">
                     <label class="form-label">First Name</label>
@@ -283,7 +283,7 @@
         <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
             <button onclick="closeModal('editTeacherModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Edit Teacher</h3>
-            <form id="editTeacherForm" method="POST">
+            <form id="editTeacherForm" method="POST" onsubmit="return validateTeacherForm(this)">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group mb-3">
                     <label class="form-label">First Name</label>
@@ -341,6 +341,39 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
+
+        function validateTeacherForm(form) {
+            const firstName = form.querySelector('[name="first_name"]').value.trim();
+            const middleName = form.querySelector('[name="middle_name"]').value.trim();
+            const lastName = form.querySelector('[name="last_name"]').value.trim();
+            const email = form.querySelector('[name="email"]').value.trim();
+
+            if (!firstName || !middleName || !lastName || !email) {
+                alert("All fields (first name, middle name, last name, email) are required.");
+                return false;
+            }
+
+            const emailPattern = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+            if (!emailPattern.test(email)) {
+                alert("Invalid email format.");
+                return false;
+            }
+
+            const namePattern = /^[A-Za-z\s\-\.']+$/;
+            if (!namePattern.test(firstName) || !namePattern.test(middleName) || !namePattern.test(lastName)) {
+                alert("Names can only contain letters, spaces, hyphens, periods, and apostrophes.");
+                return false;
+            }
+
+            if (firstName.length < 2 || firstName.length > 100 || 
+                middleName.length < 2 || middleName.length > 100 || 
+                lastName.length < 2 || lastName.length > 100) {
+                alert("Names must be between 2 and 100 characters long.");
+                return false;
+            }
+
+            return true;
+        }
 
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

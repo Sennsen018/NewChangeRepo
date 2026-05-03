@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,7 +41,10 @@
         .brand-panel::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48cGF0aCBkPSJNMTAwIDEwMGg0MDB2NDAwSDEwMHoiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvc3ZnPg==') repeat;
             opacity: 0.5;
             z-index: 0;
@@ -126,7 +130,8 @@
             height: 32px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
-            color: #34d399; /* Emerald matching design */
+            color: #34d399;
+            /* Emerald matching design */
         }
 
         /* Right Panel - Login Card */
@@ -223,7 +228,7 @@
             box-shadow: 0 0 0 3px var(--primary-soft);
         }
 
-        .login-input:focus ~ .input-icon {
+        .login-input:focus~.input-icon {
             color: var(--primary);
             filter: drop-shadow(0 0 5px var(--primary-soft));
         }
@@ -270,7 +275,8 @@
         /* Button overrides */
         .btn-gold {
             background: var(--gold-gradient);
-            color: #1e1b4b; /* Dark text for contrast */
+            color: #1e1b4b;
+            /* Dark text for contrast */
             border: none;
             width: 100%;
             padding: 1rem;
@@ -291,9 +297,11 @@
         .btn-gold::before {
             content: '';
             position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
             transition: left 0.5s ease;
         }
 
@@ -305,7 +313,7 @@
         .btn-gold:hover::before {
             left: 100%;
         }
-        
+
         .btn-secondary-link {
             width: 100%;
             padding: 0.85rem;
@@ -341,22 +349,33 @@
             font-size: 0.9rem;
             animation: slideIn 0.3s ease forwards;
         }
-        .alert-box.show { display: flex; }
-        
+
+        .alert-box.show {
+            display: flex;
+        }
+
         .alert-error {
             background: rgba(244, 63, 94, 0.1);
             color: #fb7185;
             border: 1px solid rgba(244, 63, 94, 0.2);
         }
+
         .alert-success {
             background: rgba(16, 185, 129, 0.1);
             color: #34d399;
             border: 1px solid rgba(16, 185, 129, 0.2);
         }
-        
+
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Mobile responsiveness */
@@ -365,24 +384,28 @@
                 flex-direction: column;
                 overflow-y: auto;
             }
+
             .brand-panel {
                 padding: 3rem 2rem;
                 min-height: auto;
                 flex: none;
             }
+
             .admin-link {
                 top: 1.5rem;
                 left: 1.5rem;
             }
+
             .login-panel {
                 padding: 2rem 1.5rem;
                 flex: none;
             }
+
             .login-card-container {
                 padding: 2rem 1.5rem;
             }
         }
-        
+
         /* Loading Spinner */
         .spinner {
             display: none;
@@ -394,27 +417,49 @@
             animation: spin 1s ease-in-out infinite;
             margin-right: 0.5rem;
         }
-        
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
-        
-        .btn-gold.loading .spinner { display: inline-block; }
-        .btn-gold.loading .btn-text { opacity: 0.8; }
-        .btn-gold.loading { pointer-events: none; }
-        
+
+        .btn-gold.loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-gold.loading .btn-text {
+            opacity: 0.8;
+        }
+
+        .btn-gold.loading {
+            pointer-events: none;
+        }
+
         /* Entrance Animations */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .animate-fade-up {
             opacity: 0;
             animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        .delay-100 { animation-delay: 100ms; }
+
+        .delay-100 {
+            animation-delay: 100ms;
+        }
     </style>
 </head>
+
 <body class="split-auth-page">
 
     <!-- LEFT PANEL: Brand Info -->
@@ -422,7 +467,7 @@
         <a href="{{ url_for('auth.admin_login') }}" class="admin-link">
             <i class="fas fa-arrow-left"></i> Admin Portal
         </a>
-        
+
         <div class="brand-content animate-fade-up">
             <div class="brand-icon">
                 <i class="fas fa-graduation-cap"></i>
@@ -430,9 +475,10 @@
             <h1 class="brand-title">Attendeez</h1>
             <p class="brand-subtitle">Secure & Smart</p>
             <p class="brand-desc">
-                The most advanced and reliable attendance management system designed for modern educational institutions.
+                The most advanced and reliable attendance management system designed for modern educational
+                institutions.
             </p>
-            
+
             <ul class="feature-list">
                 <li class="feature-item">
                     <div class="feature-icon"><i class="fas fa-qrcode"></i></div>
@@ -453,7 +499,7 @@
     <!-- RIGHT PANEL: Login Card -->
     <div class="login-panel">
         <div class="login-card-container animate-fade-up delay-100">
-            
+
             <div class="login-header">
                 <div class="login-icon">
                     <i class="fas fa-user-graduate"></i>
@@ -464,14 +510,15 @@
 
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert-box show alert-{{ category }}">
-                            <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
-                            <span>{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                {% endif %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert-box show alert-{{ category }}">
+                <i
+                    class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
             {% endwith %}
 
             <!-- JS Validation Alert -->
@@ -481,17 +528,20 @@
             </div>
 
             <form id="loginForm" method="POST" action="{{ url_for('auth.student_login') }}" novalidate>
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
                 <div class="input-group">
-                    <input type="text" id="email" name="email" class="login-input" placeholder="Student ID (e.g. S-2024-001)" required autocomplete="username">
+                    <input type="text" id="email" name="email" class="login-input"
+                        placeholder="Student ID (e.g. S-2024-001)" required autocomplete="username">
                     <i class="fas fa-id-card input-icon"></i>
                 </div>
 
                 <div class="input-group">
-                    <input type="password" id="password" name="password" class="login-input" placeholder="Password" required autocomplete="current-password">
+                    <input type="password" id="password" name="password" class="login-input" placeholder="Password"
+                        required autocomplete="current-password">
                     <i class="fas fa-lock input-icon"></i>
-                    <button type="button" class="password-toggle" id="toggleBtn" aria-label="Toggle password visibility">
+                    <button type="button" class="password-toggle" id="toggleBtn"
+                        aria-label="Toggle password visibility">
                         <i class="fas fa-eye" id="toggleIcon"></i>
                     </button>
                 </div>
@@ -504,7 +554,7 @@
                     <div class="spinner"></div>
                     <span class="btn-text">Sign In</span>
                 </button>
-                
+
                 <a href="{{ url_for('auth.teacher_login') }}" class="btn-secondary-link">
                     <i class="fas fa-chalkboard-teacher"></i> Teacher Login
                 </a>
@@ -543,7 +593,7 @@
         loginForm.addEventListener('submit', (e) => {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
-            
+
             if (!email || !password) {
                 e.preventDefault();
                 showError('Please enter both Student ID and Password.');
@@ -555,8 +605,8 @@
             // Show loading state
             submitBtn.classList.add('loading');
         });
-        
-        // Auto dismiss flash messages from backend
+
+        // Auto dismiss flash messages from backendd
         document.addEventListener('DOMContentLoaded', () => {
             const backendAlerts = document.querySelectorAll('.alert-box.show:not(#js-alert)');
             backendAlerts.forEach(alert => {
@@ -570,4 +620,5 @@
         });
     </script>
 </body>
+
 </html>

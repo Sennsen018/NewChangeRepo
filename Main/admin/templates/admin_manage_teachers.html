@@ -10,55 +10,24 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+                <aside class="sidebar">
             <div class="sidebar-logo">
                 <i class="fas fa-fingerprint"></i>
                 <span>Attendeez</span>
             </div>
-            
-            <div class="nav-group">
-                <p class="nav-label">Core</p>
-                <a href="{{ url_for('admin.dashboard') }}" class="nav-item">
-                    <i class="fas fa-grid-2"></i> Dashboard
-                </a>
-                <a href="{{ url_for('admin.manage_students') }}" class="nav-item">
-                    <i class="fas fa-user-graduate"></i> Students
-                </a>
-                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item active">
-                    <i class="fas fa-chalkboard-teacher"></i> Teachers
-                </a>
-                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item">
-                    <i class="fas fa-book"></i> Subjects
-                </a>
-            </div>
-
-            <div class="nav-group">
-                <p class="nav-label">Operations</p>
-                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item">
-                    <i class="fas fa-link"></i> Assign Classes
-                </a>
-                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item">
-                    <i class="fas fa-calendar-range"></i> Schedules
-                </a>
-                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item">
-                    <i class="fas fa-chart-line"></i> Analytics
-                </a>
-            </div>
-
-            <div class="nav-group">
-                <p class="nav-label">System</p>
-                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item">
-                    <i class="fas fa-user-minus"></i> Drop Requests
-                </a>
-                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item">
-                    <i class="fas fa-history"></i> Audit Logs
-                </a>
-            </div>
-            
-            <div style="margin-top: auto;">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Admin Dashboard</a>
+                <a href="{{ url_for('admin.manage_students') }}" class="nav-item"><i class="fas fa-user-graduate"></i> Manage Students</a>
+                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item active"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a>
+                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item"><i class="fas fa-book"></i> Manage Subjects</a>
+                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item"><i class="fas fa-link"></i> Assign Classes</a>
+                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item"><i class="fas fa-calendar-alt"></i> Manage Schedules</a>
+                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item"><i class="fas fa-chart-pie"></i> Attendance Analytics</a>
+                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item"><i class="fas fa-user-minus"></i> Drop Requests</a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit Logs</a>
+            </nav>
+            <div class="sidebar-bottom-actions">
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
         </aside>
 

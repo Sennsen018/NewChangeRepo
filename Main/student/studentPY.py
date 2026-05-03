@@ -24,7 +24,8 @@ def dashboard():
     cursor.execute("""
     SELECT s.subject_id, s.subject_code, s.subject_name 
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
     WHERE e.usid = %s
     """, (usid,))
     subjects_raw = cursor.fetchall()
@@ -37,9 +38,11 @@ def dashboard():
             SELECT a.status, COUNT(*) as count 
             FROM Attendance a
             JOIN Sessions s_tab ON a.session_id = s_tab.session_id
-            WHERE a.usid = %s AND s_tab.subject_id = %s
+            JOIN Teacher_Assignments ta ON s_tab.utid = ta.utid AND s_tab.subject_id = ta.subject_id AND s_tab.section = ta.section
+            JOIN Enrollments e ON ta.assignment_id = e.assignment_id
+            WHERE a.usid = %s AND s_tab.subject_id = %s AND e.usid = %s
             GROUP BY a.status
-        """, (usid, s['subject_id']))
+        """, (usid, s['subject_id'], usid))
         s_stats = {row['status']: row['count'] for row in cursor.fetchall()}
         s_total = sum(s_stats.values())
         s_present = s_stats.get('Present', 0)
@@ -109,7 +112,8 @@ def subject_performance(subject_id):
     cursor.execute("""
     SELECT s.subject_id, s.subject_code, s.subject_name 
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
     WHERE e.usid = %s
     """, (usid,))
     subjects = cursor.fetchall()
@@ -165,7 +169,8 @@ def notifications_page():
     cursor.execute("""
     SELECT s.subject_id, s.subject_code, s.subject_name 
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
     WHERE e.usid = %s
     """, (usid,))
     subjects = cursor.fetchall()
@@ -194,7 +199,8 @@ def scan_qr():
     cursor.execute("""
     SELECT s.subject_id, s.subject_code, s.subject_name 
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
     WHERE e.usid = %s
     """, (usid,))
     subjects = cursor.fetchall()
@@ -323,9 +329,10 @@ def timetable():
     SELECT s.subject_code, s.subject_name, t.first_name, t.middle_name, t.last_name, 
            sch.day_of_week, sch.start_time, sch.end_time, sch.room, sch.section
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
-    JOIN schedule sch ON e.subject_id = sch.subject_id AND e.section = sch.section
-    JOIN Teachers t ON sch.utid = t.utid
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
+    JOIN schedule sch ON ta.subject_id = sch.subject_id AND ta.section = sch.section AND ta.utid = sch.utid
+    JOIN Teachers t ON ta.utid = t.utid
     WHERE e.usid = %s
     """
     cursor.execute(query, (usid,))
@@ -362,7 +369,8 @@ def timetable():
     cursor.execute("""
     SELECT s.subject_id, s.subject_code, s.subject_name 
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
     WHERE e.usid = %s
     """, (usid,))
     subjects = cursor.fetchall()
@@ -408,10 +416,10 @@ def profile():
     
     # Get Enrolled Subjects with Teacher Info
     query = """
-    SELECT s.subject_code, s.subject_name, e.section, t.first_name, t.middle_name, t.last_name
+    SELECT s.subject_code, s.subject_name, ta.section, t.first_name, t.middle_name, t.last_name
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
-    LEFT JOIN Teacher_Assignments ta ON e.subject_id = ta.subject_id AND e.section = ta.section
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
     LEFT JOIN Teachers t ON ta.utid = t.utid
     WHERE e.usid = %s
     """
@@ -422,7 +430,8 @@ def profile():
     cursor.execute("""
     SELECT s.subject_id, s.subject_code, s.subject_name 
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
     WHERE e.usid = %s
     """, (usid,))
     subjects = cursor.fetchall()
@@ -573,8 +582,8 @@ def submit_excuse():
     query = """
     SELECT s.subject_id, s.subject_code, s.subject_name, ta.utid, t.first_name, t.middle_name, t.last_name
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
-    JOIN Teacher_Assignments ta ON e.subject_id = ta.subject_id AND e.section = ta.section
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
     JOIN Teachers t ON ta.utid = t.utid
     WHERE e.usid = %s
     """
@@ -596,7 +605,8 @@ def submit_excuse():
     cursor.execute("""
     SELECT s.subject_id, s.subject_code, s.subject_name 
     FROM Enrollments e
-    JOIN Subjects s ON e.subject_id = s.subject_id
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+    JOIN Subjects s ON ta.subject_id = s.subject_id
     WHERE e.usid = %s
     """, (usid,))
     subjects = cursor.fetchall()

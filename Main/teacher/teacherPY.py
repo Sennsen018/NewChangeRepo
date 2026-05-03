@@ -23,7 +23,7 @@ def dashboard():
     
     # Get Assigned Classes
     query = """
-    SELECT s.subject_id, s.subject_code, s.subject_name, ta.section 
+    SELECT ta.assignment_id, s.subject_id, s.subject_code, s.subject_name, ta.section 
     FROM Teacher_Assignments ta
     JOIN Subjects s ON ta.subject_id = s.subject_id
     WHERE ta.utid = %s
@@ -38,8 +38,8 @@ def dashboard():
             SELECT COUNT(*) as count 
             FROM Enrollments e
             JOIN Students s ON e.usid = s.usid
-            WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
-        """, (c['subject_id'], c['section']))
+            WHERE e.assignment_id = %s AND s.status = 'Active'
+        """, (c['assignment_id'],))
         c['student_count'] = cursor.fetchone()['count']
         
         # Get today's attendance summary for this specific class
@@ -168,9 +168,11 @@ def end_session():
             SELECT %s, e.usid, NOW(), 'Absent', 'Auto-marked: Session ended', 'Valid'
             FROM Enrollments e
             JOIN Students s ON e.usid = s.usid
+            JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
             LEFT JOIN Attendance a ON e.usid = a.usid AND a.session_id = %s
-            WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active' AND a.attendance_id IS NULL
-        """, (session_id, session_id, ses['subject_id'], ses['section']))
+            WHERE ta.utid = %s AND ta.subject_id = %s AND ta.section = %s 
+            AND s.status = 'Active' AND a.attendance_id IS NULL
+        """, (session_id, session_id, ses['utid'], ses['subject_id'], ses['section']))
         
         conn.commit()
         return jsonify({'success': True})
@@ -209,7 +211,8 @@ def get_session_stats(session_id):
             s.usid, s.first_name, s.middle_name, s.last_name,
             a.status, a.scan_time, a.is_valid, a.behavior_flags, a.distance_meters
         FROM Sessions ses
-        JOIN Enrollments e ON ses.subject_id = e.subject_id AND ses.section = e.section
+        JOIN Teacher_Assignments ta ON ses.utid = ta.utid AND ses.subject_id = ta.subject_id AND ses.section = ta.section
+        JOIN Enrollments e ON ta.assignment_id = e.assignment_id
         JOIN Students s ON e.usid = s.usid
         LEFT JOIN Attendance a ON s.usid = a.usid AND a.session_id = ses.session_id
         WHERE ses.session_id = %s AND s.status = 'Active'
@@ -321,9 +324,10 @@ def manage_students():
                 SELECT s.* 
                 FROM Students s
                 JOIN Enrollments e ON s.usid = e.usid
-                WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
+                JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+                WHERE ta.utid = %s AND ta.subject_id = %s AND ta.section = %s AND s.status = 'Active'
             """
-            params = [subject_id, section]
+            params = [utid, subject_id, section]
             
             if search:
                 query += " AND (s.first_name LIKE %s OR s.middle_name LIKE %s OR s.last_name LIKE %s OR s.usid LIKE %s)"
@@ -387,6 +391,7 @@ def reports():
                    SUM(CASE WHEN a.status = 'Flagged' THEN 1 ELSE 0 END) as days_flagged
             FROM Students s
             JOIN Enrollments e ON s.usid = e.usid
+            JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
             LEFT JOIN Attendance a ON s.usid = a.usid 
                 AND a.attendance_id IN (
                     SELECT MAX(a2.attendance_id)
@@ -395,10 +400,10 @@ def reports():
                     WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
                     GROUP BY a2.scan_time::date, a2.usid
                 )
-            WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
+            WHERE ta.utid = %s AND ta.subject_id = %s AND ta.section = %s AND s.status = 'Active'
             GROUP BY s.usid
             """
-            cursor.execute(query_summary, (utid, subject_id, section, subject_id, section))
+            cursor.execute(query_summary, (utid, subject_id, section, utid, subject_id, section))
             summary = cursor.fetchall()
             
             for row in summary:
@@ -561,6 +566,7 @@ def submit_report():
            SUM(CASE WHEN a.status = 'Flagged' THEN 1 ELSE 0 END) as days_flagged
     FROM Students s
     JOIN Enrollments e ON s.usid = e.usid
+    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
     LEFT JOIN Attendance a ON s.usid = a.usid 
         AND a.attendance_id IN (
             SELECT MAX(a2.attendance_id)
@@ -569,10 +575,10 @@ def submit_report():
             WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
             GROUP BY a2.scan_time::date, a2.usid
         )
-    WHERE e.subject_id = %s AND e.section = %s AND s.status = 'Active'
+    WHERE ta.utid = %s AND ta.subject_id = %s AND ta.section = %s AND s.status = 'Active'
     GROUP BY s.usid
     """
-    cursor.execute(query_summary, (utid, subject_id, section, subject_id, section))
+    cursor.execute(query_summary, (utid, subject_id, section, utid, subject_id, section))
     summary = cursor.fetchall()
     
     # Convert Decimals to serializable types (MySQL SUM returns Decimals)

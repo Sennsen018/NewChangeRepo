@@ -63,8 +63,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION prevent_duplicate_enrollments()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM Enrollments WHERE uSID = NEW.uSID AND subject_id = NEW.subject_id AND section = NEW.section) THEN
-        RAISE EXCEPTION 'Student is already enrolled in this subject and section.';
+    IF EXISTS (SELECT 1 FROM Enrollments WHERE uSID = NEW.uSID AND assignment_id = NEW.assignment_id) THEN
+        RAISE EXCEPTION 'Student is already enrolled in this specific teacher assignment.';
     END IF;
     RETURN NEW;
 END;

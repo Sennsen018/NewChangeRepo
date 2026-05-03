@@ -293,8 +293,9 @@ def manage_students():
     # Fetch subjects with their assigned teachers (grouped) and enrollment counts (respecting search/filters)
     subject_count_subquery = """
         SELECT COUNT(*) FROM Enrollments e 
+        JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
         JOIN Students st ON e.usid = st.usid 
-        WHERE e.subject_id = s.subject_id
+        WHERE ta.subject_id = s.subject_id
     """
     subject_count_params = []
     if search:
@@ -320,10 +321,11 @@ def manage_students():
 
     # Fetch students grouped by subjects (respecting search/filters)
     enrolled_query = """
-        SELECT s.*, sub.subject_name, sub.subject_code, e.subject_id, e.enrollment_id
+        SELECT s.*, sub.subject_name, sub.subject_code, ta.subject_id, e.enrollment_id
         FROM Students s
         JOIN Enrollments e ON s.usid = e.usid
-        JOIN Subjects sub ON e.subject_id = sub.subject_id
+        JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+        JOIN Subjects sub ON ta.subject_id = sub.subject_id
         WHERE 1=1
     """
     enrolled_params = []
@@ -837,20 +839,20 @@ def enroll_student():
             return redirect(url_for('admin.manage_students'))
             
         # Check if already enrolled
-        cursor.execute("SELECT * FROM Enrollments WHERE usid = %s AND subject_id = %s AND section = %s", 
-                       (usid, assignment['subject_id'], assignment['section']))
+        cursor.execute("SELECT * FROM Enrollments WHERE usid = %s AND assignment_id = %s", 
+                       (usid, assignment_id))
         if cursor.fetchone():
-            flash('Student is already enrolled in this subject and section.', 'warning')
+            flash('Student is already enrolled in this specific teacher assignment.', 'warning')
         else:
-            cursor.execute("INSERT INTO Enrollments (usid, subject_id, section) VALUES (%s, %s, %s) RETURNING enrollment_id", 
-                           (usid, assignment['subject_id'], assignment['section']))
+            cursor.execute("INSERT INTO Enrollments (usid, assignment_id) VALUES (%s, %s) RETURNING enrollment_id", 
+                           (usid, assignment_id))
             enrollment_id = cursor.fetchone()['enrollment_id']
             
             # Audit Logging
-            log_system_action(cursor, 'Enrollments', enrollment_id, 'Create', session['user_id'], session['role'], f"Student {usid} enrolled in Subject {assignment['subject_id']}, Section {assignment['section']}")
+            log_system_action(cursor, 'Enrollments', enrollment_id, 'Create', session['user_id'], session['role'], f"Student {usid} enrolled in Assignment ID {assignment_id} (Subject: {assignment['subject_id']}, Section: {assignment['section']})")
             
             conn.commit()
-            flash('Student successfully enrolled in the subject.', 'success')
+            flash('Student successfully enrolled in the class.', 'success')
         
     except Exception as e:
         flash(f'Error enrolling student: {str(e)}', 'error')
@@ -1120,9 +1122,19 @@ def approve_drop(request_id):
         # 1. Update drop request status
         cursor.execute("UPDATE Drop_Requests SET status = 'Approved' WHERE request_id = %s", (request_id,))
         
-        # 2. Find the section if possible (or just remove by usid and subject_id)
-        # Assuming we want to remove them from the specific subject they dropped
-        cursor.execute("DELETE FROM Enrollments WHERE usid = %s AND subject_id = %s", (req['usid'], req['subject_id']))
+        # 2. Find and remove the specific enrollment
+        # We need to find the assignment_id for this subject and teacher
+        cursor.execute("""
+            SELECT assignment_id FROM Teacher_Assignments 
+            WHERE utid = %s AND subject_id = %s
+        """, (req['utid'], req['subject_id']))
+        ta = cursor.fetchone()
+        
+        if ta:
+            cursor.execute("DELETE FROM Enrollments WHERE usid = %s AND assignment_id = %s", (req['usid'], ta['assignment_id']))
+        else:
+            # Fallback if assignment not found (though it should be)
+            cursor.execute("DELETE FROM Enrollments WHERE usid = %s AND assignment_id IN (SELECT assignment_id FROM Teacher_Assignments WHERE subject_id = %s)", (req['usid'], req['subject_id']))
         
         # 3. Optional: Global Archive (Keeping it as per previous logic, but usually a drop is per subject)
         # If the user wants the student to be 'Archived' globally, we keep this.
@@ -1176,9 +1188,9 @@ def bulk_enroll():
         query = """
             SELECT usid FROM Students 
             WHERE status = 'Active'
-            AND usid NOT IN (SELECT usid FROM Enrollments WHERE subject_id = %s)
+            AND usid NOT IN (SELECT usid FROM Enrollments WHERE assignment_id = %s)
         """
-        params = [assignment['subject_id']]
+        params = [assignment_id]
         
         if course_filter:
             query += " AND course = %s"
@@ -1193,12 +1205,62 @@ def bulk_enroll():
         if not students_to_enroll:
             flash('No eligible students found for bulk enrollment matching your criteria.', 'warning')
         else:
-            enroll_query = "INSERT INTO Enrollments (usid, subject_id, section) VALUES (%s, %s, %s)"
-            enroll_data = [(s['usid'], assignment['subject_id'], assignment['section']) for s in students_to_enroll]
+            enroll_query = "INSERT INTO Enrollments (usid, assignment_id) VALUES (%s, %s)"
+            enroll_data = [(s['usid'], assignment_id) for s in students_to_enroll]
             
             cursor.executemany(enroll_query, enroll_data)
             conn.commit()
-            flash(f'Successfully enrolled {len(students_to_enroll)} students into {assignment["section"]}.', 'success')
+            flash(f'Successfully enrolled {len(students_to_enroll)} students into {assignment["section"]} with teacher {assignment["utid"]}.', 'success')
+            
+    except Exception as e:
+        flash(f'Error in bulk enrollment: {str(e)}', 'error')
+    finally:
+        cursor.close()
+        conn.close()
+        
+    return redirect(url_for('admin.manage_students'))
+
+@admin.route('/bulk_enroll_selected', methods=['POST'])
+def bulk_enroll_selected():
+    assignment_id = request.form.get('assignment_id')
+    selected_usids = request.form.get('selected_usids', '').split(',')
+    
+    if not assignment_id or not selected_usids or selected_usids == ['']:
+        flash('Please select at least one student and a target class.', 'error')
+        return redirect(url_for('admin.manage_students'))
+        
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        # Get assignment details
+        cursor.execute("SELECT * FROM Teacher_Assignments WHERE assignment_id = %s", (assignment_id,))
+        assignment = cursor.fetchone()
+        
+        if not assignment:
+            flash('Selected class assignment not found.', 'error')
+            return redirect(url_for('admin.manage_students'))
+            
+        # Filter out students already enrolled in this specific assignment
+        cursor.execute("SELECT usid FROM Enrollments WHERE assignment_id = %s", (assignment_id,))
+        enrolled_usids = {row['usid'] for row in cursor.fetchall()}
+        
+        to_enroll = [usid for usid in selected_usids if usid not in enrolled_usids]
+        
+        if not to_enroll:
+            flash('All selected students are already enrolled in this class.', 'warning')
+        else:
+            enroll_query = "INSERT INTO Enrollments (usid, assignment_id) VALUES (%s, %s)"
+            enroll_data = [(usid, assignment_id) for usid in to_enroll]
+            
+            cursor.executemany(enroll_query, enroll_data)
+            
+            # Audit Logging (Bulk)
+            log_system_action(cursor, 'Enrollments', 'BULK', 'Create', session['user_id'], session['role'], 
+                              f"Bulk enrolled {len(to_enroll)} students into Assignment {assignment_id}")
+            
+            conn.commit()
+            flash(f'Successfully enrolled {len(to_enroll)} students into {assignment["section"]}.', 'success')
             
     except Exception as e:
         flash(f'Error in bulk enrollment: {str(e)}', 'error')

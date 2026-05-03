@@ -52,17 +52,18 @@ CREATE TABLE IF NOT EXISTS Teacher_Assignments (
     subject_id INT,
     section VARCHAR(50),
     FOREIGN KEY (uTID) REFERENCES Teachers(uTID) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES Subjects(subject_id) ON DELETE CASCADE
+    FOREIGN KEY (subject_id) REFERENCES Subjects(subject_id) ON DELETE CASCADE,
+    UNIQUE (uTID, subject_id, section)
 );
 
 -- 6. Enrollments Table
 CREATE TABLE IF NOT EXISTS Enrollments (
     enrollment_id SERIAL PRIMARY KEY,
     uSID VARCHAR(20),
-    subject_id INT,
-    section VARCHAR(50),
+    assignment_id INT,
     FOREIGN KEY (uSID) REFERENCES Students(uSID) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES Subjects(subject_id) ON DELETE CASCADE
+    FOREIGN KEY (assignment_id) REFERENCES Teacher_Assignments(assignment_id) ON DELETE CASCADE,
+    UNIQUE (uSID, assignment_id)
 );
 
 -- 7. Schedule Table

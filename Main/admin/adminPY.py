@@ -7,28 +7,60 @@ import re
 
 def validate_user_data(first_name, middle_name, last_name, email):
     """
-    Validates user data for empty fields, trim spaces, name length, and character restrictions.
-    Returns: (is_valid, error_message, (trimmed_first, trimmed_middle, trimmed_last, trimmed_email))
+    Validates user data for empty fields, trim spaces, name length, character restrictions,
+    junk input detection, and email-to-name connectivity.
     """
+    # Trim inputs
     first_name = (first_name or '').strip()
     middle_name = (middle_name or '').strip()
     last_name = (last_name or '').strip()
     email = (email or '').strip()
     
+    # 1. Basic Required Field Check
     if not first_name or not middle_name or not last_name or not email:
         return False, "All fields (first name, middle name, last name, email) are required.", None
         
-    # Email Format Validation
+    # 2. Email Format Validation
     email_pattern = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
     if not email_pattern.match(email):
         return False, "Invalid email format.", None
         
+    # 3. Name Character Validation (No special symbols/numbers)
     name_pattern = re.compile(r"^[A-Za-z\s\-\.']+$")
     if not name_pattern.match(first_name) or not name_pattern.match(middle_name) or not name_pattern.match(last_name):
         return False, "Names can only contain letters, spaces, hyphens, periods, and apostrophes.", None
         
+    # 4. Name Length Validation
     if not (2 <= len(first_name) <= 100) or not (2 <= len(middle_name) <= 100) or not (2 <= len(last_name) <= 100):
         return False, "Names must be between 2 and 100 characters long.", None
+
+    # 5. Junk Name Detection (Keyboard Mash Check)
+    # Simple check for repeated characters (e.g. "aaaaa") or lack of vowels in long strings
+    def is_junk(s):
+        s = s.lower()
+        # Check for 4+ identical consecutive characters
+        if re.search(r'(.)\1\1\1', s): return True
+        # Check for strings with very few vowels (keyboard mashing often lacks vowels)
+        vowels = sum(1 for char in s if char in 'aeiou')
+        if len(s) > 5 and vowels == 0: return True
+        # Check for suspicious patterns like "asdf", "hjkl", "qwerty"
+        if any(mash in s for mash in ['asdf', 'ghjk', 'xcv', 'qwer', 'dfgh']): return True
+        return False
+
+    if is_junk(first_name) or is_junk(last_name):
+        return False, "The name provided appears to be invalid or 'keyboard mashing'. Please enter a real name.", None
+
+    # 6. Email-to-Name Connectivity Check
+    # Ensures the email prefix contains at least a part of the student's name
+    email_prefix = email.split('@')[0].lower().replace('.', '').replace('_', '')
+    fn_part = first_name.lower().replace(' ', '')
+    ln_part = last_name.lower().replace(' ', '')
+    
+    # Check if at least 3 chars of first or last name are in the email prefix
+    # or if the prefix contains the whole first or last name
+    if not (fn_part[:3] in email_prefix or ln_part[:3] in email_prefix or 
+            email_prefix in fn_part or email_prefix in ln_part):
+        return False, "The Gmail address must be connected to the student's name (e.g., john.doe@gmail.com).", None
         
     return True, "", (first_name, middle_name, last_name, email)
 
@@ -306,8 +338,16 @@ def manage_students():
 
     cursor.execute(enrolled_query, enrolled_params)
     enrolled_students = cursor.fetchall()
-    
 
+    # Fetch students with NO enrollments for the "Manual Enroll" feature
+    cursor.execute("""
+        SELECT * FROM Students 
+        WHERE usid NOT IN (SELECT DISTINCT usid FROM Enrollments)
+        AND status = 'Active'
+        ORDER BY last_name ASC
+    """)
+    unassigned_students = cursor.fetchall()
+    
     # Fetch assignments for enrollment modal
     cursor.execute("""
         SELECT ta.assignment_id, s.subject_code, s.subject_name, ta.section, t.first_name, t.middle_name, t.last_name
@@ -326,6 +366,7 @@ def manage_students():
                            students=students, 
                            subjects=subjects, 
                            enrolled_students=enrolled_students,
+                           unassigned_students=unassigned_students, # New data for manual enroll
                            all_assignments=all_assignments,
                            courses=courses,
                            total_pages=total_pages,

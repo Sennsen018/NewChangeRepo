@@ -131,6 +131,10 @@
                                 </span>
                             </button>
                         {% endfor %}
+                        <button class="tab-btn" onclick="showTab('unassigned')" style="border: 1px dashed var(--primary); color: var(--primary);">
+                            <i class="fas fa-user-plus mr-1"></i> Manual Enroll
+                            <span class="badge badge-primary" style="margin-left: 0.5rem;">{{ unassigned_students|length }}</span>
+                        </button>
                         <button class="tab-btn" onclick="showTab('archived')" style="margin-left: auto; color: var(--danger);">
                             <i class="fas fa-archive"></i> Archived
                         </button>
@@ -323,6 +327,57 @@
             </div>
             {% endfor %}
 
+            <!-- Unassigned Students (Manual Enroll) Tab -->
+            <div id="tab-unassigned" class="tab-content" style="display: none;">
+                <div class="glass-panel p-4" style="padding: 1.5rem;">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 style="margin: 0; color: var(--primary);">Manual Enrollment</h3>
+                            <p class="text-muted" style="font-size: 0.85rem;">Showing students who are not yet enrolled in any subjects or sections.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Full Name</th>
+                                    <th>Course & Year</th>
+                                    <th>Email Address</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in unassigned_students %}
+                                <tr>
+                                    <td style="font-weight: 600;">{{ student.usid }}</td>
+                                    <td>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</td>
+                                    <td>{{ student.course }} - {{ student.level }}</td>
+                                    <td>{{ student.email }}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-primary btn-sm" 
+                                                onclick="openEnrollModal('{{ student.usid }}', '{{ student.first_name }} {{ student.last_name }}')">
+                                            <i class="fas fa-plus-circle"></i> Enroll Now
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center" style="padding: 4rem 1rem;">
+                                        <div style="opacity: 0.6;">
+                                            <i class="fas fa-check-double" style="font-size: 3rem; margin-bottom: 1rem; color: var(--success); display: block;"></i>
+                                            <p>All active students are currently enrolled in at least one subject!</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Archived Students Tab -->
             <div id="tab-archived" class="tab-content" style="display: none;">
                 <div class="glass-panel p-4" style="padding: 1.5rem;">
@@ -419,8 +474,15 @@
                         <input type="text" name="course" class="form-control" placeholder="e.g. BSIT" required>
                     </div>
                     <div class="form-group mb-3" style="flex: 1;">
-                        <label class="form-label">Level</label>
-                        <input type="text" name="level" class="form-control" placeholder="e.g. 1st Year" required>
+                        <label class="form-label">Level / Year</label>
+                        <select name="level" class="form-control" required>
+                            <option value="">-- Select Year --</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                            <option value="Irregular Student">Irregular Student</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-group mb-4">
@@ -464,8 +526,14 @@
                         <input type="text" name="course" id="edit_course" class="form-control" required>
                     </div>
                     <div class="form-group mb-3" style="flex: 1;">
-                        <label class="form-label">Level</label>
-                        <input type="text" name="level" id="edit_level" class="form-control" required>
+                        <label class="form-label">Level / Year</label>
+                        <select name="level" id="edit_level" class="form-control" required>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                            <option value="Irregular Student">Irregular Student</option>
+                        </select>
                     </div>
                 </div>
                 <div class="row" style="display: flex; gap: 1rem;">
@@ -608,41 +676,73 @@
         }
 
 
+        /**
+         * Comprehensive Student Form Validation
+         * Includes checks for required fields, email format, junk input, and email-to-name connectivity.
+         */
         function validateStudentForm(form) {
             const firstName = form.querySelector('[name="first_name"]').value.trim();
             const middleName = form.querySelector('[name="middle_name"]').value.trim();
             const lastName = form.querySelector('[name="last_name"]').value.trim();
             const email = form.querySelector('[name="email"]').value.trim();
 
-            // 1. Required Fields check (redundant due to 'required' attribute but safe)
+            // 1. Basic Required Fields check
             if (!firstName || !middleName || !lastName || !email) {
-                alert("All fields (first name, middle name, last name, email) are required.");
+                alert("Please fill in all required fields (First, Middle, Last Name, and Email).");
                 return false;
             }
 
-            // 2. Email Format Validation
+            // 2. Strict Email Format Validation
             const emailPattern = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
             if (!emailPattern.test(email)) {
-                alert("Invalid email format.");
+                alert("Invalid email format. Please enter a valid Gmail or work address.");
                 return false;
             }
 
-            // 3. Name Character Validation
+            // 3. Name Character Validation (Only letters and common name symbols)
             const namePattern = /^[A-Za-z\s\-\.']+$/;
             if (!namePattern.test(firstName) || !namePattern.test(middleName) || !namePattern.test(lastName)) {
                 alert("Names can only contain letters, spaces, hyphens, periods, and apostrophes.");
                 return false;
             }
 
-            // 4. Name Length Validation
-            if (firstName.length < 2 || firstName.length > 100 || 
-                middleName.length < 2 || middleName.length > 100 || 
-                lastName.length < 2 || lastName.length > 100) {
-                alert("Names must be between 2 and 100 characters long.");
+            // 4. Junk Name / Keyboard Mashing Detection
+            const isJunk = (str) => {
+                const s = str.toLowerCase();
+                // Check for 4+ identical consecutive characters (e.g., "aaaa")
+                if (/(.)\1\1\1/.test(s)) return true;
+                // Check for very few vowels in long names (keyboard mashing usually lacks vowels)
+                const vowels = (s.match(/[aeiou]/g) || []).length;
+                if (s.length > 5 && vowels === 0) return true;
+                // Check for common keyboard mashing patterns
+                const patterns = ['asdf', 'ghjk', 'xcv', 'qwer', 'dfgh'];
+                if (patterns.some(p => s.includes(p))) return true;
+                return false;
+            };
+
+            if (isJunk(firstName) || isJunk(lastName)) {
+                alert("The name provided appears to be invalid or 'keyboard mashing' (e.g., asdfgh). Please enter a real name.");
                 return false;
             }
 
-            return true; // Form is valid
+            // 5. Email-to-Name Connectivity Validation
+            // Ensures the email prefix contains some portion of the student's name
+            const emailPrefix = email.split('@')[0].toLowerCase().replace(/[\._]/g, '');
+            const fnPart = firstName.toLowerCase().replace(/\s/g, '');
+            const lnPart = lastName.toLowerCase().replace(/\s/g, '');
+            
+            // Check if email prefix contains at least 3 chars of first or last name
+            const hasConnection = emailPrefix.includes(fnPart.substring(0, 3)) || 
+                                  emailPrefix.includes(lnPart.substring(0, 3)) ||
+                                  fnPart.includes(emailPrefix) ||
+                                  lnPart.includes(emailPrefix);
+
+            if (!hasConnection) {
+                alert("The Gmail address must be connected to the student's name (e.g., 'john.doe@gmail.com' for John Doe). Random emails are not allowed.");
+                return false;
+            }
+
+            return true; // All validations passed
         }
 
     </script>

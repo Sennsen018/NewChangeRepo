@@ -948,8 +948,8 @@ def submit_manual_attendance():
     now = datetime.now()
 
     # Build a unique session ID for this manual event
-    # Format: MANUAL-{utid}-{subject_id}-{section}-{timestamp}
-    manual_session_id = f"MANUAL-{utid}-{subject_id}-{section}-{now.strftime('%Y%m%d%H%M%S')}"
+    # Format: MANUAL-{8_char_uuid} to ensure it fits in VARCHAR(50)
+    manual_session_id = f"MANUAL-{uuid.uuid4().hex[:8]}"
 
     conn   = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)

@@ -10,7 +10,7 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-                <aside class="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-logo">
                 <i class="fas fa-fingerprint"></i>
                 <span>Attendeez</span>
@@ -47,6 +47,9 @@
                             <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
                             <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
                         </div>
+                        <a href="javascript:void(0)" onclick="openChangePinModal()" class="dropdown-item">
+                            <i class="fas fa-shield-alt"></i> Change Deletion PIN
+                        </a>
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
                             <i class="fas fa-key"></i> Change Password
                         </a>
@@ -113,6 +116,21 @@
                         </div>
                     </form>
                 </div>
+
+                <!-- Tab Navigation -->
+                <div class="glass-panel" style="padding: 0.5rem; margin-bottom: 2rem; border-radius: var(--radius-md);">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="tab-btn active" onclick="showTab('active')">
+                            Active Faculty <span class="badge badge-secondary" style="margin-left: 0.5rem;">{{ total_count }}</span>
+                        </button>
+                        <button class="tab-btn" onclick="showTab('archived')" style="margin-left: auto; color: var(--danger);">
+                            <i class="fas fa-archive mr-1"></i> Archived
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Teachers Tab -->
+                <div id="tab-active" class="tab-content">
             
             <div class="glass-panel p-4" style="padding: 1.5rem;">
                 <div class="table-container">
@@ -142,23 +160,23 @@
                                 <td>
                                         {% set m_name = teacher.middle_name if teacher.middle_name else '' %}
                                         {% set dept = teacher.department if teacher.department else '' %}
-                                        <button class="btn btn-secondary" 
-                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
-                                                 onclick="openEditModal('{{ teacher.utid }}', '{{ teacher.first_name }}', '{{ m_name }}', '{{ teacher.last_name }}', '{{ dept }}', '{{ teacher.email }}', '{{ teacher.status }}')">
-                                             <i class="fas fa-edit"></i> Edit
-                                         </button>
+                                         <button class="btn btn-secondary" 
+                                                  style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                                  onclick="openEditModal(`{{ teacher.utid }}`, `{{ teacher.first_name }}`, `{{ m_name }}`, `{{ teacher.last_name }}`, `{{ dept }}`, `{{ teacher.email }}`, `{{ teacher.status }}`)">
+                                              <i class="fas fa-edit"></i> Edit
+                                          </button>
                                          <a href="{{ url_for('admin.archive_teacher', utid=teacher.utid) }}" 
                                             class="btn btn-warning" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                             onclick="return confirm('Are you sure you want to archive this teacher?')">
                                              <i class="fas fa-archive"></i> Archive
                                          </a>
-                                         <a href="{{ url_for('admin.delete_teacher', utid=teacher.utid) }}" 
-                                            class="btn btn-danger" 
-                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
-                                            onclick="return confirm('Are you sure you want to PERMANENTLY delete this teacher?')">
-                                             <i class="fas fa-trash-alt"></i> Delete
-                                         </a>
+                                          <a href="#" 
+                                             class="btn btn-danger" 
+                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                             onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_teacher', utid=teacher.utid) }}`)">
+                                              <i class="fas fa-trash-alt"></i> Delete
+                                          </a>
                                      </td>
                             </tr>
                             {% else %}
@@ -170,73 +188,52 @@
                 </table>
                 </div>
 
-                <!-- Pagination Controls -->
+                <!-- Pagination -->
                 {% if total_pages > 1 %}
-                <div class="pagination-container mt-4" style="display: flex; justify-content: center; gap: 0.5rem; align-items: center; margin-top: 2rem;">
-                    <a href="{{ url_for('admin.manage_teachers', page=current_page-1, search=search, dept_filter=dept_filter, status_filter=status_filter) }}" 
-                       class="btn btn-secondary {% if current_page == 1 %}disabled{% endif %}" 
-                       style="padding: 0.5rem 1rem;">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-    
-                    
-                    <div style="display: flex; gap: 0.25rem;">
-                        {% for p in range(1, total_pages + 1) %}
-                            {% if p == current_page %}
-                                <span class="btn btn-primary" style="padding: 0.5rem 1rem; cursor: default;">{{ p }}</span>
-                            {% else %}
-                                <a href="{{ url_for('admin.manage_teachers', page=p, search=search, dept_filter=dept_filter, status_filter=status_filter) }}" 
-                                   class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none;">{{ p }}</a>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-
-                    <a href="{{ url_for('admin.manage_teachers', page=current_page+1, search=search, dept_filter=dept_filter, status_filter=status_filter) }}" 
-                       class="btn btn-secondary {% if current_page == total_pages %}disabled{% endif %}"
-                       style="padding: 0.5rem 1rem;">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-    
+                <div class="pagination-container mt-4" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;">
+                    {% for p in range(1, total_pages + 1) %}
+                        <a href="{{ url_for('admin.manage_teachers', page=p) }}" class="btn {% if p == current_page %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.5rem 1rem;">{{ p }}</a>
+                    {% endfor %}
                 </div>
-                <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem;">
-                    Showing page {{ current_page }} of {{ total_pages }}
-                </p>
                 {% endif %}
                 </div>
 
-                <div class="glass-panel p-4 mt-8" style="padding: 1.5rem; margin-top: 3rem;">
-                    <h3 class="mb-4 text-danger"><i class="fas fa-archive mr-2"></i> Archived Teachers</h3>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Teacher ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for teacher in teachers if teacher.status == 'Archived' %}
-                                <tr>
-                                    <td>{{ teacher.utid }}</td>
-                                    <td>{{ teacher.first_name }} {% if teacher.middle_name %}{{ teacher.middle_name }} {% endif %}{{ teacher.last_name }}</td>
-                                    <td>{{ teacher.email }}</td>
-                                    <td>
-                                        <a href="{{ url_for('admin.unarchive_teacher', utid=teacher.utid) }}" 
-                                           class="btn btn-success" 
-                                           style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
-                                            <i class="fas fa-undo"></i> Unarchive
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center" style="padding: 2rem;">No archived teachers.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                </div> <!-- End tab-active -->
+
+                <!-- Archived Teachers Tab -->
+                <div id="tab-archived" class="tab-content" style="display: none;">
+                    <div class="glass-panel p-4" style="padding: 1.5rem;">
+                        <h3 class="mb-4 text-danger"><i class="fas fa-archive mr-2"></i> Archived Faculty</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Teacher ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for teacher in teachers if teacher.status == 'Archived' %}
+                                    <tr>
+                                        <td>{{ teacher.utid }}</td>
+                                        <td>{{ teacher.first_name }} {{ teacher.last_name }}</td>
+                                        <td>{{ teacher.email }}</td>
+                                        <td>
+                                            <a href="{{ url_for('admin.unarchive_teacher', utid=teacher.utid) }}" class="btn btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
+                                                <i class="fas fa-undo"></i> Unarchive
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center" style="padding: 2rem;">No archived faculty members.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div> <!-- End main-content-inner -->
@@ -342,6 +339,13 @@
         }
 
 
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabId).style.display = 'block';
+            event.currentTarget.classList.add('active');
+        }
+
         function validateTeacherForm(form) {
             const firstName = form.querySelector('[name="first_name"]').value.trim();
             const middleName = form.querySelector('[name="middle_name"]').value.trim();
@@ -349,7 +353,7 @@
             const email = form.querySelector('[name="email"]').value.trim();
 
             if (!firstName || !middleName || !lastName || !email) {
-                alert("All fields (first name, middle name, last name, email) are required.");
+                alert("Please fill in all required fields.");
                 return false;
             }
 
@@ -361,14 +365,31 @@
 
             const namePattern = /^[A-Za-z\s\-\.']+$/;
             if (!namePattern.test(firstName) || !namePattern.test(middleName) || !namePattern.test(lastName)) {
-                alert("Names can only contain letters, spaces, hyphens, periods, and apostrophes.");
+                alert("Names can only contain letters, spaces, and standard symbols.");
                 return false;
             }
 
-            if (firstName.length < 2 || firstName.length > 100 || 
-                middleName.length < 2 || middleName.length > 100 || 
-                lastName.length < 2 || lastName.length > 100) {
-                alert("Names must be between 2 and 100 characters long.");
+            // Junk Name Detection
+            const isJunk = (s) => {
+                s = s.toLowerCase();
+                if (/(.)\1\1\1/.test(s)) return true;
+                const vowels = (s.match(/[aeiou]/g) || []).length;
+                if (s.length > 5 && vowels === 0) return true;
+                if (['asdf', 'ghjk', 'xcv', 'qwer'].some(p => s.includes(p))) return true;
+                return false;
+            };
+
+            if (isJunk(firstName) || isJunk(lastName)) {
+                alert("Please enter a valid name (avoid random characters).");
+                return false;
+            }
+
+            // Email-to-Name Connectivity
+            const emailPrefix = email.split('@')[0].toLowerCase().replace(/[\._]/g, '');
+            const fn = firstName.toLowerCase().replace(/\s/g, '');
+            const ln = lastName.toLowerCase().replace(/\s/g, '');
+            if (!emailPrefix.includes(fn.substring(0, 3)) && !emailPrefix.includes(ln.substring(0, 3)) && !fn.includes(emailPrefix) && !ln.includes(emailPrefix)) {
+                alert("The Gmail address must be connected to the teacher's name.");
                 return false;
             }
 

@@ -10,7 +10,7 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-                <aside class="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-logo">
                 <i class="fas fa-fingerprint"></i>
                 <span>Attendeez</span>
@@ -47,6 +47,9 @@
                             <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
                             <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
                         </div>
+                        <a href="javascript:void(0)" onclick="openChangePinModal()" class="dropdown-item">
+                            <i class="fas fa-shield-alt"></i> Change Deletion PIN
+                        </a>
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
                             <i class="fas fa-key"></i> Change Password
                         </a>
@@ -63,7 +66,12 @@
                         <h1 class="auth-title">Subject Management</h1>
                         <p class="text-muted">Define and manage academic subjects and curriculum.</p>
                     </div>
-                    <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus"></i> Add Subject</button>
+                    <div class="flex gap-4 items-center">
+                        <div class="glass-panel" style="padding: 0.5rem 1rem; font-weight: 600;">
+                            Total Subjects: <span class="text-primary">{{ total_count }}</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus"></i> Add Subject</button>
+                    </div>
                 </div>
 
                 <!-- Search Bar -->
@@ -114,14 +122,14 @@
                                     <div class="flex gap-2">
                                         <button class="btn btn-secondary" 
                                                  style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
-                                                 onclick="openEditModal('{{ subject.subject_id }}', '{{ subject.subject_code }}', '{{ subject.subject_name }}')">
+                                                 onclick="openEditModal(`{{ subject.subject_id }}`, `{{ subject.subject_code }}`, `{{ subject.subject_name }}`)">
                                              <i class="fas fa-edit"></i> Edit
                                          </button>
-                                         <a href="{{ url_for('admin.delete_subject', subject_id=subject.subject_id) }}" 
+                                         <a href="#" 
                                             class="btn btn-danger" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
-                                            onclick="return confirm('Are you sure you want to delete this subject?')">
-                                             <i class="fas fa-trash"></i> Delete
+                                            onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_subject', subject_id=subject.subject_id) }}`)">
+                                             <i class="fas fa-trash-alt"></i> Delete
                                          </a>
                                     </div>
                                 </td>
@@ -144,7 +152,7 @@
         <div class="glass-panel" style="width: 450px; padding: 2rem; position: relative;">
             <button onclick="closeModal('addSubjectModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Add New Subject</h3>
-            <form method="POST" action="{{ url_for('admin.manage_subjects') }}">
+            <form method="POST" action="{{ url_for('admin.manage_subjects') }}" onsubmit="return validateSubjectForm(this)">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group mb-3">
                     <label class="form-label">Subject Code</label>
@@ -167,7 +175,7 @@
         <div class="glass-panel" style="width: 450px; padding: 2rem; position: relative;">
             <button onclick="closeModal('editSubjectModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Edit Subject</h3>
-            <form id="editSubjectForm" method="POST">
+            <form id="editSubjectForm" method="POST" onsubmit="return validateSubjectForm(this)">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group mb-3">
                     <label class="form-label">Subject Code</label>
@@ -201,6 +209,30 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
+
+        function validateSubjectForm(form) {
+            const code = form.querySelector('[name="subject_code"]').value.trim();
+            const name = form.querySelector('[name="subject_name"]').value.trim();
+
+            if (!code || !name) {
+                alert("Both subject code and name are required.");
+                return false;
+            }
+
+            // Subject Code Pattern: Alphanumeric, Hyphens, dots (e.g. CS-101)
+            const codePattern = /^[A-Za-z0-9\-\.]+$/;
+            if (!codePattern.test(code)) {
+                alert("Subject Code can only contain letters, numbers, hyphens, and dots.");
+                return false;
+            }
+
+            if (name.length < 5) {
+                alert("Subject Name is too short. Please enter a valid descriptive name.");
+                return false;
+            }
+
+            return true;
+        }
 
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

@@ -1472,3 +1472,71 @@ def change_deletion_pin():
     conn.close()
     
     return jsonify({'success': True, 'message': 'Deletion PIN updated successfully.'})
+
+@admin.route('/manual_enroll', methods=['GET', 'POST'])
+def manual_enroll():
+    """
+    Dedicated page for selective manual enrollment.
+    Allows searching any active student and enrolling them in any assigned class.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    if request.method == 'POST':
+        usid = request.form.get('usid')
+        assignment_id = request.form.get('assignment_id')
+        
+        # Get assignment details
+        cursor.execute("SELECT * FROM Teacher_Assignments WHERE assignment_id = %s", (assignment_id,))
+        assignment = cursor.fetchone()
+        
+        if assignment:
+            # Check if already enrolled in this specific Subject + Section
+            cursor.execute("SELECT * FROM Enrollments WHERE usid = %s AND subject_id = %s AND section = %s", 
+                           (usid, assignment['subject_id'], assignment['section']))
+            if not cursor.fetchone():
+                cursor.execute("INSERT INTO Enrollments (usid, subject_id, section) VALUES (%s, %s, %s) RETURNING enrollment_id", 
+                               (usid, assignment['subject_id'], assignment['section']))
+                enrollment_id = cursor.fetchone()['enrollment_id']
+                
+                # Audit Logging
+                log_system_action(cursor, 'Enrollments', enrollment_id, 'Create', session['user_id'], session['role'], 
+                                   f"Manual Enrollment: Student {usid} enrolled in Subject ID {assignment['subject_id']} (Section {assignment['section']})")
+                
+                conn.commit()
+                flash('Student successfully enrolled.', 'success')
+            else:
+                flash('Student is already enrolled in this class.', 'warning')
+        else:
+            flash('Selected class not found.', 'error')
+            
+        return redirect(url_for('admin.manual_enroll'))
+
+    # GET Logic
+    search = request.args.get('search', '').strip()
+    
+    # Fetch all assigned classes for selection
+    cursor.execute("""
+        SELECT ta.assignment_id, s.subject_code, s.subject_name, ta.section, t.first_name, t.last_name
+        FROM Teacher_Assignments ta
+        JOIN Subjects s ON ta.subject_id = s.subject_id
+        JOIN Teachers t ON ta.utid = t.utid
+        ORDER BY s.subject_code, ta.section
+    """)
+    all_assignments = cursor.fetchall()
+    
+    # Fetch students based on search
+    query = "SELECT * FROM Students WHERE status = 'Active'"
+    params = []
+    if search:
+        query += " AND (first_name LIKE %s OR last_name LIKE %s OR usid LIKE %s OR email LIKE %s)"
+        val = f"%{search}%"
+        params.extend([val, val, val, val])
+    
+    query += " ORDER BY level, last_name LIMIT 50" # Limit for performance, search will find specific ones
+    cursor.execute(query, params)
+    students = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    return render_template('manual_enroll.html', students=students, all_assignments=all_assignments, search=search)

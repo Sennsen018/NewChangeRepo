@@ -20,6 +20,7 @@
                 <a href="{{ url_for('admin.manage_students') }}" class="nav-item active"><i class="fas fa-user-graduate"></i> Manage Students</a>
                 <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a>
                 <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item"><i class="fas fa-book"></i> Manage Subjects</a>
+                <a href="{{ url_for('admin.manual_enroll') }}" class="nav-item"><i class="fas fa-user-plus"></i> Manual Enrollment</a>
                 <a href="{{ url_for('admin.assign_classes') }}" class="nav-item"><i class="fas fa-link"></i> Assign Classes</a>
                 <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item"><i class="fas fa-calendar-alt"></i> Manage Schedules</a>
                 <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item"><i class="fas fa-chart-pie"></i> Attendance Analytics</a>
@@ -174,12 +175,12 @@
                                     <td>
                                         <button class="btn btn-secondary" 
                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
-                                                onclick="openEditModal('{{ student.usid }}', '{{ student.first_name }}', '{{ student.middle_name }}', '{{ student.last_name }}', '{{ student.email }}', '{{ student.course }}', '{{ student.level }}', '{{ student.section }}', '{{ student.status }}')">
+                                                onclick="openEditModal(`{{ student.usid }}`, `{{ student.first_name }}`, `{{ student.middle_name }}`, `{{ student.last_name }}`, `{{ student.email }}`, `{{ student.course }}`, `{{ student.level }}`, `{{ student.section }}`, `{{ student.status }}`)">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
                                          <button class="btn btn-primary" 
                                                  style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
-                                                 onclick="openEnrollModal('{{ student.usid }}', '{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}')">
+                                                 onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}`)">
                                             <i class="fas fa-user-plus"></i> Enroll
                                          </button>
                                          <a href="{{ url_for('admin.archive_student', usid=student.usid) }}" 
@@ -191,7 +192,7 @@
                                          <a href="#" 
                                             class="btn btn-danger" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
-                                            onclick="event.preventDefault(); confirmWithPin('{{ url_for('admin.delete_student', usid=student.usid) }}')">
+                                            onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_student', usid=student.usid) }}`)">
                                              <i class="fas fa-trash-alt"></i> Delete
                                          </a>
                                     </td>
@@ -360,7 +361,7 @@
                                     <td>{{ student.email }}</td>
                                     <td class="text-center">
                                         <button class="btn btn-primary btn-sm" 
-                                                onclick="openEnrollModal('{{ student.usid }}', '{{ student.first_name }} {{ student.last_name }}')">
+                                                onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.last_name }}`)">
                                             <i class="fas fa-plus-circle"></i> Enroll Now
                                         </button>
                                     </td>

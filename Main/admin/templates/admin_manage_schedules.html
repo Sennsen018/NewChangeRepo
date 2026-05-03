@@ -10,7 +10,7 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-                <aside class="sidebar">
+                        <aside class="sidebar">
             <div class="sidebar-logo">
                 <i class="fas fa-fingerprint"></i>
                 <span>Attendeez</span>
@@ -20,6 +20,7 @@
                 <a href="{{ url_for('admin.manage_students') }}" class="nav-item"><i class="fas fa-user-graduate"></i> Manage Students</a>
                 <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a>
                 <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item"><i class="fas fa-book"></i> Manage Subjects</a>
+                <a href="{{ url_for('admin.manual_enroll') }}" class="nav-item"><i class="fas fa-user-plus"></i> Manual Enrollment</a>
                 <a href="{{ url_for('admin.assign_classes') }}" class="nav-item"><i class="fas fa-link"></i> Assign Classes</a>
                 <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item active"><i class="fas fa-calendar-alt"></i> Manage Schedules</a>
                 <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item"><i class="fas fa-chart-pie"></i> Attendance Analytics</a>

@@ -206,7 +206,7 @@
             <div class="glass-panel" style="width: 450px; padding: 2rem; position: relative;">
                 <button onclick="closeModal('dropModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
                 <h3 class="mb-4">Request to Drop Student</h3>
-                <form method="POST">
+                <form method="POST" data-inline>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input type="hidden" name="action" value="request_drop">
                     <input type="hidden" name="usid" id="drop_usid">

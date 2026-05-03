@@ -34,10 +34,6 @@
                 <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item">
                     <i class="fas fa-clipboard-check"></i> Manual Entry
                 </a>
-                <a href="{{ url_for('teacher.qr_generator') }}" class="nav-item">
-                    <i class="fas fa-qrcode"></i> QR Generator
-                </a>
-
             </div>
 
             <div class="nav-group">
@@ -212,7 +208,7 @@
                                 </td>
                                 <td>
                                     <div style="display:flex; gap:0.5rem; align-items:center;">
-                                        <form method="POST" action="{{ url_for('teacher.update_mark') }}" style="display:inline-flex; gap:0.5rem; margin:0;">
+                                        <form method="POST" action="{{ url_for('teacher.update_mark') }}" data-inline style="display:inline-flex; gap:0.5rem; margin:0;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <input type="hidden" name="attendance_id" value="{{ r.attendance_id }}">
                                             <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
@@ -226,7 +222,7 @@
                                             <button type="submit" class="btn btn-primary" style="padding:0.2rem 0.5rem; font-size:0.8rem;">Update</button>
                                         </form>
                                         
-                                        <form method="POST" action="{{ url_for('teacher.delete_mark') }}" style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this attendance record? This action will be logged.');">
+                                        <form method="POST" action="{{ url_for('teacher.delete_mark') }}" data-inline style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this attendance record? This action will be logged.');">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <input type="hidden" name="attendance_id" value="{{ r.attendance_id }}">
                                             <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">

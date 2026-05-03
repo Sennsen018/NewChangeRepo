@@ -10,7 +10,7 @@ window.addEventListener('click', function(e) {
     const dropdown = document.getElementById('user-dropdown');
     const burger = document.querySelector('.burger-btn');
     if (dropdown && dropdown.style.display === 'block') {
-        if (!dropdown.contains(e.target) && !burger.contains(e.target)) {
+        if (!dropdown.contains(e.target) && (!burger || !burger.contains(e.target))) {
             dropdown.style.display = 'none';
         }
     }
@@ -31,32 +31,46 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.insertAdjacentHTML('beforeend', loaderHTML);
 
     const loader = document.getElementById('loading-overlay');
+    let loaderTimeout = null;
 
-    // Show loader on page change (navigation)
-    window.addEventListener('beforeunload', () => {
+    function showLoader() {
         loader.style.display = 'flex';
+        // Safety fallback: auto-hide after 8 seconds in case navigation stalls
+        if (loaderTimeout) clearTimeout(loaderTimeout);
+        loaderTimeout = setTimeout(() => {
+            loader.style.display = 'none';
+            loaderTimeout = null;
+        }, 8000);
+    }
+
+    function hideLoader() {
+        loader.style.display = 'none';
+        if (loaderTimeout) { clearTimeout(loaderTimeout); loaderTimeout = null; }
+    }
+
+    // Show loader ONLY on full-page navigation (leaving the page)
+    window.addEventListener('beforeunload', () => {
+        showLoader();
     });
 
-    // Show loader on form submissions
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', (e) => {
-            // Only show if the form is valid (if using browser validation)
-            if (form.checkValidity()) {
-                loader.style.display = 'flex';
-            }
-        });
-    });
+    // Do NOT attach loader to form submits here — individual pages handle their own forms.
+    // This prevents the overlay from blocking buttons on multi-form pages.
 
-    // Add click feedback to all buttons and nav items
+    // Add click feedback to all buttons and nav items (subtle scale only)
     const interactiveElements = document.querySelectorAll('.btn, .nav-item, .class-card, .subject-card');
     interactiveElements.forEach(el => {
-        el.addEventListener('click', function(e) {
-            // If it's a link, the beforeunload will handle the loader
-            // This just provides immediate visual feedback
-            this.style.transform = 'scale(0.96)';
+        el.addEventListener('click', function() {
+            this.style.transform = 'scale(0.97)';
             setTimeout(() => {
                 this.style.transform = '';
-            }, 100);
+            }, 120);
         });
     });
+
+    // Sidebar scroll support: ensure scrollbar shows when nav overflows
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.style.overflowY = 'auto';
+        sidebar.style.scrollbarWidth = 'thin';
+    }
 });

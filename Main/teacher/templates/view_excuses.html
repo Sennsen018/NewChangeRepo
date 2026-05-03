@@ -124,7 +124,7 @@
                             
                             {% if letter.status == 'Pending' %}
                             <div class="flex gap-2">
-                                <form action="{{ url_for('teacher.update_excuse_status') }}" method="POST" style="display: inline;">
+                                <form action="{{ url_for('teacher.update_excuse_status') }}" method="POST" data-inline style="display: inline;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <input type="hidden" name="letter_id" value="{{ letter.letter_id }}">
                                     <input type="hidden" name="status" value="Approved">
@@ -132,7 +132,7 @@
                                         <i class="fas fa-check mr-1"></i> Approve
                                     </button>
                                 </form>
-                                <form action="{{ url_for('teacher.update_excuse_status') }}" method="POST" style="display: inline;">
+                                <form action="{{ url_for('teacher.update_excuse_status') }}" method="POST" data-inline style="display: inline;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <input type="hidden" name="letter_id" value="{{ letter.letter_id }}">
                                     <input type="hidden" name="status" value="Rejected">

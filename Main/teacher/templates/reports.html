@@ -320,6 +320,7 @@
                                         style="background: rgba(255,255,255,0.1); color: var(--text-muted);">{{ logs
                                         | length }} Records</span>
                                     <form method="POST" action="{{ url_for('teacher.delete_daily_attendance') }}"
+                                        data-inline
                                         style="margin: 0;"
                                         onsubmit="return confirm('Delete ALL attendance records for {{ date }}? This cannot be undone.');">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>

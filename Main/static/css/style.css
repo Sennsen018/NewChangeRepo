@@ -176,6 +176,37 @@ a {
     font-size: 0.8rem;
 }
 
+.btn-warning {
+    background: var(--warning);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.btn-success {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-outline-primary {
+    background: transparent;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-soft);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
 /* =========================================
    LAYOUT - DASHBOARD
    ========================================= */
@@ -190,11 +221,55 @@ a {
     border-right: 1px solid var(--border-color);
     position: fixed;
     height: 100vh;
-    padding: 2rem 1rem;
+    padding: 2rem 1rem 1rem;
     display: flex;
     flex-direction: column;
     z-index: 50;
     transition: var(--transition);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 99px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--text-dim);
+}
+
+/* Sidebar nav items as buttons (for non-link uses) */
+.sidebar .nav-item-btn {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition);
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    text-align: left;
+}
+
+.sidebar .nav-item-btn:hover {
+    background: var(--bg-surface-soft);
+    color: var(--text-main);
 }
 
 .sidebar-logo {

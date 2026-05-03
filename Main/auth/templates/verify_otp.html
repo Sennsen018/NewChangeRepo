@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="auth-container">
+    <div class="auth-page">
         <div class="auth-card glass-panel">
             <div class="auth-header">
                 <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem;"></i>
@@ -31,14 +31,14 @@
                 <span style="color: var(--text-muted);">
                     <i class="fas fa-key" style="margin-right: 5px; color: var(--primary);"></i>
                     Attempts left:
-                    <strong style="color: {% if (max_wrong - wrong_count) <= 2 %}#ef4444{% else %}var(--primary){% endif %};">
+                    <strong {% if (max_wrong - wrong_count) <= 2 %}style="color: #ef4444;"{% else %}style="color: var(--primary);"{% endif %}>
                         {{ max_wrong - wrong_count }} / {{ max_wrong }}
                     </strong>
                 </span>
                 <span style="color: var(--text-muted);">
                     <i class="fas fa-paper-plane" style="margin-right: 5px; color: var(--primary);"></i>
                     Resends left:
-                    <strong style="color: {% if resends_left == 0 %}#ef4444{% else %}var(--primary){% endif %};">
+                    <strong {% if resends_left == 0 %}style="color: #ef4444;"{% else %}style="color: var(--primary);"{% endif %}>
                         {{ resends_left }}
                     </strong>
                 </span>
@@ -48,11 +48,25 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group text-center">
                     <label class="form-label" style="display: block; margin-bottom: 1rem;">Enter 4-Digit Code</label>
-                    <input type="text" name="otp" id="otp-input" class="form-control text-center" required 
-                           maxlength="4" pattern="\d{4}" 
-                           placeholder="0000" 
-                           style="font-size: 2rem; letter-spacing: 1rem; font-weight: bold; padding: 1rem;"
-                           autocomplete="one-time-code" inputmode="numeric" autofocus>
+                    
+                    <!-- Premium 4-box OTP Input -->
+                    <div class="otp-inputs-wrapper" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem;">
+                        <input type="text" class="otp-box form-control text-center" maxlength="1" required 
+                               style="width: 60px; height: 60px; font-size: 2rem; font-weight: bold; padding: 0; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.03);"
+                               autocomplete="off" inputmode="numeric" autofocus>
+                        <input type="text" class="otp-box form-control text-center" maxlength="1" required 
+                               style="width: 60px; height: 60px; font-size: 2rem; font-weight: bold; padding: 0; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.03);"
+                               autocomplete="off" inputmode="numeric">
+                        <input type="text" class="otp-box form-control text-center" maxlength="1" required 
+                               style="width: 60px; height: 60px; font-size: 2rem; font-weight: bold; padding: 0; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.03);"
+                               autocomplete="off" inputmode="numeric">
+                        <input type="text" class="otp-box form-control text-center" maxlength="1" required 
+                               style="width: 60px; height: 60px; font-size: 2rem; font-weight: bold; padding: 0; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.03);"
+                               autocomplete="off" inputmode="numeric">
+                    </div>
+                    
+                    <!-- Hidden input to store the combined OTP value for form submission -->
+                    <input type="hidden" name="otp" id="final-otp" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-full">
                     <i class="fas fa-check-circle" style="margin-right: 6px;"></i>
@@ -96,7 +110,7 @@
 
     <script>
         // Cooldown countdown — cooldown_ends is a Unix epoch int passed from Flask
-        const cooldownEnds = {{ cooldown_ends }};
+        const cooldownEnds = parseInt("{{ cooldown_ends }}", 10) || 0;
 
         function updateCountdown() {
             const now   = Math.floor(Date.now() / 1000);
@@ -124,6 +138,65 @@
         }
 
         updateCountdown();
+
+        // Premium OTP Input Logic (Auto-advance and Backspace handling)
+        const otpBoxes = document.querySelectorAll('.otp-box');
+        const finalOtpInput = document.getElementById('final-otp');
+
+        otpBoxes.forEach((box, index) => {
+            box.addEventListener('input', (e) => {
+                // Allow only numbers
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                
+                // Auto-advance
+                if (e.target.value.length === 1 && index < otpBoxes.length - 1) {
+                    otpBoxes[index + 1].focus();
+                }
+                
+                updateFinalOtp();
+            });
+
+            box.addEventListener('keydown', (e) => {
+                // Move back on Backspace
+                if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    otpBoxes[index - 1].focus();
+                }
+            });
+            
+            // Allow paste of 4 digits
+            box.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '').slice(0, 4);
+                
+                for(let i = 0; i < pasteData.length; i++) {
+                    if (otpBoxes[i]) {
+                        otpBoxes[i].value = pasteData[i];
+                    }
+                }
+                
+                // Focus on the next empty box or the last one
+                const nextFocus = pasteData.length < 4 ? pasteData.length : 3;
+                otpBoxes[nextFocus].focus();
+                
+                updateFinalOtp();
+            });
+        });
+
+        function updateFinalOtp() {
+            let otpValue = '';
+            otpBoxes.forEach(box => {
+                otpValue += box.value;
+            });
+            finalOtpInput.value = otpValue;
+        }
+        
+        // Ensure OTP is filled before submit
+        document.querySelector('form').addEventListener('submit', (e) => {
+            if (finalOtpInput.value.length !== 4) {
+                e.preventDefault();
+                alert('Please enter the 4-digit code.');
+            }
+        });
     </script>
 </body>
 </html>

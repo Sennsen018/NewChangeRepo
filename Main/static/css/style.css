@@ -521,7 +521,8 @@ td {
     min-height: 100vh;
     background: radial-gradient(circle at top left, var(--bg-surface-soft), var(--bg-main));
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
+    padding: 2rem;
 }
 
 .auth-page::before {

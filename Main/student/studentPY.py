@@ -518,8 +518,14 @@ def submit_excuse():
                 if file and file.filename != '':
                     # Ensure upload directory exists
                     upload_dir = os.path.join('Main', 'static', 'uploads', 'excuses')
-                    if not os.path.exists(upload_dir):
-                        os.makedirs(upload_dir)
+                    try:
+                        if not os.path.exists(upload_dir):
+                            os.makedirs(upload_dir, exist_ok=True)
+                    except OSError as e:
+                        if e.errno == 30: # Read-only file system
+                            flash('Server Error: File system is read-only. Please contact admin to configure cloud storage.', 'error')
+                            return redirect(url_for('user.submit_excuse'))
+                        raise e
                         
                     ext = file.filename.rsplit('.', 1)[1].lower()
                     allowed_ext = {'pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'}
@@ -538,9 +544,14 @@ def submit_excuse():
                         
                     filename = secure_filename(f"{usid}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
                     file_path = os.path.join(upload_dir, filename)
-                    file.save(file_path)
-                    # Store relative path for template use
-                    filename = filename 
+                    
+                    try:
+                        file.save(file_path)
+                    except OSError as e:
+                        if e.errno == 30: # Read-only file system
+                            flash('Upload Failed: The server filesystem is read-only (likely Vercel). Persistent uploads require Cloud Storage (Supabase/S3).', 'error')
+                            return redirect(url_for('user.submit_excuse'))
+                        raise e
 
                 cursor.execute("""
                     INSERT INTO Excuse_Letters (usid, utid, subject_id, message, file_path)

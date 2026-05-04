@@ -147,6 +147,40 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
     `;
+    // --- LOGOUT CONFIRMATION MODAL ---
+    const logoutModalHTML = `
+        <div id="logout-modal-overlay" class="modal-overlay">
+            <div class="confirm-modal">
+                <div class="modal-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <h3 class="modal-title">Confirm Logout</h3>
+                <p class="modal-text">Are you sure you want to log out? Your current session will be ended.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+                    <a href="/logout" class="btn-confirm-logout">Log Out</a>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', logoutModalHTML);
+
+    window.closeLogoutModal = function() {
+        document.getElementById('logout-modal-overlay').classList.remove('active');
+    };
+
+    window.showLogoutModal = function(e) {
+        if (e) e.preventDefault();
+        document.getElementById('logout-modal-overlay').classList.add('active');
+    };
+
+    // Intercept all logout links EXCEPT the one in the modal
+    const logoutLinks = document.querySelectorAll('a[href="/logout"]:not(.btn-confirm-logout)');
+    logoutLinks.forEach(link => {
+        link.addEventListener('click', showLogoutModal);
+    });
+
     document.body.insertAdjacentHTML('beforeend', pinModalsHTML);
 });
 

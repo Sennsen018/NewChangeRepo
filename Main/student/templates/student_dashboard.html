@@ -16,7 +16,7 @@
             <div class="sidebar-logo">
                 <div>
                     <i class="fas fa-fingerprint"></i>
-                <span>Attendeez</span>
+                    <span>Attendeez</span>
                 </div>
                 <div class="user-menu-container">
                     <button class="burger-btn" onclick="toggleUserMenu()">
@@ -39,6 +39,7 @@
                 </div>
             </div>
             <nav class="sidebar-nav">
+                <a href="{{ url_for('user.profile') }}" class="nav-item profile-nav-item"><i class="fas fa-user-circle"></i> My Profile</a>
                 <a href="{{ url_for('user.dashboard') }}" class="nav-item active"><i class="fas fa-house"></i> Student
                     Dashboard </a>
                 
@@ -66,12 +67,7 @@
                     Excuse Letters </a>
             </nav>
 
-            <div class="sidebar-bottom-actions">
-                <a href="{{ url_for('user.profile') }}" class="btn btn-secondary w-full"><i
-                        class="fas fa-user-circle"></i> My Profile</a>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i>
-                    Logout</a>
-            </div>
+            
         </aside>
 
         <!-- Main Content -->

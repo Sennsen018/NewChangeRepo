@@ -135,18 +135,83 @@
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        async function markAllAsRead() {
-            const MARK_READ_URL = document.body.dataset.markReadUrl;
+        const NOTIF_API = "{{ url_for('user.get_notifications') }}";
+        const MARK_READ_URL = "{{ url_for('user.mark_notifications_read') }}";
+
+        async function fetchNotifications() {
             try {
-                const response = await fetch(MARK_READ_URL, { method: 'POST' });
-                if (response.ok) {
-                    // Refresh page to show updated status
-                    window.location.reload();
+                const response = await fetch(NOTIF_API);
+                const data = await response.json();
+                renderNotifications(data.notifications);
+            } catch (error) {
+                console.error('Error fetching notifications:', error);
+            }
+        }
+
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notifications-list');
+            const badge = document.getElementById('notif-badge-sidebar');
+            
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-panel p-8 text-center">
+                        <i class="fas fa-bell-slash" style="font-size: 3rem; color: var(--border-color); margin-bottom: 1rem; display: block;"></i>
+                        <p style="color: var(--text-muted);">You don't have any notifications yet.</p>
+                    </div>
+                `;
+                if (badge) badge.style.display = 'none';
+                return;
+            }
+
+            let unreadCount = 0;
+            const html = notifications.map(n => {
+                if (!n.is_read) unreadCount++;
+                const icon = n.type === 'Warning' ? 'exclamation-triangle' : (n.type === 'Alert' ? 'bell' : 'info-circle');
+                const typeClass = n.type === 'Warning' ? 'type-warning' : (n.type === 'Alert' ? 'type-alert' : 'type-info');
+                
+                return `
+                    <div class="glass-panel notif-card ${!n.is_read ? 'unread' : ''}">
+                        <div class="flex items-center gap-4">
+                            <div class="notif-type-icon ${typeClass}">
+                                <i class="fas fa-${icon}"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div class="flex justify-between items-start">
+                                    <h4 style="margin: 0 0 0.3rem; font-size: 1rem;">${n.type}</h4>
+                                    <small style="color: var(--text-muted);">${n.created_at}</small>
+                                </div>
+                                <p style="margin: 0; color: var(--text-main); font-size: 0.95rem; line-height: 1.5;">${n.message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+            
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.innerText = unreadCount;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
                 }
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                await fetch(MARK_READ_URL, { method: 'POST' });
+                fetchNotifications();
             } catch (error) {
                 console.error('Error marking notifications as read:', error);
             }
         }
+
+        // Initial fetch
+        fetchNotifications();
+        // Polling every 30 seconds
+        setInterval(fetchNotifications, 30000);
     </script>
 
     <nav class="bottom-nav">

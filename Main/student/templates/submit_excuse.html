@@ -64,28 +64,25 @@
                 </div>
             </header>
 
-            <div class="main-content-inner">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 style="margin: 0;">Submit Excuse Letter</h2>
-                        <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Send a formal excuse to your teacher for missing a class.</p>
-                    </div>
+            <div class="main-content-inner" style="display: flex; flex-direction: column; align-items: center;">
+                <div class="mb-6 text-center">
+                    <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Send a formal excuse to your teacher for missing a class.</p>
                 </div>
 
-                <div class="glass-panel p-4 mobile-p-6">
+                <div class="glass-panel p-4 mobile-p-6" style="max-width: 500px; width: 100%; margin-bottom: 3rem;">
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
                             {% for category, message in messages %}
-                                <div class="alert alert-{{ category }} mb-4">{{ message }}</div>
+                                <div class="alert alert-{{ category }} mb-4" style="font-size: 0.85rem;">{{ message }}</div>
                             {% endfor %}
                         {% endif %}
                     {% endwith %}
 
-                    <form action="{{ url_for('user.submit_excuse') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ url_for('user.submit_excuse') }}" method="POST" enctype="multipart/form-data" style="text-align: left;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group mb-4">
-                            <label for="class_id" class="form-label">Select Class</label>
-                            <select name="class_id" id="class_id" class="form-control" required style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color); font-size: 0.9rem;">
+                            <label for="class_id" class="form-label" style="font-size: 0.85rem;">Select Class</label>
+                            <select name="class_id" id="class_id" class="form-control" required style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color); font-size: 0.85rem; padding: 0.6rem;">
                                 <option value="" disabled selected>-- Select a Class --</option>
                                 {% for c in enrollments %}
                                 <option value="{{ c.subject_id }}|{{ c.utid }}">
@@ -93,40 +90,38 @@
                                 </option>
                                 {% endfor %}
                             </select>
-                            <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">Only assigned teachers are shown.</small>
                         </div>
 
                         <div class="form-group mb-4">
-                            <label for="message" class="form-label">Reason / Message <span style="font-weight:400; font-size:0.75rem; color: var(--text-muted);">(max 600 chars)</span></label>
-                            <textarea name="message" id="message" rows="4" class="form-control" placeholder="Explain why you missed the class..." required maxlength="600" oninput="updateCharCount(this)" style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color); font-size: 0.9rem;"></textarea>
-                            <div style="display:flex; justify-content:flex-end; margin-top:0.35rem;">
-                                <small id="char-count" style="color: var(--text-muted); font-size:0.75rem;"><span id="chars-used">0</span> / 600</small>
+                            <label for="message" class="form-label" style="font-size: 0.85rem;">Reason <span style="font-weight:400; font-size:0.7rem; color: var(--text-muted);">(max 600)</span></label>
+                            <textarea name="message" id="message" rows="4" class="form-control" placeholder="Explain your absence..." required maxlength="600" oninput="updateCharCount(this)" style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color); font-size: 0.85rem; padding: 0.6rem;"></textarea>
+                            <div style="display:flex; justify-content:flex-end; margin-top:0.25rem;">
+                                <small id="char-count" style="color: var(--text-muted); font-size:0.7rem;"><span id="chars-used">0</span> / 600</small>
                             </div>
                         </div>
 
                         <div class="form-group mb-6">
-                            <label class="form-label">Attachment</label>
+                            <label class="form-label" style="font-size: 0.85rem;">Attachment</label>
                             <div class="upload-area" 
                                  onclick="document.getElementById('excuse_file').click()"
-                                 style="border: 2px dashed var(--border-color); padding: 1.25rem; border-radius: 12px; text-align: center; position: relative; transition: border-color 0.3s; cursor: pointer;">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.75rem;"></i>
-                                <p id="file-name" style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Click to upload file</p>
-                                <p style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.5rem;">PDF, Word, or Images (Max 10 MB)</p>
+                                 style="border: 2px dashed var(--border-color); padding: 1rem; border-radius: 10px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.02);">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
+                                <p id="file-name" style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Upload File</p>
                                 <input type="file" name="excuse_file" id="excuse_file" style="display: none;" onchange="updateFileName(this)">
                             </div>
                         </div>
 
-                        <div class="flex flex-responsive gap-3">
-                            <button type="submit" class="btn btn-primary w-full">
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: center;">
+                            <button type="submit" class="btn btn-primary" style="width: 180px; font-size: 0.9rem;">
                                 <i class="fas fa-paper-plane mr-2"></i> Send Excuse
                             </button>
-                            <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary w-full text-center">Cancel</a>
+                            <a href="{{ url_for('user.dashboard') }}" class="text-muted" style="font-size: 0.85rem; text-decoration: none;">Cancel</a>
                         </div>
                     </form>
                 </div>
 
-                <div class="mt-8">
-                    <h3 style="margin-bottom: 1.5rem;">Previous Submissions</h3>
+                <div class="w-full" style="max-width: 800px;">
+                    <h3 class="text-center" style="margin-bottom: 1.5rem;">Previous Submissions</h3>
                     <div class="glass-panel table-container overflow-hidden mt-4">
                         <table class="w-full" style="border-collapse: collapse; min-width: 700px;">
                             <thead>

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="theme-teacher">
     <div class="dashboard-container">
@@ -152,7 +153,10 @@
             const duration = document.getElementById('duration').value;
             fetch('{{ url_for("teacher.start_session") }}', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                },
                 body: JSON.stringify({ subject_id: subjectId, section: section, lat: lat, lon: lon, duration: duration })
             })
             .then(res => res.json())
@@ -213,7 +217,10 @@
 
             fetch('{{ url_for("teacher.end_session") }}', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                },
                 body: JSON.stringify({ session_id: currentSessionId })
             }).then(() => {
                 currentSessionId = null;

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Student Dashboard | Attendeez</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -256,5 +256,28 @@
             }
         });
     </script>
+
+    <nav class="bottom-nav">
+        <a href="{{ url_for('user.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('user.timetable') }}" class="bottom-nav-item {% if request.endpoint == 'user.timetable' %}active{% endif %}">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Schedule</span>
+        </a>
+        <a href="{{ url_for('user.notifications_page') }}" class="bottom-nav-item {% if request.endpoint == 'user.notifications_page' %}active{% endif %}">
+            <i class="fas fa-bell"></i>
+            <span>Alerts</span>
+        </a>
+        <a href="{{ url_for('user.profile') }}" class="bottom-nav-item {% if request.endpoint == 'user.profile' %}active{% endif %}">
+            <i class="fas fa-user-circle"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+    <button class="fab" onclick="window.location.href='{{ url_for('user.scan_qr') }}'">
+        <i class="fas fa-camera"></i>
+    </button>
+
 </body>
 </html>

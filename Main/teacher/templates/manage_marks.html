@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Manage Marks | Attendeez</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -288,5 +288,28 @@
         </main>
     </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('teacher.manual_attendance') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.manual_attendance' %}active{% endif %}">
+            <i class="fas fa-edit"></i>
+            <span>Manual</span>
+        </a>
+        <a href="{{ url_for('teacher.reports') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.reports' %}active{% endif %}">
+            <i class="fas fa-file-chart-column"></i>
+            <span>Reports</span>
+        </a>
+        <a href="{{ url_for('teacher.profile') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.profile' %}active{% endif %}">
+            <i class="fas fa-user-circle"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+    <button class="fab" onclick="window.location.href='{{ url_for('teacher.qr_generator') }}'">
+        <i class="fas fa-qrcode"></i>
+    </button>
+
 </body>
 </html>

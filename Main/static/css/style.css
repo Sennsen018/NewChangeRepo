@@ -897,8 +897,8 @@ td {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Row hover */
-tr:hover td {
+/* Row hover only for clickable tables */
+.clickable-table tr:hover td {
     background: rgba(255, 255, 255, 0.02);
 }
 

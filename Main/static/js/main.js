@@ -5,6 +5,13 @@ function toggleUserMenu() {
     }
 }
 
+function toggleAccordion(button) {
+    const accordion = button.closest('.nav-accordion');
+    if (accordion) {
+        accordion.classList.toggle('open');
+    }
+}
+
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.querySelector('.sidebar-overlay');

@@ -45,18 +45,26 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ url_for('user.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Student Dashboard </a>
+                <div class="nav-accordion">
+                    <button class="nav-item-btn accordion-trigger" onclick="toggleAccordion(this)">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>My Classes</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </button>
+                    <div class="accordion-content">
+                        {% for s in subjects %}
+                        <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="nav-item">
+                            <i class="fas fa-book"></i> {{ s.subject_code }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
                 <a href="{{ url_for('user.timetable') }}" class="nav-item"><i class="fas fa-calendar-alt"></i> Class Timetable </a>
                 <a href="{{ url_for('user.notifications_page') }}" class="nav-item"><i class="fas fa-bell"></i> Notifications {% if unread_count > 0 %}<span id="notif-badge-sidebar" class="badge badge-danger" style="margin-left: auto;">{{ unread_count }}</span>{% endif %}</a>
                 <a href="{{ url_for('user.submit_excuse') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> Excuse Letters </a>
             </nav>
-            <div class="nav-group" style="margin-top: 1.5rem;">
-                <p class="nav-label" style="font-size: 0.7rem; opacity: 0.8;">My Subjects</p>
-                {% for s in subjects %}
-                <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="nav-item" style="font-size: 0.85rem; padding: 0.6rem 1rem;">
-                    <i class="fas fa-book" style="font-size: 0.8rem;"></i> {{ s.subject_code }}
-                </a>
-                {% endfor %}
-            </div>
+            
             <div class="sidebar-bottom-actions">
                 <a href="{{ url_for('user.profile') }}" class="btn btn-secondary w-full"><i class="fas fa-user-circle"></i> My Profile</a>
                 <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a>

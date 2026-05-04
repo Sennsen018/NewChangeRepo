@@ -380,7 +380,7 @@ a {
     color: var(--text-muted);
     border-radius: var(--radius-sm);
     margin-bottom: 0.25rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 500;
     transition: var(--transition);
     background: none;
@@ -390,9 +390,59 @@ a {
     text-align: left;
 }
 
+.sidebar .nav-item-btn i:first-child {
+    width: 20px;
+    margin-right: 12px;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
 .sidebar .nav-item-btn:hover {
     background: var(--bg-surface-soft);
     color: var(--text-main);
+}
+
+.nav-accordion {
+    margin-bottom: 0.25rem;
+}
+
+.accordion-trigger .arrow {
+    margin-left: auto;
+    font-size: 0.7rem;
+    transition: transform 0.3s ease;
+}
+
+.nav-accordion.open .accordion-trigger {
+    background: var(--bg-surface-soft);
+    color: var(--text-main);
+}
+
+.nav-accordion.open .accordion-trigger .arrow {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.nav-accordion.open .accordion-content {
+    max-height: 500px;
+    margin: 0.25rem 0;
+    padding: 0.25rem 0;
+}
+
+.accordion-content .nav-item {
+    padding-left: 2.75rem !important;
+    font-size: 0.85rem !important;
+    opacity: 0.9;
+}
+
+.accordion-content .nav-item:hover {
+    opacity: 1;
 }
 
 .sidebar-logo {

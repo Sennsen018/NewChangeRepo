@@ -1,7 +1,7 @@
 function toggleUserMenu() {
     const dropdown = document.getElementById('user-dropdown');
     if (dropdown) {
-        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        dropdown.classList.toggle('active');
     }
 }
 
@@ -25,9 +25,9 @@ window.addEventListener('click', function(e) {
     const overlay = document.querySelector('.sidebar-overlay');
 
     // Handle User Dropdown
-    if (dropdown && dropdown.style.display === 'block') {
+    if (dropdown && dropdown.classList.contains('active')) {
         if (!dropdown.contains(e.target) && (!burger || !burger.contains(e.target))) {
-            dropdown.style.display = 'none';
+            dropdown.classList.remove('active');
         }
     }
 

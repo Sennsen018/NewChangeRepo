@@ -88,13 +88,32 @@
         .dot-5 { background: rgba(139,92,246,0.15); color: #a78bfa; }
     </style>
 </head>
-<body>
+<body class="theme-teacher">
     <div class="dashboard-container">
         <!-- Sidebar -->
                         <aside class="sidebar">
             <div class="sidebar-logo">
-                <i class="fas fa-fingerprint"></i>
+                <div>
+                    <i class="fas fa-fingerprint"></i>
                 <span>Attendeez</span>
+                </div>
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ teacher.first_name }} {{ teacher.middle_name }} {{ teacher.last_name }}</p>
+                            <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;">Faculty Member</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ url_for('teacher.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Teacher Dashboard</a>
@@ -119,24 +138,7 @@
                 <div class="header-left">
                     <h2 style="margin: 0;">My Profile</h2>
                 </div>
-                <div class="user-menu-container">
-                    <button class="burger-btn" onclick="toggleUserMenu()">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ teacher.first_name }} {{ teacher.middle_name }} {{ teacher.last_name }}</p>
-                            <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;">Faculty Member</p>
-                        </div>
-                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
-                            <i class="fas fa-key"></i> Change Password
-                        </a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </div>
-                </div>
-            </header>
+</header>
 
             <div class="main-content-inner">
 

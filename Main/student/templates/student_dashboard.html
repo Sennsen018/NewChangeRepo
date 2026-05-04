@@ -140,9 +140,9 @@
                                 style="padding: 1.5rem; display: block; color: inherit; text-decoration: none;">
                                 <div class="flex justify-between items-start mb-4">
                                     <div>
-                                        <div style="font-weight: 700; color: var(--primary); font-size: 0.8rem;">{{
-                                            s.subject_code }}</div>
+                                        <div style="font-weight: 700; color: var(--primary); font-size: 0.8rem;">{{ s.subject_code }}</div>
                                         <h4 style="font-size: 1rem; margin: 0.25rem 0;">{{ s.subject_name }}</h4>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);"><i class="fas fa-chalkboard-teacher"></i> {{ s.teacher_first }} {{ s.teacher_last }}</div>
                                     </div>
                                     <div
                                         class="badge {% if s.attendance_pct >= 75 %}badge-success{% else %}badge-danger{% endif %}">

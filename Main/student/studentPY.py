@@ -22,10 +22,11 @@ def dashboard():
     
     # Get Enrolled Subjects with their specific stats
     cursor.execute("""
-    SELECT s.subject_id, s.subject_code, s.subject_name 
+    SELECT s.subject_id, s.subject_code, s.subject_name, t.first_name as teacher_first, t.last_name as teacher_last
     FROM Enrollments e
     JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
     JOIN Subjects s ON ta.subject_id = s.subject_id
+    JOIN Teachers t ON ta.utid = t.utid
     WHERE e.usid = %s
     """, (usid,))
     subjects_raw = cursor.fetchall()
@@ -87,8 +88,15 @@ def subject_performance(subject_id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    # Get Subject Info
-    cursor.execute("SELECT * FROM Subjects WHERE subject_id = %s", (subject_id,))
+    # Get Subject Info and Teacher Info
+    cursor.execute("""
+        SELECT s.*, t.first_name as teacher_first, t.last_name as teacher_last, ta.section
+        FROM Subjects s
+        JOIN Teacher_Assignments ta ON s.subject_id = ta.subject_id
+        JOIN Enrollments e ON ta.assignment_id = e.assignment_id
+        JOIN Teachers t ON ta.utid = t.utid
+        WHERE s.subject_id = %s AND e.usid = %s
+    """, (subject_id, usid))
     subject = cursor.fetchone()
     
     if not subject:

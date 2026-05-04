@@ -50,6 +50,49 @@
             z-index: 0;
         }
 
+        /* Animated Orbs for Left Panel */
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            width: 50vw;
+            height: 50vw;
+            max-width: 600px;
+            max-height: 600px;
+            background: #818cf8; /* Light Indigo */
+            border-radius: 50%;
+            filter: blur(100px);
+            top: -20%;
+            right: -20%;
+            z-index: 1;
+            opacity: 0.4;
+            animation: floatLeft 30s infinite ease-in-out alternate;
+            pointer-events: none;
+        }
+
+        .brand-content::before {
+            content: '';
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            max-width: 500px;
+            max-height: 500px;
+            background: #fbbf24; /* Gold */
+            border-radius: 50%;
+            filter: blur(100px);
+            bottom: -30%;
+            left: -20%;
+            z-index: -1;
+            opacity: 0.3;
+            animation: floatLeft 25s infinite ease-in-out alternate-reverse;
+            pointer-events: none;
+        }
+
+        @keyframes floatLeft {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-40px, 50px) scale(1.1); }
+            100% { transform: translate(30px, -30px) scale(0.9); }
+        }
+
         .admin-link {
             position: absolute;
             top: 2rem;
@@ -82,6 +125,26 @@
             margin-bottom: 1.5rem;
             color: #fbbf24;
             filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.4));
+            cursor: pointer;
+        }
+
+        .brand-icon i {
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .brand-icon:hover i {
+            animation: hatToss 1.5s ease-in-out infinite;
+            color: #fff;
+            filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.9));
+        }
+
+        @keyframes hatToss {
+            0% { transform: translateY(0) rotate(0deg); }
+            30% { transform: translateY(-30px) rotate(20deg); }
+            50% { transform: translateY(-35px) rotate(0deg); }
+            70% { transform: translateY(-30px) rotate(-20deg); }
+            100% { transform: translateY(0) rotate(0deg); }
         }
 
         .brand-title {
@@ -143,6 +206,8 @@
             padding: 2rem;
             background: var(--bg-main);
             position: relative;
+            z-index: 1;
+            overflow: hidden;
         }
 
         .login-card-container {
@@ -188,6 +253,44 @@
         .login-subtitle {
             color: var(--text-muted);
             font-size: 0.95rem;
+        }
+
+        /* Animated Background Orbs */
+        .login-panel::before,
+        .login-panel::after {
+            content: '';
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            max-width: 600px;
+            max-height: 600px;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.15;
+            z-index: -1;
+            animation: float 25s infinite ease-in-out alternate;
+            pointer-events: none;
+        }
+
+        .login-panel::before {
+            background: #4f46e5;
+            top: -10%;
+            left: -10%;
+        }
+
+        .login-panel::after {
+            background: #fbbf24;
+            bottom: -10%;
+            right: -10%;
+            animation-delay: -6s;
+            animation-direction: alternate-reverse;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, 50px) scale(1.1); }
+            66% { transform: translate(-30px, 20px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
         }
 
         /* Input fields overrides */
@@ -547,7 +650,7 @@
                 </div>
 
                 <div class="forgot-link-wrapper">
-                    <a href="{{ url_for('auth.forgot_password') }}" class="forgot-link">Forgot password?</a>
+                    <a href="{{ url_for('auth.forgot_password', role='student') }}" class="forgot-link">Forgot password?</a>
                 </div>
 
                 <button type="submit" class="btn-gold" id="submitBtn">

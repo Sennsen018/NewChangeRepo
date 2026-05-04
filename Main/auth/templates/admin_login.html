@@ -1,65 +1,722 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login | Attendeez</title>
+    <meta name="description" content="Secure Admin Portal Login">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Specific overrides for the split layout with the requested color palette */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #0f172a;
+            --surface-color: rgba(30, 41, 59, 0.7);
+            --surface-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+
+            --brand-gradient: linear-gradient(135deg, var(--danger-color) 0%, #7f1d1d 100%);
+            --accent-gradient: linear-gradient(135deg, #f87171 0%, var(--danger-color) 100%);
+            --accent-color: var(--danger-color);
+            --accent-soft: rgba(239, 68, 68, 0.1);
+            
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            --transition: all 0.3s ease;
+        }
+
+        body.split-auth-page {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Left Panel - Brand */
+        .brand-panel {
+            flex: 1;
+            background: var(--brand-gradient);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .brand-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48cGF0aCBkPSJNMTAwIDEwMGg0MDB2NDAwSDEwMHoiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvc3ZnPg==') repeat;
+            opacity: 0.5;
+            z-index: 0;
+        }
+
+        /* Animated Orbs for Left Panel */
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            width: 50vw;
+            height: 50vw;
+            max-width: 600px;
+            max-height: 600px;
+            background: #fca5a5; /* Light Red */
+            border-radius: 50%;
+            filter: blur(100px);
+            top: -20%;
+            right: -20%;
+            z-index: 1;
+            opacity: 0.4;
+            animation: floatLeft 30s infinite ease-in-out alternate;
+            pointer-events: none;
+        }
+
+        .brand-content::before {
+            content: '';
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            max-width: 500px;
+            max-height: 500px;
+            background: #fb923c; /* Orange */
+            border-radius: 50%;
+            filter: blur(100px);
+            bottom: -30%;
+            left: -20%;
+            z-index: -1;
+            opacity: 0.3;
+            animation: floatLeft 25s infinite ease-in-out alternate-reverse;
+            pointer-events: none;
+        }
+
+        @keyframes floatLeft {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-40px, 50px) scale(1.1); }
+            100% { transform: translate(30px, -30px) scale(0.9); }
+        }
+
+        .admin-link {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            z-index: 10;
+        }
+
+        .admin-link:hover {
+            color: var(--text-primary);
+            transform: translateX(-5px);
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 10;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .brand-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+            cursor: pointer;
+            perspective: 1000px;
+        }
+
+        .brand-icon i {
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .brand-icon:hover i {
+            animation: shieldSpin 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            color: #fca5a5;
+            filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.9));
+        }
+
+        @keyframes shieldSpin {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.1); }
+            100% { transform: rotateY(360deg) scale(1); }
+        }
+
+        .brand-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .brand-subtitle {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 1.5rem;
+            font-weight: 300;
+        }
+
+        .brand-desc {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            font-size: 1.05rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+        }
+
+        .feature-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            color: var(--text-primary);
+        }
+
+        /* Right Panel - Login Card */
+        .login-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: var(--bg-color);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .login-card-container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface-color);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            background: var(--accent-soft);
+            color: var(--accent-color);
+            border-radius: 50%;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0 20px var(--accent-soft);
+        }
+
+        .login-title {
+            font-size: 2rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Animated Background Orbs */
+        .login-panel::before,
+        .login-panel::after {
+            content: '';
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            max-width: 600px;
+            max-height: 600px;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.15;
+            z-index: -1;
+            animation: float 25s infinite ease-in-out alternate;
+            pointer-events: none;
+        }
+
+        .login-panel::before {
+            background: #ef4444; /* danger */
+            top: -10%;
+            left: -10%;
+        }
+
+        .login-panel::after {
+            background: #4f46e5; /* primary */
+            bottom: -10%;
+            right: -10%;
+            animation-delay: -6s;
+            animation-direction: alternate-reverse;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, 50px) scale(1.1); }
+            66% { transform: translate(-30px, 20px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        /* Input fields overrides */
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            transition: var(--transition);
+            z-index: 2;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3.2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .login-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        .login-input:focus~.input-icon {
+            color: var(--accent-color);
+            filter: drop-shadow(0 0 5px var(--accent-soft));
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: var(--transition);
+            z-index: 2;
+            font-size: 1.1rem;
+        }
+
+        .password-toggle:hover {
+            color: var(--accent-color);
+        }
+
+        .forgot-link-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 2rem;
+            margin-top: -0.5rem;
+        }
+
+        .forgot-link {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+
+        /* Button overrides */
+        .btn-accent {
+            background: var(--accent-gradient);
+            color: #ffffff;
+            border: none;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .btn-accent::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-accent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-accent:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary-link {
+            width: 100%;
+            padding: 0.85rem;
+            background: transparent;
+            border: 1px solid var(--surface-border);
+            color: var(--text-secondary);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-secondary-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+        
+        .portal-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Alert animations */
+        .alert-box {
+            display: none;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        .alert-box.show {
+            display: flex;
+        }
+
+        .alert-error, .alert-danger {
+            background: rgba(244, 63, 94, 0.15);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 900px) {
+            body.split-auth-page {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            .brand-panel {
+                padding: 3rem 2rem;
+                min-height: auto;
+                flex: none;
+            }
+
+            .admin-link {
+                top: 1.5rem;
+                left: 1.5rem;
+            }
+
+            .login-panel {
+                padding: 2rem 1.5rem;
+                flex: none;
+            }
+
+            .login-card-container {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-accent.loading .spinner { display: inline-block; }
+        .btn-accent.loading .btn-text { opacity: 0.8; }
+        .btn-accent.loading { pointer-events: none; }
+
+        /* Entrance Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-up {
+            opacity: 0;
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .delay-100 { animation-delay: 100ms; }
+    </style>
 </head>
-<body class="auth-page admin-auth-page">
-    <div class="auth-card animate-fade-up">
-        <div class="auth-header animate-fade-up delay-100">
-            <div class="auth-logo auth-logo-danger">
+
+<body class="split-auth-page">
+
+    <!-- LEFT PANEL: Brand Info -->
+    <div class="brand-panel">
+        <div class="brand-content animate-fade-up">
+            <div class="brand-icon">
                 <i class="fas fa-shield-halved"></i>
             </div>
-            <h1 class="auth-title">Attendeez</h1>
-            <p class="auth-subtitle">Administrative Access</p>
-        </div>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+            <h1 class="brand-title">Attendeez</h1>
+            <p class="brand-subtitle">Administrative Access</p>
+            <p class="brand-desc">
+                Complete control and overview of the entire attendance tracking ecosystem. Secure, real-time, and efficient.
+            </p>
 
-        <form method="POST" action="{{ url_for('auth.admin_login') }}" class="animate-fade-up delay-200">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="form-group floating-group">
-                <div class="input-with-icon">
-                    <i class="fas fa-user-shield"></i>
-                    <input type="text" name="username" class="form-control" required placeholder=" " autocomplete="username">
-                    <label class="floating-label">Administrator Username</label>
-                </div>
-            </div>
-            <div class="form-group floating-group">
-                <div class="flex justify-end mb-2">
-                    <a href="{{ url_for('auth.forgot_password') }}" class="text-sm auth-link">Forgot password?</a>
-                </div>
-                <div class="input-with-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" name="password" class="form-control" required placeholder=" ">
-                    <label class="floating-label">Password</label>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-danger w-full mt-6 auth-btn">Login to System</button>
-        </form>
-        
-        <div class="auth-footer animate-fade-up delay-300">
-            <p class="text-muted text-sm mb-4">Other Access Portals</p>
-            <div class="auth-links">
-                <a href="{{ url_for('auth.student_login') }}" class="btn btn-secondary flex-1">
-                    <i class="fas fa-user-graduate"></i> Student
-                </a>
-                <a href="{{ url_for('auth.teacher_login') }}" class="btn btn-secondary flex-1">
-                    <i class="fas fa-chalkboard-teacher"></i> Faculty
-                </a>
-            </div>
+            <ul class="feature-list">
+                <li class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-users-cog"></i></div>
+                    <span>User Management</span>
+                </li>
+                <li class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
+                    <span>Comprehensive Analytics</span>
+                </li>
+                <li class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-cogs"></i></div>
+                    <span>System Configuration</span>
+                </li>
+            </ul>
         </div>
     </div>
+
+    <!-- RIGHT PANEL: Login Card -->
+    <div class="login-panel">
+        <div class="login-card-container animate-fade-up delay-100">
+
+            <div class="login-header">
+                <div class="login-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h2 class="login-title">Admin Login</h2>
+                <p class="login-subtitle">Enter your administrative credentials</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert-box show alert-{{ category }}">
+                <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- JS Validation Alert -->
+            <div id="js-alert" class="alert-box alert-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="js-alert-msg">Error message</span>
+            </div>
+
+            <form id="loginForm" method="POST" action="{{ url_for('auth.admin_login') }}" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+                <div class="input-group">
+                    <input type="text" id="username" name="username" class="login-input"
+                        placeholder="Administrator Username" required autocomplete="username">
+                    <i class="fas fa-user-shield input-icon"></i>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="login-input" placeholder="Password"
+                        required autocomplete="current-password">
+                    <i class="fas fa-lock input-icon"></i>
+                    <button type="button" class="password-toggle" id="toggleBtn"
+                        aria-label="Toggle password visibility">
+                        <i class="fas fa-eye" id="toggleIcon"></i>
+                    </button>
+                </div>
+
+                <div class="forgot-link-wrapper">
+                    <a href="{{ url_for('auth.forgot_password', role='admin') }}" class="forgot-link">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn-accent" id="submitBtn">
+                    <div class="spinner"></div>
+                    <span class="btn-text">Login to System</span>
+                </button>
+
+                <div class="portal-links">
+                    <a href="{{ url_for('auth.student_login') }}" class="btn-secondary-link">
+                        <i class="fas fa-user-graduate"></i> Student
+                    </a>
+                    <a href="{{ url_for('auth.teacher_login') }}" class="btn-secondary-link">
+                        <i class="fas fa-chalkboard-teacher"></i> Faculty
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        // Password visibility toggle
+        const toggleBtn = document.getElementById('toggleBtn');
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.getElementById('toggleIcon');
+
+        toggleBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+            toggleIcon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+        });
+
+        // Form validation & loading state
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const usernameInput = document.getElementById('username');
+        const jsAlert = document.getElementById('js-alert');
+        const jsAlertMsg = document.getElementById('js-alert-msg');
+
+        function showError(message) {
+            jsAlertMsg.textContent = message;
+            jsAlert.classList.add('show');
+            setTimeout(() => {
+                jsAlert.classList.remove('show');
+            }, 5000);
+        }
+
+        loginForm.addEventListener('submit', (e) => {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!username || !password) {
+                e.preventDefault();
+                showError('Please enter both Administrator Username and Password.');
+                if (!username) usernameInput.focus();
+                else passwordInput.focus();
+                return;
+            }
+
+            // Show loading state
+            submitBtn.classList.add('loading');
+        });
+
+        // Auto dismiss flash messages from backend
+        document.addEventListener('DOMContentLoaded', () => {
+            const backendAlerts = document.querySelectorAll('.alert-box.show:not(#js-alert)');
+            backendAlerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    alert.style.transition = 'all 0.3s ease';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+            });
+        });
+    </script>
 </body>
+
 </html>

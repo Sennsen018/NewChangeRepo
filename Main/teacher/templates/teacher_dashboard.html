@@ -16,6 +16,7 @@
             <div class="sidebar-logo">
                 <div>
                     <i class="fas fa-fingerprint"></i>
+<<<<<<< HEAD
                     <span>Attendeez</span>
                 </div>
                 <div class="user-menu-container">
@@ -69,6 +70,54 @@
                     <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Faculty Dashboard</h2>
                 </div>
             </header>
+=======
+                <span>Attendeez</span>
+                </div>
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div
+                            style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ name
+                                }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Faculty Member</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('teacher.dashboard') }}" class="nav-item active"><i class="fas fa-house"></i> Teacher Dashboard</a>
+                <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users"></i> Manage Students</a>
+                <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item"><i class="fas fa-clipboard-check"></i> Manual Attendance</a>
+                <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i> Manage Marks</a>
+                <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
+                <a href="{{ url_for('teacher.reports') }}" class="nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+            </nav>
+            <div class="sidebar-bottom-actions">
+                <a href="{{ url_for('teacher.profile') }}" class="btn btn-secondary w-full"><i class="fas fa-user-circle"></i> My Profile</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="header-left">
+                    <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Faculty Dashboard</h2>
+                </div>
+</header>
+>>>>>>> 70cb27f95d51d27e2e0cf32b69bb3a6853855fd1
 
             <div class="main-content-inner">
                 <div class="mb-8">

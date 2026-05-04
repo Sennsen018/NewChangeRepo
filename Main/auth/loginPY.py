@@ -155,7 +155,7 @@ def student_login():
                 flash('Account is disabled. Please contact admin.', 'error')
             elif student['lockout_time'] and student['lockout_time'] > datetime.now():
                 flash(f'Account locked. Try again after {student["lockout_time"]}', 'error')
-            elif check_password_hash(student['password_hash'], password):
+            elif student['password_hash'] and check_password_hash(student['password_hash'], password):
                 # Reset attempts
                 cursor.execute("UPDATE Students SET failed_attempts = 0, lockout_time = NULL WHERE usid = %s", (student['usid'],))
                 conn.commit()
@@ -205,7 +205,7 @@ def teacher_login():
                 flash('Account is disabled.', 'error')
             elif teacher['lockout_time'] and teacher['lockout_time'] > datetime.now():
                 flash(f'Account locked. Try again after {teacher["lockout_time"]}', 'error')
-            elif check_password_hash(teacher['password_hash'], password):
+            elif teacher['password_hash'] and check_password_hash(teacher['password_hash'], password):
                 cursor.execute("UPDATE Teachers SET failed_attempts = 0, lockout_time = NULL WHERE utid = %s", (teacher['utid'],))
                 conn.commit()
                 session['user_id'] = teacher['utid']
@@ -248,7 +248,7 @@ def admin_login():
         if admin:
             if admin['lockout_time'] and admin['lockout_time'] > datetime.now():
                 flash(f'Account locked. Try again after {admin["lockout_time"]}', 'error')
-            elif check_password_hash(admin['password_hash'], password):
+            elif admin['password_hash'] and check_password_hash(admin['password_hash'], password):
                 cursor.execute("UPDATE Admins SET failed_attempts = 0, lockout_time = NULL WHERE admin_id = %s", (admin['admin_id'],))
                 conn.commit()
                 session['user_id'] = admin['admin_id']
@@ -587,7 +587,7 @@ def change_password():
         user = cursor.fetchone()
         
         from werkzeug.security import check_password_hash, generate_password_hash
-        if user and check_password_hash(user['password_hash'], current_password):
+        if user and user['password_hash'] and check_password_hash(user['password_hash'], current_password):
             new_hash = generate_password_hash(new_password)
             cursor.execute(f"UPDATE {table} SET password_hash = %s WHERE {id_col} = %s", (new_hash, uID))
             conn.commit()

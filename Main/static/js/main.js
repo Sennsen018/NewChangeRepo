@@ -5,21 +5,43 @@ function toggleUserMenu() {
     }
 }
 
-// Close dropdown when clicking outside
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    if (sidebar) {
+        sidebar.classList.toggle('open');
+        if (overlay) {
+            overlay.classList.toggle('active');
+        }
+    }
+}
+
+// Close dropdown or sidebar when clicking outside
 window.addEventListener('click', function(e) {
     const dropdown = document.getElementById('user-dropdown');
     const burger = document.querySelector('.burger-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    const overlay = document.querySelector('.sidebar-overlay');
+
+    // Handle User Dropdown
     if (dropdown && dropdown.style.display === 'block') {
         if (!dropdown.contains(e.target) && (!burger || !burger.contains(e.target))) {
             dropdown.style.display = 'none';
         }
     }
+
+    // Handle Sidebar Overlay click
+    if (overlay && overlay.contains(e.target)) {
+        if (sidebar) sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    }
 });
 
 // Global Loading & Transition Logic
 document.addEventListener('DOMContentLoaded', function() {
-    // Inject Loading Overlay
-    const loaderHTML = `
+    // Inject UI elements
+    const extraUI = `
         <div id="loading-overlay">
             <div class="spinner-container">
                 <div class="spinner-ring"></div>
@@ -27,8 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="loading-text">Attendeez Loading...</div>
         </div>
+        <div class="sidebar-overlay"></div>
     `;
-    document.body.insertAdjacentHTML('beforeend', loaderHTML);
+    document.body.insertAdjacentHTML('beforeend', extraUI);
 
     const loader = document.getElementById('loading-overlay');
     let loaderTimeout = null;

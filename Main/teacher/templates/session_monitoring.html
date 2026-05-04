@@ -49,6 +49,9 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <div class="header-left">
                     <h2 style="margin: 0;">Live Tracking: {{ session.subject_code }}</h2>
                     <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">{{ session.subject_name }} · Section {{ session.section }}</p>

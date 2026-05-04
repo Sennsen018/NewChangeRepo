@@ -229,24 +229,30 @@
     </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
+    
     <nav class="bottom-nav">
-        <a href="{{ url_for('user.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
+        <a href="{{ url_for('user.dashboard') }}" class="nav-item {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
-        <a href="{{ url_for('user.timetable') }}" class="bottom-nav-item {% if request.endpoint == 'user.timetable' %}active{% endif %}">
+        <a href="{{ url_for('user.timetable') }}" class="nav-item {% if request.endpoint == 'user.timetable' %}active{% endif %}">
             <i class="fas fa-calendar-alt"></i>
             <span>Schedule</span>
         </a>
-        <a href="{{ url_for('user.notifications_page') }}" class="bottom-nav-item {% if request.endpoint == 'user.notifications_page' %}active{% endif %}">
-            <i class="fas fa-bell"></i>
-            <span>Notifications</span>
+        <a href="{{ url_for('user.submit_excuse') }}" class="nav-item {% if request.endpoint == 'user.submit_excuse' %}active{% endif %}">
+            <i class="fas fa-envelope-open-text"></i>
+            <span>Excuse</span>
         </a>
-        <a href="{{ url_for('user.profile') }}" class="bottom-nav-item {% if request.endpoint == 'user.profile' %}active{% endif %}">
+        <a href="{{ url_for('user.notifications_page') }}" class="nav-item {% if request.endpoint == 'user.notifications_page' %}active{% endif %}">
+            <i class="fas fa-bell"></i>
+            <span>Alerts</span>
+        </a>
+        <a href="{{ url_for('user.profile') }}" class="nav-item {% if request.endpoint == 'user.profile' %}active{% endif %}">
             <i class="fas fa-user-circle"></i>
             <span>Profile</span>
         </a>
     </nav>
+    
     
 
 </body>

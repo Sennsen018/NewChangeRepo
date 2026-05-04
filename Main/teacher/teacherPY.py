@@ -253,20 +253,30 @@ def manage_students():
 
         if action == 'request_drop':
             try:
-                # Check if a pending request already exists
+                # Verify teacher is assigned to this student's class
                 cursor.execute("""
-                    SELECT * FROM Drop_Requests 
-                    WHERE usid = %s AND subject_id = %s AND status = 'Pending'
-                """, (sid, subj_id))
-                if cursor.fetchone():
-                    flash('A drop request for this student is already pending.', 'warning')
+                    SELECT 1 FROM Enrollments e
+                    JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+                    WHERE e.usid = %s AND ta.subject_id = %s AND ta.utid = %s
+                """, (sid, subj_id, utid))
+                
+                if not cursor.fetchone():
+                    flash('Unauthorized action.', 'error')
                 else:
+                    # Check if a pending request already exists
                     cursor.execute("""
-                        INSERT INTO Drop_Requests (utid, usid, subject_id, reason)
-                        VALUES (%s, %s, %s, %s)
-                    """, (utid, sid, subj_id, reason))
-                    conn.commit()
-                    flash('Drop request submitted to admin.', 'success')
+                        SELECT * FROM Drop_Requests 
+                        WHERE usid = %s AND subject_id = %s AND status = 'Pending'
+                    """, (sid, subj_id))
+                    if cursor.fetchone():
+                        flash('A drop request for this student is already pending.', 'warning')
+                    else:
+                        cursor.execute("""
+                            INSERT INTO Drop_Requests (utid, usid, subject_id, reason)
+                            VALUES (%s, %s, %s, %s)
+                        """, (utid, sid, subj_id, reason))
+                        conn.commit()
+                        flash('Drop request submitted to admin.', 'success')
             except Exception as e:
                 flash(f'Error submitting request: {str(e)}', 'error')
         
@@ -888,11 +898,12 @@ def manual_attendance():
             FROM Enrollments e
             JOIN Students s ON e.usid = s.usid
             JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
-            WHERE ta.subject_id = %s
+            WHERE ta.utid = %s
+              AND ta.subject_id = %s
               AND ta.section    = %s
               AND s.status     = 'Active'
             ORDER BY s.last_name, s.first_name
-        """, (selected_subject_id, selected_section))
+        """, (utid, selected_subject_id, selected_section))
         students = cursor.fetchall()
 
         # Check if attendance is already recorded for today for this class

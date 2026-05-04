@@ -113,9 +113,13 @@
                         </div>
 
                         <div class="flex gap-2">
+                            <a href="{{ url_for('teacher.qr_generator', subject_id=c.subject_id, section=c.section) }}"
+                                class="btn btn-primary" style="flex: 1; background: var(--primary);">
+                                <i class="fas fa-play"></i> Start Class
+                            </a>
                             <a href="{{ url_for('teacher.reports', subject_id=c.subject_id, section=c.section) }}"
-                                class="btn btn-primary" style="flex: 1;">
-                                <i class="fas fa-chart-line"></i> View Reports
+                                class="btn btn-secondary" style="flex: 1;">
+                                <i class="fas fa-chart-line"></i> Reports
                             </a>
                         </div>
                     </div>

@@ -3,223 +3,418 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Submit Excuse Letter | Attendeez</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Submit Excuse | Attendeez</title>
+    <!-- Google Fonts: Inter for professional typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for intuitive iconography -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* 
+           MOBILE-FIRST CSS DESIGN SYSTEM 
+           Colors: Zinc-based dark theme with Indigo/Emerald accents
+        */
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-main: #09090b;
+            --bg-card: #18181b;
+            --border: #27272a;
+            --text-main: #fafafa;
+            --text-muted: #a1a1aa;
+            --error: #ef4444;
+            --success: #10b981;
+            --radius: 12px;
+            --touch-target: 48px; /* High accessibility for mobile */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+
+        /* Semantic Header: Fixed Android-style App Bar */
+        header {
+            height: 64px;
+            background: rgba(9, 9, 11, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-link {
+            width: var(--touch-target);
+            height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        /* Main Container: Mobile-First Padding and Centering */
+        main {
+            padding: 1.5rem 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        /* Form Section: Centralized and Minimized */
+        section {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        /* Touch-friendly inputs */
+        .input-field {
+            width: 100%;
+            background: #09090b;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 1rem;
+            height: var(--touch-target);
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        textarea.input-field {
+            height: auto;
+            padding: 1rem;
+            min-height: 120px;
+            resize: none;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Minimal Upload Area */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .upload-zone:active {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .upload-zone i {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-zone p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Centralized Actions */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-submit {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            height: var(--touch-target);
+            width: 200px;
+            border-radius: 24px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .btn-cancel {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+        }
+
+        /* Submissions History: Table with Scroll Container */
+        .history-section {
+            width: 100%;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1.25rem;
+            text-align: center;
+        }
+
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: #27272a;
+            color: var(--text-muted);
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Status Badge System */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .status-pending { background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
+        .status-approved { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .status-rejected { background: rgba(239, 68, 68, 0.1); color: #f87171; }
+
+        /* Responsive Behavior for Tablets/Desktops */
+        @media (min-width: 768px) {
+            main { padding: 3rem 2rem; }
+            .form-card { padding: 2rem; }
+            h1 { font-size: 1.5rem; }
+        }
+
+        /* Hidden File Input */
+        #excuse_file { display: none; }
+
+        /* Navigation Menu (Bottom Nav) */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: #18181b;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            text-decoration: none;
+            text-align: center;
+            font-size: 0.7rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-                        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <i class="fas fa-fingerprint"></i>
-                <span>Attendeez</span>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="{{ url_for('user.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Student Dashboard </a>
-                <a href="{{ url_for('user.timetable') }}" class="nav-item"><i class="fas fa-calendar-alt"></i> Class Timetable </a>
-                <a href="{{ url_for('user.notifications_page') }}" class="nav-item"><i class="fas fa-bell"></i> Notifications {% if unread_count > 0 %}<span id="notif-badge-sidebar" class="badge badge-danger" style="margin-left: auto;">{{ unread_count }}</span>{% endif %}</a>
-                <a href="{{ url_for('user.submit_excuse') }}" class="nav-item active"><i class="fas fa-envelope-open-text"></i> Excuse Letters </a>
-            </nav>
-            <div class="nav-group" style="margin-top: 1.5rem;">
-                <p class="nav-label" style="font-size: 0.7rem; opacity: 0.8;">My Subjects</p>
-                {% for s in subjects %}
-                <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="nav-item" style="font-size: 0.85rem; padding: 0.6rem 1rem;">
-                    <i class="fas fa-book" style="font-size: 0.8rem;"></i> {{ s.subject_code }}
-                </a>
-                {% endfor %}
-            </div>
-            <div class="sidebar-bottom-actions">
-                <a href="{{ url_for('user.profile') }}" class="btn btn-secondary w-full"><i class="fas fa-user-circle"></i> My Profile</a>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </div>
-        </aside>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="top-header">
-                <button class="sidebar-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="header-left">
-                    <h2 style="margin: 0;">Submit Excuse Letter</h2>
-                </div>
+    <!-- Semantic Header -->
+    <header>
+        <a href="{{ url_for('user.dashboard') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1>Submit Excuse</h1>
+    </header>
 
-                <div class="user-menu-container">
-                    <button class="burger-btn" onclick="toggleUserMenu()">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Student') }}</p>
-                            <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;">Student Member</p>
-                        </div>
-                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
-                            <i class="fas fa-key"></i> Change Password
-                        </a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </div>
-                </div>
-            </header>
+    <main>
+        <!-- Form Section -->
+        <section>
+            <div class="form-card">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div style="padding: 0.75rem; border-radius: 8px; background: rgba(99, 102, 241, 0.1); color: var(--primary); margin-bottom: 1.5rem; font-size: 0.85rem; text-align: center; border: 1px solid rgba(99, 102, 241, 0.2);">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
 
-            <div class="main-content-inner" style="display: flex; flex-direction: column; align-items: center;">
-                <div class="mb-6 text-center">
-                    <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Send a formal excuse to your teacher for missing a class.</p>
-                </div>
-
-                <div class="glass-panel p-4 mobile-p-6" style="max-width: 500px; width: 100%; margin-bottom: 3rem;">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }} mb-4" style="font-size: 0.85rem;">{{ message }}</div>
+                <form action="{{ url_for('user.submit_excuse') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="form-group">
+                        <label for="class_id">Target Subject</label>
+                        <select name="class_id" id="class_id" class="input-field" required>
+                            <option value="" disabled selected>Select your class</option>
+                            {% for c in enrollments %}
+                            <option value="{{ c.subject_id }}|{{ c.utid }}">{{ c.subject_code }} - {{ c.subject_name }}</option>
                             {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-
-                    <form action="{{ url_for('user.submit_excuse') }}" method="POST" enctype="multipart/form-data" style="text-align: left;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <div class="form-group mb-4">
-                            <label for="class_id" class="form-label" style="font-size: 0.85rem;">Select Class</label>
-                            <select name="class_id" id="class_id" class="form-control" required style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color); font-size: 0.85rem; padding: 0.6rem;">
-                                <option value="" disabled selected>-- Select a Class --</option>
-                                {% for c in enrollments %}
-                                <option value="{{ c.subject_id }}|{{ c.utid }}">
-                                    {{ c.subject_code }} - {{ c.subject_name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="form-group mb-4">
-                            <label for="message" class="form-label" style="font-size: 0.85rem;">Reason <span style="font-weight:400; font-size:0.7rem; color: var(--text-muted);">(max 600)</span></label>
-                            <textarea name="message" id="message" rows="4" class="form-control" placeholder="Explain your absence..." required maxlength="600" oninput="updateCharCount(this)" style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color); font-size: 0.85rem; padding: 0.6rem;"></textarea>
-                            <div style="display:flex; justify-content:flex-end; margin-top:0.25rem;">
-                                <small id="char-count" style="color: var(--text-muted); font-size:0.7rem;"><span id="chars-used">0</span> / 600</small>
-                            </div>
-                        </div>
-
-                        <div class="form-group mb-6">
-                            <label class="form-label" style="font-size: 0.85rem;">Attachment</label>
-                            <div class="upload-area" 
-                                 onclick="document.getElementById('excuse_file').click()"
-                                 style="border: 2px dashed var(--border-color); padding: 1rem; border-radius: 10px; text-align: center; cursor: pointer; background: rgba(255,255,255,0.02);">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
-                                <p id="file-name" style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Upload File</p>
-                                <input type="file" name="excuse_file" id="excuse_file" style="display: none;" onchange="updateFileName(this)">
-                            </div>
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: center;">
-                            <button type="submit" class="btn btn-primary" style="width: 180px; font-size: 0.9rem;">
-                                <i class="fas fa-paper-plane mr-2"></i> Send Excuse
-                            </button>
-                            <a href="{{ url_for('user.dashboard') }}" class="text-muted" style="font-size: 0.85rem; text-decoration: none;">Cancel</a>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="w-full" style="max-width: 800px;">
-                    <h3 class="text-center" style="margin-bottom: 1.5rem;">Previous Submissions</h3>
-                    <div class="glass-panel table-container overflow-hidden mt-4">
-                        <table class="w-full" style="border-collapse: collapse; min-width: 700px;">
-                            <thead>
-                                <tr style="background: rgba(255,255,255,0.05); text-align: left;">
-                                    <th style="padding: 1rem;">Date</th>
-                                    <th style="padding: 1rem;">Subject</th>
-                                    <th style="padding: 1rem;">Teacher</th>
-                                    <th style="padding: 1rem;">Status</th>
-                                    <th style="padding: 1rem;">Attachment</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for letter in previous_letters %}
-                                <tr style="border-bottom: 1px solid var(--border-color);">
-                                    <td style="padding: 1rem;">{{ letter.created_at.strftime('%Y-%m-%d %H:%M') if letter.created_at else 'N/A' }}</td>
-                                    <td style="padding: 1rem;">{{ letter.subject_code }}</td>
-                                    <td style="padding: 1rem;">{{ letter.first_name }} {{ letter.middle_name }} {{ letter.last_name }}</td>
-                                    <td style="padding: 1rem;">
-                                        <span class="badge {% if letter.status == 'Approved' %}badge-success{% elif letter.status == 'Rejected' %}badge-danger{% else %}badge-warning{% endif %}">
-                                            {{ letter.status }}
-                                        </span>
-                                    </td>
-                                    <td style="padding: 1rem;">
-                                        {% if letter.file_path %}
-                                        <a href="{{ url_for('static', filename='uploads/excuses/' + letter.file_path.split('/')[-1]) }}" target="_blank" style="color: var(--primary); text-decoration: none;">
-                                            <i class="fas fa-file-download mr-1"></i> View File
-                                        </a>
-                                        {% else %}
-                                        <span style="color: var(--text-muted);">No file</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-muted);">No excuse letters submitted yet.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        </select>
                     </div>
-                </div>
+
+                    <div class="form-group">
+                        <label for="message">Reason / Explanation</label>
+                        <textarea name="message" id="message" class="input-field" placeholder="Briefly explain your absence..." required maxlength="600" oninput="document.getElementById('count').innerText = this.value.length"></textarea>
+                        <div style="text-align: right; margin-top: 0.25rem;">
+                            <small style="color: var(--text-muted); font-size: 0.7rem;"><span id="count">0</span> / 600</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Supporting Document</label>
+                        <div class="upload-zone" onclick="document.getElementById('excuse_file').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p id="file-label">Tap to upload file</p>
+                            <input type="file" name="excuse_file" id="excuse_file" onchange="if(this.files[0]) document.getElementById('file-label').innerText = this.files[0].name">
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" class="btn-submit">Send Excuse</button>
+                        <a href="{{ url_for('user.dashboard') }}" class="btn-cancel">Discard and Back</a>
+                    </div>
+                </form>
             </div>
-        </main>
-    </div>
+        </section>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script>
-        function updateCharCount(textarea) {
-            const used = textarea.value.length;
-            const counter = document.getElementById('chars-used');
-            const label = document.getElementById('char-count');
-            counter.textContent = used;
-            if (used >= 580) {
-                label.style.color = used >= 600 ? '#ef4444' : '#f59e0b';
-            } else {
-                label.style.color = 'var(--text-muted)';
-            }
-        }
+        <!-- History Section -->
+        <section class="history-section">
+            <h2>Previous Submissions</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for letter in previous_letters %}
+                        <tr>
+                            <td>{{ letter.created_at.strftime('%m/%d/%y') if letter.created_at else 'N/A' }}</td>
+                            <td>{{ letter.subject_code }}</td>
+                            <td>
+                                <span class="badge {% if letter.status == 'Approved' %}status-approved{% elif letter.status == 'Rejected' %}status-rejected{% else %}status-pending{% endif %}">
+                                    {{ letter.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if letter.file_path %}
+                                <a href="{{ url_for('static', filename='uploads/excuses/' + letter.file_path.split('/')[-1]) }}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600;">View</a>
+                                {% else %}
+                                <span style="color: var(--text-muted);">None</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem;">No history found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
 
-        function updateFileName(input) {
-            const fileNameDisplay = document.getElementById('file-name');
-            const MAX_MB = 10;
-            if (input.files && input.files.length > 0) {
-                const file = input.files[0];
-                if (file.size > MAX_MB * 1024 * 1024) {
-                    fileNameDisplay.textContent = '\u26a0 File exceeds 10 MB limit. Please choose a smaller file.';
-                    fileNameDisplay.style.color = '#ef4444';
-                    input.value = ''; // clear selection
-                    return;
-                }
-                fileNameDisplay.textContent = 'Selected: ' + file.name;
-                fileNameDisplay.style.color = 'var(--text-muted)';
-            } else {
-                fileNameDisplay.textContent = 'Click to upload or drag and drop files';
-                fileNameDisplay.style.color = 'var(--text-muted)';
-            }
-        }
-    </script>
-
+    <!-- Bottom Mobile Nav Consistency -->
     <nav class="bottom-nav">
-        <a href="{{ url_for('user.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
+        <a href="{{ url_for('user.dashboard') }}" class="nav-item">
+            <i class="fas fa-home"></i> Home
         </a>
-        <a href="{{ url_for('user.timetable') }}" class="bottom-nav-item {% if request.endpoint == 'user.timetable' %}active{% endif %}">
-            <i class="fas fa-calendar-alt"></i>
-            <span>Schedule</span>
+        <a href="{{ url_for('user.timetable') }}" class="nav-item">
+            <i class="fas fa-calendar-alt"></i> Schedule
         </a>
-        <a href="{{ url_for('user.notifications_page') }}" class="bottom-nav-item {% if request.endpoint == 'user.notifications_page' %}active{% endif %}">
-            <i class="fas fa-bell"></i>
-            <span>Notifications</span>
+        <a href="{{ url_for('user.notifications_page') }}" class="nav-item">
+            <i class="fas fa-bell"></i> Alerts
         </a>
-        <a href="{{ url_for('user.profile') }}" class="bottom-nav-item {% if request.endpoint == 'user.profile' %}active{% endif %}">
-            <i class="fas fa-user-circle"></i>
-            <span>Profile</span>
+        <a href="{{ url_for('user.submit_excuse') }}" class="nav-item active">
+            <i class="fas fa-envelope-open-text"></i> Excuse
         </a>
     </nav>
-    
 
 </body>
 </html>

@@ -65,14 +65,14 @@
             </header>
 
             <div class="main-content-inner">
-                <div class="flex flex-responsive justify-between items-center mb-8">
-                    <div>
-                        <h1 class="auth-title">Welcome back, {{ name }}!</h1>
-                        <p class="text-muted">Stay on top of your attendance and performance.</p>
-                    </div>
-                    <div class="glass-panel w-fit" style="padding: 0.75rem 1.25rem; border-color: var(--accent);">
-                        <span class="text-muted text-sm">Overall Attendance: </span>
-                        <span style="font-weight: 700; color: var(--accent);">{{ attendance_pct }}%</span>
+                <div class="mb-8">
+                    <h1 class="auth-title" style="margin-bottom: 0.25rem;">Welcome back, {{ name }}!</h1>
+                    <div class="flex items-center flex-wrap gap-3">
+                        <p class="text-muted" style="margin: 0;">Stay on top of your performance.</p>
+                        <div class="glass-panel w-fit" style="padding: 0.35rem 0.75rem; border-color: var(--accent); display: flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.05);">
+                            <span class="text-muted" style="font-size: 0.75rem;">Overall:</span>
+                            <span style="font-weight: 700; color: var(--accent); font-size: 0.85rem;">{{ attendance_pct }}%</span>
+                        </div>
                     </div>
                 </div>
 

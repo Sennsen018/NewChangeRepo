@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,249 +10,830 @@
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        /* ── Page layout ── */
+        .page-wrap {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            transition: all 0.4s cubic-bezier(.4, 0, .2, 1);
+            justify-content: center;
+        }
+
+        .page-wrap.split {
+            justify-content: flex-start;
+        }
+
+        /* ── QR Panel ── */
+        #qr-panel {
+            flex: 0 0 540px;
+            max-width: 540px;
+            transition: all 0.4s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        #qr-panel.shrunk {
+            flex: 0 0 190px;
+            max-width: 190px;
+        }
+
+        /* ── QR glass card ── */
+        .qr-card {
+            padding: 2.5rem;
+            text-align: center;
+        }
+
+        #qr-panel.shrunk .qr-card {
+            padding: 1rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        #qr-panel.shrunk .hide-when-shrunk {
+            display: none !important;
+        }
+
+        #qr-panel.shrunk #timer {
+            font-size: 1.4rem !important;
+            margin-bottom: 0.75rem !important;
+        }
+
+        #qr-panel.shrunk #qr-container img,
+        #qr-panel.shrunk #qr-container canvas {
+            width: 120px !important;
+            height: 120px !important;
+        }
+
+        #qr-panel.shrunk #qr-container {
+            padding: 0.5rem !important;
+            margin-bottom: 0.75rem !important;
+        }
+
+        /* ── Monitoring Panel ── */
+        #monitor-panel {
+            flex: 1;
+            min-width: 0;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease 0.2s;
+        }
+
+        #monitor-panel.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        /* ── Stats bar ── */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.green {
+            background: rgba(16, 185, 129, .12);
+            color: #10b981;
+        }
+
+        .stat-icon.red {
+            background: rgba(244, 63, 94, .12);
+            color: #f43f5e;
+        }
+
+        .stat-icon.amber {
+            background: rgba(245, 158, 11, .12);
+            color: #f59e0b;
+        }
+
+        .stat-icon.blue {
+            background: rgba(37, 99, 235, .12);
+            color: #2563eb;
+        }
+
+        .stat-label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .stat-val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        /* ── Filter tabs ── */
+        .filter-tabs {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .ftab {
+            padding: 0.35rem 0.9rem;
+            border-radius: 99px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            transition: all .2s;
+        }
+
+        .ftab.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* ── Monitor grid ── */
+        .mon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 0.85rem;
+        }
+
+        /* ── Student card ── */
+        .s-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+            position: relative;
+            overflow: hidden;
+            transition: all .25s ease;
+        }
+
+        .s-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .s-card.cp::before {
+            background: #10b981;
+        }
+
+        .s-card.cf::before {
+            background: #f43f5e;
+        }
+
+        .s-card.cw::before {
+            background: #64748b;
+        }
+
+        .s-card.cw {
+            opacity: .6;
+        }
+
+        .s-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: .5rem;
+        }
+
+        .s-name {
+            font-weight: 700;
+            font-size: .88rem;
+            color: var(--text-main);
+        }
+
+        .s-id {
+            font-size: .68rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .s-pill {
+            padding: .18rem .6rem;
+            border-radius: 99px;
+            font-size: .68rem;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .pp {
+            background: rgba(16, 185, 129, .12);
+            color: #10b981;
+        }
+
+        .pf {
+            background: rgba(244, 63, 94, .12);
+            color: #f43f5e;
+        }
+
+        .pw {
+            background: rgba(100, 116, 139, .12);
+            color: #64748b;
+        }
+
+        .s-time {
+            font-size: .7rem;
+            color: var(--text-muted);
+            margin-top: .5rem;
+        }
+
+        .flags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+            margin-top: .5rem;
+        }
+
+        .ftag {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .18rem .5rem;
+            border-radius: 6px;
+            font-size: .66rem;
+            font-weight: 600;
+        }
+
+        .fw {
+            background: rgba(245, 158, 11, .1);
+            color: #f59e0b;
+        }
+
+        .fc {
+            background: rgba(244, 63, 94, .1);
+            color: #f43f5e;
+        }
+
+        /* ── Live dot ── */
+        .live-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #10b981;
+            flex-shrink: 0;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, .6);
+            animation: pulse 1.5s ease-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, .6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 9px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        /* ── Responsive ── */
+        @media(max-width:900px) {
+            .page-wrap {
+                flex-direction: column;
+            }
+
+            #qr-panel {
+                flex: none;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            #qr-panel.shrunk {
+                flex: none;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            #qr-panel.shrunk .qr-card {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                text-align: left;
+            }
+
+            #qr-panel.shrunk #qr-container {
+                margin-bottom: 0 !important;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width:480px) {
+            .mon-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
+
 <body class="theme-teacher">
     <div class="dashboard-container">
+
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo">
                 <div>
                     <i class="fas fa-fingerprint"></i>
-                <span>Attendeez</span>
+                    <span>Attendeez</span>
                 </div>
                 <div class="user-menu-container">
-                    <button class="burger-btn" onclick="toggleUserMenu()">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
+                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-ellipsis-v"></i></button>
                     <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ name }}</p>
-                            <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0;">Faculty Member</p>
+                        <div style="padding:1rem;border-bottom:1px solid var(--border-color);margin-bottom:.5rem;">
+                            <p style="font-size:.85rem;font-weight:600;color:var(--text-main);margin:0;">{{ name }}</p>
+                            <p style="font-size:.7rem;color:var(--text-muted);margin:0;">Faculty Member</p>
                         </div>
-                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
-                            <i class="fas fa-key"></i> Change Password
-                        </a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item"><i class="fas fa-key"></i>
+                            Change Password</a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color:var(--danger);"><i
+                                class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <a href="{{ url_for('teacher.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Teacher Dashboard</a>
-                <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users"></i> Manage Students</a>
-                <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item active"><i class="fas fa-clipboard-check"></i> Manual Attendance</a>
-                <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i> Manage Marks</a>
-                <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
+                <a href="{{ url_for('teacher.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Teacher
+                    Dashboard</a>
+                <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users"></i> Manage
+                    Students</a>
+                <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item active"><i
+                        class="fas fa-clipboard-check"></i> Manual Attendance</a>
+                <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i>
+                    Manage Marks</a>
+                <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i
+                        class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
                 <a href="{{ url_for('teacher.reports') }}" class="nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
             </nav>
             <div class="sidebar-bottom-actions">
-                <a href="{{ url_for('teacher.profile') }}" class="btn btn-secondary w-full"><i class="fas fa-user-circle"></i> My Profile</a>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <a href="{{ url_for('teacher.profile') }}" class="btn btn-secondary w-full"><i
+                        class="fas fa-user-circle"></i> My Profile</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i>
+                    Logout</a>
             </div>
         </aside>
 
-        <!-- Main Content -->
+        <!-- Main -->
         <main class="main-content">
             <header class="top-header">
-                <button class="sidebar-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
                 <div class="header-left">
-                    <h2 style="margin: 0;">QR Attendance Generator</h2>
+                    <h2 style="margin:0;" id="page-title">QR Attendance Generator</h2>
                 </div>
             </header>
 
-            <div class="main-content-inner" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 80px);">
-            <div style="width: 100%; max-width: 500px;">
-                <a href="{{ url_for('teacher.dashboard') }}" class="back-btn mb-4" style="display:inline-block; color:var(--text-muted); text-decoration:none;">
+            <div class="main-content-inner">
+                <a href="{{ url_for('teacher.dashboard') }}" class="back-btn mb-4"
+                    style="display:inline-block;color:var(--text-muted);text-decoration:none;margin-bottom:1rem;">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
-                
-                <div class="glass-panel" style="padding: 2.5rem; text-align: center;">
-                    <div id="setup-view">
-                        <h2 style="margin-bottom: 1rem;">Attendance Session</h2>
-                        <p style="color: var(--text-muted); margin-bottom: 2rem;">Click start to generate the QR code. You must allow location access.</p>
-                        
-                        <div class="form-group mb-4" id="duration-selector" style="text-align: left;">
-                            <label class="form-label" style="font-weight: 600;">Session Duration</label>
-                            <select id="duration" class="form-control">
-                                <option value="1">1 Minute</option>
-                                <option value="2">2 Minutes</option>
-                                <option value="3">3 Minutes</option>
-                                <option value="5">5 Minutes</option>
-                                <option value="10">10 Minutes</option>
-                            </select>
-                            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem;">Max 10 minutes allowed.</p>
-                        </div>
-                        <button id="start-btn" class="btn btn-primary w-full mb-4" onclick="startSession()">Start Session</button>
-                    </div>
 
-                    <div id="session-view" style="display: none;">
-                        <div id="qr-container" style="background: white; padding: 1rem; border-radius: 8px; width: max-content; margin: 0 auto 1.5rem auto;">
-                            <div id="qrcode"></div>
-                        </div>
-                        
-                        <h1 id="timer" style="font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem;">00:00</h1>
+                <div class="page-wrap" id="page-wrap">
 
-                        <button id="monitoring-btn" class="btn btn-secondary w-full mb-4" onclick="goToMonitoring()">
-                            <i class="fas fa-desktop"></i> View Live Tracking
-                        </button>
-                        <button id="end-btn" class="btn btn-danger w-full" onclick="endSession()">End Session</button>
-                    </div>
-                </div>
+                    <!-- ── QR Panel ── -->
+                    <div id="qr-panel">
+                        <div class="glass-panel qr-card">
+
+                            <!-- Setup view -->
+                            <div id="setup-view">
+                                <h2 style="margin-bottom:.75rem;">Attendance Session</h2>
+                                <p style="color:var(--text-muted);margin-bottom:1.5rem;">Click Start to generate QR.
+                                    Location access required.</p>
+                                <div class="form-group mb-4" style="text-align:left;">
+                                    <label class="form-label" style="font-weight:600;">Session Duration</label>
+                                    <select id="duration" class="form-control">
+                                        <option value="1">1 Minute</option>
+                                        <option value="2">2 Minutes</option>
+                                        <option value="3">3 Minutes</option>
+                                        <option value="5" selected>5 Minutes</option>
+                                        <option value="10">10 Minutes</option>
+                                    </select>
+                                    <p style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Max 10 minutes
+                                        allowed.</p>
+                                </div>
+                                <button class="btn btn-primary w-full" onclick="startSession()">
+                                    <i class="fas fa-play-circle"></i> Start Session
+                                </button>
+                            </div>
+
+                            <!-- Session view -->
+                            <div id="session-view" style="display:none;">
+                                <!-- Mini label when shrunk -->
+                                <div id="mini-label"
+                                    style="display:none; font-size:.72rem; color:var(--text-muted); margin-bottom:.4rem;">
+                                    <i class="fas fa-qrcode"></i> QR Active
+                                </div>
+
+                                <div id="qr-container"
+                                    style="background:white;padding:1.25rem;border-radius:12px;width:max-content;margin:0 auto 1.5rem auto;box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+                                    <div id="qrcode"></div>
+                                </div>
+
+                                <h1 id="timer" class="hide-when-shrunk"
+                                    style="font-size:3.5rem;font-weight:800;color:var(--primary);margin-bottom:1.5rem;letter-spacing:-1px;">
+                                    00:00</h1>
+                                <div id="timer-mini"
+                                    style="display:none;font-size:1.2rem;font-weight:700;color:var(--primary);margin-bottom:.75rem;">
+                                </div>
+
+                                <button id="monitor-btn" class="btn btn-secondary w-full mb-3 hide-when-shrunk"
+                                    onclick="showMonitoring()">
+                                    <i class="fas fa-desktop"></i> View Live Tracking
+                                </button>
+                                <button id="back-qr-btn" class="btn btn-secondary w-full mb-3" style="display:none;"
+                                    onclick="showQR()">
+                                    <i class="fas fa-qrcode"></i> Back to QR
+                                </button>
+                                <button class="btn btn-danger w-full hide-when-shrunk" onclick="endSession()">
+                                    <i class="fas fa-stop-circle"></i> End Session
+                                </button>
+                                <button id="end-mini-btn" class="btn btn-danger w-full"
+                                    style="display:none;margin-top:.5rem;" onclick="endSession()">
+                                    <i class="fas fa-stop-circle"></i> End
+                                </button>
+                            </div>
+
+                        </div>
+                    </div><!-- /#qr-panel -->
+
+                    <!-- ── Monitoring Panel ── -->
+                    <div id="monitor-panel">
+
+                        <!-- Header row -->
+                        <div
+                            style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+                            <div style="display:flex;align-items:center;gap:.6rem;">
+                                <div class="live-dot"></div>
+                                <div>
+                                    <div style="font-weight:700;font-size:1rem;">Live Monitoring</div>
+                                    <div style="font-size:.75rem;color:var(--text-muted);">Updated every 3s · <span
+                                            id="last-upd">—</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="stats-bar">
+                            <div class="stat-card">
+                                <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
+                                <div>
+                                    <div class="stat-label">Present</div>
+                                    <div class="stat-val" id="sp" style="color:#10b981;">0</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon red"><i class="fas fa-flag"></i></div>
+                                <div>
+                                    <div class="stat-label">Flagged</div>
+                                    <div class="stat-val" id="sf" style="color:#f43f5e;">0</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon amber"><i class="fas fa-user-clock"></i></div>
+                                <div>
+                                    <div class="stat-label">Absent</div>
+                                    <div class="stat-val" id="sa" style="color:#f59e0b;">0</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                                <div>
+                                    <div class="stat-label">Total</div>
+                                    <div class="stat-val" id="st">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter tabs -->
+                        <div class="filter-tabs">
+                            <button class="ftab active" onclick="setFilter('all',this)"><i class="fas fa-list"></i>
+                                All</button>
+                            <button class="ftab" onclick="setFilter('Present',this)"><i class="fas fa-check-circle"></i>
+                                Present</button>
+                            <button class="ftab" onclick="setFilter('Flagged',this)"><i class="fas fa-flag"></i>
+                                Flagged</button>
+                            <button class="ftab" onclick="setFilter('waiting',this)"><i
+                                    class="fas fa-hourglass-half"></i> Not Scanned</button>
+                        </div>
+
+                        <!-- Cards -->
+                        <div id="mon-list" class="mon-grid">
+                            <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">
+                                <i class="fas fa-circle-notch fa-spin"
+                                    style="font-size:2rem;color:var(--primary);display:block;margin-bottom:.75rem;"></i>
+                                Connecting…
+                            </div>
+                        </div>
+
+                    </div><!-- /#monitor-panel -->
+
+                </div><!-- /.page-wrap -->
             </div>
-            </div> <!-- End main-content-inner -->
         </main>
     </div>
 
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('teacher.dashboard') }}" class="bottom-nav-item"><i
+                class="fas fa-home"></i><span>Home</span></a>
+        <a href="{{ url_for('teacher.manual_attendance') }}" class="bottom-nav-item active"><i
+                class="fas fa-edit"></i><span>Manual</span></a>
+        <a href="{{ url_for('teacher.view_excuses') }}" class="bottom-nav-item"><i
+                class="fas fa-envelope-open-text"></i><span>Excuse</span></a>
+        <a href="{{ url_for('teacher.reports') }}" class="bottom-nav-item"><i
+                class="fas fa-chart-bar"></i><span>Reports</span></a>
+        <a href="{{ url_for('teacher.profile') }}" class="bottom-nav-item"><i
+                class="fas fa-user-circle"></i><span>Profile</span></a>
+    </nav>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
         let currentSessionId = null;
         let countdown = null;
+        let pollInterval = null;
+        let allStudents = [];
+        let activeFilter = 'all';
+        let remainingSeconds = 0;
         const subjectId = '{{ subject_id }}';
         const section = '{{ section }}';
+        const CSRF = () => document.querySelector('meta[name="csrf-token"]').content;
 
-        function goToMonitoring() {
-            if (currentSessionId) {
-                window.location.href = `/teacher/session_monitoring/${currentSessionId}`;
-            }
-        }
-
+        /* ═══════════════ SESSION ═══════════════ */
         function startSession() {
-            if (navigator.geolocation) {
-                Swal.fire({
-                    title: 'Getting Location...',
-                    allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading(); }
-                });
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        
-                        // Laguna Bounds (Roughly)
-                        const isInsideLaguna = (lat >= 13.91 && lat <= 14.53) && (lon >= 120.95 && lon <= 121.74);
-                        
-                        if (!isInsideLaguna) {
-                            Swal.fire('Out of Range', 'You can only start sessions within the Laguna area.', 'error');
-                            return;
-                        }
-
-                        createSession(lat, lon);
-                    },
-                    (error) => {
-                        Swal.fire('Location Error', 'You must enable location services to start a session.', 'error');
-                    }
-                );
-            } else {
-                Swal.fire('Error', 'Geolocation is not supported by your browser.', 'error');
-            }
+            if (!navigator.geolocation) { Swal.fire('Error', 'Geolocation not supported.', 'error'); return; }
+            Swal.fire({ title: 'Getting Location…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            navigator.geolocation.getCurrentPosition(pos => {
+                const lat = pos.coords.latitude, lon = pos.coords.longitude;
+                const ok = (lat >= 13.91 && lat <= 14.53) && (lon >= 120.95 && lon <= 121.74);
+                if (!ok) { Swal.fire('Out of Range', 'Sessions can only start within the Laguna area.', 'error'); return; }
+                createSession(lat, lon);
+            }, () => Swal.fire('Location Error', 'Enable location services to start.', 'error'));
         }
 
         function createSession(lat, lon) {
-            const duration = document.getElementById('duration').value;
+            const dur = document.getElementById('duration').value;
             fetch('{{ url_for("teacher.start_session") }}', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ subject_id: subjectId, section: section, lat: lat, lon: lon, duration: duration })
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF() },
+                body: JSON.stringify({ subject_id: subjectId, section, lat, lon, duration: dur })
             })
-            .then(res => res.json())
-            .then(data => {
-                Swal.close();
-                if (data.success) {
+                .then(r => r.json())
+                .then(data => {
+                    Swal.close();
+                    if (!data.success) { Swal.fire('Error', 'Could not start session.', 'error'); return; }
                     currentSessionId = data.session_id;
-                    
-                    // Generate QR
-                    const qrData = JSON.stringify({ session_id: data.session_id, token: data.token });
-                    document.getElementById('qrcode').innerHTML = "";
-                    new QRCode(document.getElementById("qrcode"), {
-                        text: qrData,
-                        width: 256,
-                        height: 256
+
+                    // Build QR
+                    document.getElementById('qrcode').innerHTML = '';
+                    new QRCode(document.getElementById('qrcode'), {
+                        text: JSON.stringify({ session_id: data.session_id, token: data.token }),
+                        width: 320, height: 320
                     });
-                    
-                    // UI changes
-                    document.getElementById('setup-view').style.display = "none";
-                    document.getElementById('session-view').style.display = "block";
-                    
-                    startTimer(duration * 60); 
-                } else {
-                    Swal.fire('Error', 'Could not start session.', 'error');
-                }
-            })
-            .catch(err => Swal.fire('Error', 'Server error.', 'error'));
+
+                    document.getElementById('setup-view').style.display = 'none';
+                    document.getElementById('session-view').style.display = 'block';
+                    startTimer(parseInt(dur) * 60);
+                })
+                .catch(() => Swal.fire('Error', 'Server error.', 'error'));
         }
 
-        function startTimer(duration) {
-            let timer = duration, minutes, seconds;
-            countdown = setInterval(function () {
-                minutes = parseInt(timer / 60, 10);
-                seconds = parseInt(timer % 60, 10);
-
-                minutes = minutes < 10 ? "0" + minutes : minutes;
-                seconds = seconds < 10 ? "0" + seconds : seconds;
-
-                document.getElementById('timer').textContent = minutes + ":" + seconds;
-
-                if (--timer < 0) {
+        function startTimer(total) {
+            remainingSeconds = total;
+            clearInterval(countdown);
+            function tick() {
+                const m = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+                const s = String(remainingSeconds % 60).padStart(2, '0');
+                const txt = m + ':' + s;
+                document.getElementById('timer').textContent = txt;
+                document.getElementById('timer-mini').textContent = txt;
+                if (remainingSeconds <= 0) {
                     clearInterval(countdown);
-                    document.getElementById('timer').textContent = "Expired";
-                    document.getElementById('timer').style.color = "var(--danger-color)";
+                    document.getElementById('timer').style.color = 'var(--danger)';
+                    document.getElementById('timer-mini').style.color = 'var(--danger)';
                     endSession();
+                    return;
                 }
-            }, 1000);
+                remainingSeconds--;
+            }
+            tick();
+            countdown = setInterval(tick, 1000);
         }
 
         function endSession() {
-            if (!currentSessionId) return;
-            
-            clearInterval(countdown);
-            document.getElementById('setup-view').style.display = "block";
-            document.getElementById('session-view').style.display = "none";
-            document.getElementById('timer').style.color = "var(--primary)";
-            document.getElementById('timer').textContent = "00:00";
+            if (!currentSessionId) {
+                Swal.fire('No Active Session', 'There is no active session to end.', 'info');
+                return;
+            }
 
-            fetch('{{ url_for("teacher.end_session") }}', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ session_id: currentSessionId })
-            }).then(() => {
-                currentSessionId = null;
-                Swal.fire('Ended', 'Session has been ended.', 'info');
+            Swal.fire({
+                title: 'End Session?',
+                text: 'Students who have not scanned will be automatically marked as Absent.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-stop-circle"></i> Yes, End It',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#ef4444',
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                // Show loading
+                Swal.fire({
+                    title: 'Ending Session…',
+                    text: 'Marking absent students and closing session.',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                clearInterval(countdown);
+                clearInterval(pollInterval);
+
+                fetch('{{ url_for("teacher.end_session") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF()
+                    },
+                    body: JSON.stringify({ session_id: currentSessionId })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            currentSessionId = null;
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Session Ended',
+                                text: 'All absent students have been marked. Redirecting to dashboard…',
+                                timer: 2500,
+                                showConfirmButton: false,
+                                allowOutsideClick: false
+                            }).then(() => {
+                                window.location.href = '{{ url_for("teacher.dashboard") }}';
+                            });
+                        } else {
+                            Swal.fire('Error', data.message || 'Could not end the session. Try again.', 'error');
+                            // Restart intervals if failed
+                            startTimer(remainingSeconds);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Network Error', 'Failed to reach the server. Please check your connection.', 'error');
+                    });
             });
         }
+
+
+        /* ═══════════════ VIEW TOGGLE ═══════════════ */
+        function showMonitoring() {
+            const qp = document.getElementById('qr-panel');
+            const mp = document.getElementById('monitor-panel');
+            const pw = document.getElementById('page-wrap');
+
+            qp.classList.add('shrunk');
+            pw.classList.add('split');
+            pw.style.justifyContent = 'flex-start';
+
+
+            // swap buttons/timer for mini view
+            document.getElementById('timer-mini').style.display = 'block';
+            document.getElementById('mini-label').style.display = 'block';
+            document.getElementById('monitor-btn').style.display = 'none';
+            document.getElementById('back-qr-btn').style.display = 'block';
+            document.getElementById('end-mini-btn').style.display = 'block';
+
+            mp.style.display = 'block';
+            requestAnimationFrame(() => mp.classList.add('visible'));
+
+            document.getElementById('page-title').textContent = 'Live Monitoring';
+
+            if (currentSessionId) {
+                startPolling();
+            }
+        }
+
+        function showQR() {
+            const qp = document.getElementById('qr-panel');
+            const mp = document.getElementById('monitor-panel');
+            const pw = document.getElementById('page-wrap');
+
+            qp.classList.remove('shrunk');
+            pw.classList.remove('split');
+            pw.style.justifyContent = 'center';
+
+
+            document.getElementById('timer-mini').style.display = 'none';
+            document.getElementById('mini-label').style.display = 'none';
+            document.getElementById('monitor-btn').style.display = 'block';
+            document.getElementById('back-qr-btn').style.display = 'none';
+            document.getElementById('end-mini-btn').style.display = 'none';
+
+            mp.classList.remove('visible');
+            setTimeout(() => { mp.style.display = 'none'; }, 300);
+
+            clearInterval(pollInterval);
+            document.getElementById('page-title').textContent = 'QR Attendance Generator';
+        }
+
+        /* ═══════════════ MONITORING ═══════════════ */
+        function startPolling() {
+            fetchStats();
+            pollInterval = setInterval(fetchStats, 3000);
+        }
+
+        function setFilter(f, btn) {
+            activeFilter = f;
+            document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCards(allStudents);
+        }
+
+        async function fetchStats() {
+            if (!currentSessionId) return;
+            try {
+                const data = await fetch(`/teacher/api/session_stats/${currentSessionId}`).then(r => r.json());
+                allStudents = data.students || [];
+                const present = allStudents.filter(s => s.status === 'Present').length;
+                const flagged = allStudents.filter(s => s.status === 'Flagged').length;
+                const absent = allStudents.filter(s => !s.status).length;
+                document.getElementById('sp').textContent = present;
+                document.getElementById('sf').textContent = flagged;
+                document.getElementById('sa').textContent = absent;
+                document.getElementById('st').textContent = data.total_count ?? allStudents.length;
+                document.getElementById('last-upd').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                renderCards(allStudents);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderCards(students) {
+            let list = students;
+            if (activeFilter === 'Present') list = students.filter(s => s.status === 'Present');
+            else if (activeFilter === 'Flagged') list = students.filter(s => s.status === 'Flagged');
+            else if (activeFilter === 'waiting') list = students.filter(s => !s.status);
+
+            const c = document.getElementById('mon-list');
+            if (!list.length) {
+                c.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);"><i class="fas fa-search" style="font-size:2rem;display:block;margin-bottom:.5rem;"></i>No students match this filter.</div>';
+                return;
+            }
+            c.innerHTML = list.map(s => {
+                const ip = s.status === 'Present', iff = s.status === 'Flagged';
+                const cls = ip ? 'cp' : iff ? 'cf' : 'cw';
+                const pillCls = ip ? 'pp' : iff ? 'pf' : 'pw';
+                const statusTxt = s.status || 'Waiting…';
+                const mi = s.middle_name ? ' ' + s.middle_name.charAt(0) + '.' : '';
+
+                let flags = '';
+                if (s.is_valid === 'Invalid') flags += `<span class="ftag fc"><i class="fas fa-exclamation-triangle"></i> Invalid</span>`;
+                (s.behavior_flags || []).forEach(f => {
+                    const crit = /far|tab/i.test(f);
+                    flags += `<span class="ftag ${crit ? 'fc' : 'fw'}"><i class="fas fa-shield-alt"></i> ${f}</span>`;
+                });
+
+                const time = s.scan_time ? `<div class="s-time"><i class="far fa-clock"></i> ${new Date(s.scan_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>` : '';
+                const dist = s.distance_meters != null ? `<div class="s-time"><i class="fas fa-map-marker-alt"></i> ${Math.round(s.distance_meters)}m</div>` : '';
+
+                return `<div class="s-card ${cls}">
+                <div class="s-head">
+                    <div>
+                        <div class="s-name">${s.last_name}, ${s.first_name}${mi}</div>
+                        <div class="s-id">${s.usid}</div>
+                    </div>
+                    <span class="s-pill ${pillCls}">${statusTxt}</span>
+                </div>
+                ${time}${dist}
+                ${flags ? `<div class="flags">${flags}</div>` : ''}
+            </div>`;
+            }).join('');
+        }
     </script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-
-    <nav class="bottom-nav">
-        <a href="{{ url_for('teacher.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.dashboard' %}active{% endif %}">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </a>
-        <a href="{{ url_for('teacher.manual_attendance') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.manual_attendance' %}active{% endif %}">
-            <i class="fas fa-edit"></i>
-            <span>Manual</span>
-        </a>
-        <a href="{{ url_for('teacher.view_excuses') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.view_excuses' %}active{% endif %}">
-            <i class="fas fa-envelope-open-text"></i>
-            <span>Excuse</span>
-        </a>
-        <a href="{{ url_for('teacher.reports') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.reports' %}active{% endif %}">
-            <i class="fas fa-chart-bar"></i>
-            <span>Reports</span>
-        </a>
-        <a href="{{ url_for('teacher.profile') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.profile' %}active{% endif %}">
-            <i class="fas fa-user-circle"></i>
-            <span>Profile</span>
-        </a>
-    </nav>
-
 </body>
+
 </html>

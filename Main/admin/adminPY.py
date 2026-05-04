@@ -871,11 +871,23 @@ def enroll_student():
             flash('Selected class assignment not found.', 'error')
             return redirect(url_for('admin.manage_students'))
             
-        # Check if already enrolled
-        cursor.execute("SELECT * FROM Enrollments WHERE usid = %s AND assignment_id = %s", 
-                       (usid, assignment_id))
-        if cursor.fetchone():
-            flash('Student is already enrolled in this specific teacher assignment.', 'warning')
+        # Check if already enrolled in this specific SUBJECT or with this TEACHER
+        cursor.execute("""
+            SELECT s.subject_name, (t.first_name || ' ' || t.last_name) as teacher_name, 
+                   ta.subject_id, ta.utid
+            FROM Enrollments e
+            JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+            JOIN Subjects s ON ta.subject_id = s.subject_id
+            JOIN Teachers t ON ta.utid = t.utid
+            WHERE e.usid = %s AND (ta.subject_id = %s OR ta.utid = %s)
+        """, (usid, assignment['subject_id'], assignment['utid']))
+        
+        conflict = cursor.fetchone()
+        if conflict:
+            if conflict['subject_id'] == assignment['subject_id']:
+                flash(f"Student is already enrolled in '{conflict['subject_name']}'. Duplicate subject enrollment is not allowed.", 'warning')
+            else:
+                flash(f"Student is already assigned to teacher {conflict['teacher_name']} in another subject. Each subject must have a unique teacher.", 'warning')
         else:
             cursor.execute("INSERT INTO Enrollments (usid, assignment_id) VALUES (%s, %s) RETURNING enrollment_id", 
                            (usid, assignment_id))
@@ -1216,14 +1228,17 @@ def bulk_enroll():
             flash('Selected class assignment not found.', 'error')
             return redirect(url_for('admin.manage_students'))
             
-        # Get students who are NOT enrolled in THIS subject (regardless of section)
-        # to avoid double enrollment in the same course.
+        # Get students who are NOT enrolled in THIS subject AND do NOT have THIS teacher
         query = """
             SELECT usid FROM Students 
             WHERE status = 'Active'
-            AND usid NOT IN (SELECT usid FROM Enrollments WHERE assignment_id = %s)
+            AND usid NOT IN (
+                SELECT e.usid FROM Enrollments e
+                JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+                WHERE ta.subject_id = %s OR ta.utid = %s
+            )
         """
-        params = [assignment_id]
+        params = [assignment['subject_id'], assignment['utid']]
         
         if course_filter:
             query += " AND course = %s"
@@ -1274,14 +1289,18 @@ def bulk_enroll_selected():
             flash('Selected class assignment not found.', 'error')
             return redirect(url_for('admin.manage_students'))
             
-        # Filter out students already enrolled in this specific assignment
-        cursor.execute("SELECT usid FROM Enrollments WHERE assignment_id = %s", (assignment_id,))
-        enrolled_usids = {row['usid'] for row in cursor.fetchall()}
+        # Filter out students already enrolled in this subject or with this teacher
+        cursor.execute("""
+            SELECT e.usid FROM Enrollments e
+            JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+            WHERE ta.subject_id = %s OR ta.utid = %s
+        """, (assignment['subject_id'], assignment['utid']))
+        ineligible_usids = {row['usid'] for row in cursor.fetchall()}
         
-        to_enroll = [usid for usid in selected_usids if usid not in enrolled_usids]
+        to_enroll = [usid for usid in selected_usids if usid not in ineligible_usids]
         
         if not to_enroll:
-            flash('All selected students are already enrolled in this class.', 'warning')
+            flash('All selected students are already enrolled in this subject or assigned to this teacher.', 'warning')
         else:
             enroll_query = "INSERT INTO Enrollments (usid, assignment_id) VALUES (%s, %s)"
             enroll_data = [(usid, assignment_id) for usid in to_enroll]
@@ -1588,10 +1607,19 @@ def manual_enroll():
         assignment = cursor.fetchone()
         
         if assignment:
-            # Check if already enrolled in this specific Assignment
-            cursor.execute("SELECT * FROM Enrollments WHERE usid = %s AND assignment_id = %s", 
-                           (usid, assignment_id))
-            if not cursor.fetchone():
+            # Check if already enrolled in this SUBJECT or with this TEACHER
+            cursor.execute("""
+                SELECT s.subject_name, (t.first_name || ' ' || t.last_name) as teacher_name,
+                       ta.subject_id, ta.utid
+                FROM Enrollments e
+                JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+                JOIN Subjects s ON ta.subject_id = s.subject_id
+                JOIN Teachers t ON ta.utid = t.utid
+                WHERE e.usid = %s AND (ta.subject_id = %s OR ta.utid = %s)
+            """, (usid, assignment['subject_id'], assignment['utid']))
+            
+            conflict = cursor.fetchone()
+            if not conflict:
                 cursor.execute("INSERT INTO Enrollments (usid, assignment_id) VALUES (%s, %s) RETURNING enrollment_id", 
                                (usid, assignment_id))
                 enrollment_id = cursor.fetchone()['enrollment_id']
@@ -1603,7 +1631,10 @@ def manual_enroll():
                 conn.commit()
                 flash('Student successfully enrolled.', 'success')
             else:
-                flash('Student is already enrolled in this class.', 'warning')
+                if conflict['subject_id'] == assignment['subject_id']:
+                    flash(f"Student is already enrolled in '{conflict['subject_name']}'. Duplicate subject enrollment is not allowed.", 'warning')
+                else:
+                    flash(f"Student is already assigned to teacher {conflict['teacher_name']} in another subject. Each subject must have a unique teacher.", 'warning')
         else:
             flash('Selected class not found.', 'error')
             

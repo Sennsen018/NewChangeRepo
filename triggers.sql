@@ -59,13 +59,41 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 5. Function: Prevent Duplicate Enrollments
+-- 5. Function: Prevent Duplicate Enrollments (Unique Subject & Unique Teacher per Student)
 CREATE OR REPLACE FUNCTION prevent_duplicate_enrollments()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_subject_id INT;
+    v_uTID VARCHAR(20);
+    v_subject_name VARCHAR(100);
+    v_teacher_name VARCHAR(150);
 BEGIN
-    IF EXISTS (SELECT 1 FROM Enrollments WHERE uSID = NEW.uSID AND assignment_id = NEW.assignment_id) THEN
-        RAISE EXCEPTION 'Student is already enrolled in this specific teacher assignment.';
+    -- Get details for the assignment we are trying to enroll in
+    SELECT ta.subject_id, ta.uTID, s.subject_name, (t.first_name || ' ' || t.last_name) 
+    INTO v_subject_id, v_uTID, v_subject_name, v_teacher_name
+    FROM Teacher_Assignments ta
+    JOIN Subjects s ON ta.subject_id = s.subject_id
+    JOIN Teachers t ON ta.uTID = t.uTID
+    WHERE ta.assignment_id = NEW.assignment_id;
+
+    -- 1. Constraint: A student cannot be enrolled in the same subject twice (even with different teachers/sections)
+    IF EXISTS (
+        SELECT 1 FROM Enrollments e
+        JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+        WHERE e.uSID = NEW.uSID AND ta.subject_id = v_subject_id
+    ) THEN
+        RAISE EXCEPTION 'Student is already enrolled in the subject "%". Duplicate subject enrollment is not allowed.', v_subject_name;
     END IF;
+
+    -- 2. Constraint: A student must have a unique teacher (cannot have the same teacher for different subjects)
+    IF EXISTS (
+        SELECT 1 FROM Enrollments e
+        JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+        WHERE e.uSID = NEW.uSID AND ta.uTID = v_uTID
+    ) THEN
+        RAISE EXCEPTION 'Student is already handled by teacher %. Each subject must have a unique teacher for this student.', v_teacher_name;
+    END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

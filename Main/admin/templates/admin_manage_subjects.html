@@ -65,7 +65,7 @@
             </header>
 
             <div class="main-content-inner">
-                <div class="flex justify-between items-center mb-8">
+                <div class="flex flex-responsive justify-between items-center mb-8">
                     <div>
                         <h1 class="auth-title">Subject Management</h1>
                         <p class="text-muted">Define and manage academic subjects and curriculum.</p>
@@ -80,7 +80,7 @@
 
                 <!-- Search Bar -->
                 <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                    <form method="GET" action="{{ url_for('admin.manage_subjects') }}" style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
+                    <form method="GET" action="{{ url_for('admin.manage_subjects') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
                         <div class="form-group">
                             <label class="form-label">Search Subjects</label>
                             <input type="text" name="search" class="form-control" placeholder="Code or Name..." value="{{ search }}">

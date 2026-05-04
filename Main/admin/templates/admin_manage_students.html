@@ -65,7 +65,7 @@
             </header>
 
             <div class="main-content-inner">
-                <div class="flex justify-between items-center mb-8">
+                <div class="flex flex-responsive justify-between items-center mb-8">
                     <div>
                         <h1 class="auth-title">Student Management</h1>
                         <p class="text-muted">Register, enroll, and manage student accounts across the system.</p>
@@ -88,7 +88,7 @@
 
                 <!-- Search and Filter Bar -->
                 <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                    <form method="GET" action="{{ url_for('admin.manage_students') }}" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                    <form method="GET" action="{{ url_for('admin.manage_students') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
                         <div class="form-group">
                             <label class="form-label">Search Students</label>
                             <input type="text" name="search" class="form-control" placeholder="ID, Name, or Email..." value="{{ search }}">

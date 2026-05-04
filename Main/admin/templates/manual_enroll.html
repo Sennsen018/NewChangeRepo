@@ -58,7 +58,7 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="main-content-inner">
-                <div class="flex justify-between items-center mb-8">
+                <div class="flex flex-responsive justify-between items-center mb-8">
                     <div>
                         <h1 class="auth-title">Manual Enrollment</h1>
                         <p class="text-muted">Directly enroll specific students into designated classes.</p>
@@ -82,7 +82,7 @@
 
                 <!-- Search and Selection Panel -->
                 <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                    <form method="GET" action="{{ url_for('admin.manual_enroll') }}" style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
+                    <form method="GET" action="{{ url_for('admin.manual_enroll') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
                         <div class="form-group">
                             <label class="form-label">Search Student</label>
                             <input type="text" name="search" class="form-control" placeholder="Search by ID, Name, or Email..." value="{{ search }}">

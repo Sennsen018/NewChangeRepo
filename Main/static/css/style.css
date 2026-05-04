@@ -210,6 +210,14 @@ a {
 /* =========================================
    LAYOUT - DASHBOARD
    ========================================= */
+.flex { display: flex; }
+.justify-between { justify-content: space-between; }
+.items-center { align-items: center; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.mb-8 { margin-bottom: 2rem; }
+.w-full { width: 100%; }
+
 .dashboard-container {
     display: flex;
     min-height: 100vh;
@@ -772,24 +780,73 @@ td {
     .user-menu-container {
         margin-left: auto;
     }
+
+    /* Stack flex containers that are usually side-by-side */
+    .flex-responsive {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .flex-responsive > * {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid { 
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    }
+    
+    /* Search/Filter bar grid reset */
+    .filter-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    .filter-grid .btn {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .auth-title {
+        font-size: 1.75rem;
+    }
 }
 
 @media (max-width: 640px) {
-    .main-content-inner { padding: 1rem; }
+    .main-content-inner { padding: 1.25rem; }
     .top-header { padding: 0 1rem; }
     .stats-grid { grid-template-columns: 1fr; }
     .auth-card { 
-        padding: 2rem 1.5rem; 
+        padding: 2.5rem 1.5rem; 
         border-radius: 0;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
+    
+    .modal-content {
+        width: 95% !important;
+        margin: 10px auto;
+        padding: 1.5rem !important;
+    }
+
+    /* Table optimization for very small screens */
+    .table-container {
+        margin: 0 -1.25rem;
+        width: calc(100% + 2.5rem);
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
 }
 
 @media (max-width: 480px) {
     .auth-links { flex-direction: column; }
+    .btn { width: 100%; }
+    .header-left .auth-title { display: none; } /* Hide page title on very small screens to save space */
 }
 
 /* =========================================

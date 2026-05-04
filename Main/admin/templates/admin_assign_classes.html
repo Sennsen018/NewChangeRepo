@@ -78,7 +78,7 @@
             {% endwith %}
             
             <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                <form method="POST" action="{{ url_for('admin.assign_classes') }}" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                <form method="POST" action="{{ url_for('admin.assign_classes') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Select Teacher</label>
@@ -110,7 +110,7 @@
 
             <!-- Search Bar -->
             <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                <form method="GET" action="{{ url_for('admin.assign_classes') }}" style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
+                <form method="GET" action="{{ url_for('admin.assign_classes') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Search Assignments</label>
                         <input type="text" name="search" class="form-control" placeholder="Code, Subject, Teacher or Section..." value="{{ search }}">

@@ -69,7 +69,7 @@
 
                 <!-- Search and Filter Bar -->
                 <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                    <form method="GET" action="{{ url_for('admin.audit_logs') }}" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                    <form method="GET" action="{{ url_for('admin.audit_logs') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
                         <div class="form-group">
                             <label class="form-label">Search Details</label>
                             <input type="text" name="search" class="form-control" placeholder="User, ID, or Action..." value="{{ search }}">

@@ -71,7 +71,7 @@
 
             <div class="main-content-inner">
                 
-                <div class="flex justify-between items-end mb-8">
+                <div class="flex flex-responsive justify-between items-center mb-8">
                     <div>
                         <h1 class="auth-title">Welcome back, {{ session.get('name', 'Admin') }}!</h1>
                         <p class="text-muted">Here's a snapshot of the system's current state.</p>
@@ -105,10 +105,10 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: start;">
+                <div class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: start;">
                     <!-- Recent Reports -->
                     <div class="table-wrapper">
-                        <div style="padding: 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                        <div class="flex flex-responsive" style="padding: 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
                             <h3 style="font-size: 1rem;">Recent Reports</h3>
                             <span class="badge badge-success">{{ submitted_reports|length }} Received</span>
                         </div>
@@ -150,7 +150,7 @@
 
                     <!-- Activity Feed -->
                     <div class="glass-panel" style="padding: 1.25rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <div class="flex flex-responsive" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                             <h3 style="font-size: 1rem;">System Activity</h3>
                             <a href="{{ url_for('admin.audit_logs') }}" class="text-sm" style="color: var(--primary);">View All</a>
                         </div>

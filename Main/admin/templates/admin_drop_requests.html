@@ -54,7 +54,7 @@
                     <p class="text-muted">Review requests from teachers to drop/archive students.</p>
                 </div>
                 <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                    <form method="GET" action="{{ url_for('admin.drop_requests') }}" style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end;">
+                    <form method="GET" action="{{ url_for('admin.drop_requests') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Search Requests</label>
                             <input type="text" name="search" class="form-control" placeholder="Student, ID or Subject..." value="{{ search }}">

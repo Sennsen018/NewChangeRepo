@@ -167,7 +167,7 @@
                         <div class="grid-row-line {% if loop.index0 % 2 == 0 %}line-solid{% else %}line-dashed{% endif %}" style="--row: {{ row_idx }};"></div>
                     {% endfor %}
 
-                    <!-- Schedule Entries -->
+                    <!-- Schedule Entriess -->
                     {% for entry in schedule %}
                         {% set color_idx = (loop.index0 % 5) + 1 %}
                         <div class="class-entry color-{{ color_idx }}" 

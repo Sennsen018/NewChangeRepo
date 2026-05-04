@@ -201,7 +201,7 @@ window.closePinModal = function() {
 };
 
 /**
- * PIN Management Logic
+ * PIN Management Logicc
  */
 window.openChangePinModal = function() {
     document.getElementById('pinChangeModal').style.display = 'flex';

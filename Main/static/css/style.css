@@ -1503,7 +1503,7 @@ td {
         justify-content: center;
     }
     
-    /* Make action buttons icon-only on mobile */
+    /* Make action buttons icon-only on mobilee */
     .table-wrapper .btn span.btn-text {
         display: none;
     }

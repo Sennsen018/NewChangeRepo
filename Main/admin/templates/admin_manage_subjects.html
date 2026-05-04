@@ -108,7 +108,7 @@
             {% endwith %}
             
             <div class="glass-panel p-4" style="padding: 1.5rem;">
-                <div class="table-container">
+                <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
@@ -120,27 +120,25 @@
                         <tbody>
                             {% for subject in subjects %}
                             <tr>
-                                <td><span class="badge badge-primary">{{ subject.subject_code }}</span></td>
-                                <td>{{ subject.subject_name }}</td>
-                                <td>
-                                    <div class="flex gap-2">
+                                <td data-label="Subject Code"><span class="badge badge-primary">{{ subject.subject_code }}</span></td>
+                                <td data-label="Subject Name">{{ subject.subject_name }}</td>
+                                <td class="action-cell" data-label="Action">
                                         <button class="btn btn-secondary" 
                                                  style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
                                                  onclick="openEditModal(`{{ subject.subject_id }}`, `{{ subject.subject_code }}`, `{{ subject.subject_name }}`)">
-                                             <i class="fas fa-edit"></i> Edit
+                                             <i class="fas fa-edit"></i> <span class="btn-text">Edit</span>
                                          </button>
                                          <a href="#" 
                                             class="btn btn-danger" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                             onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_subject', subject_id=subject.subject_id) }}`)">
-                                             <i class="fas fa-trash-alt"></i> Delete
+                                             <i class="fas fa-trash-alt"></i> <span class="btn-text">Delete</span>
                                          </a>
-                                    </div>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="3" class="text-center" style="padding: 2rem;">No subjects defined yet.</td>
+                                <td colspan="3" class="text-center" style="padding: 2rem;" data-label="Subject Code">No subjects defined yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -259,9 +257,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

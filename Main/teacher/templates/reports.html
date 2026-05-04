@@ -52,7 +52,10 @@
                             <i class="fas fa-chevron-left" style="margin: 0;"></i>
                         </a>
                         <div>
-                            <h2 style="margin: 0; line-height: 1.2;">{{ selected_class.subject_name }}</h2>
+                            <h2 class="auth-title" style="margin: 0; line-height: 1.2;">
+                                <i class="fas fa-chart-bar" style="margin-right: 0.5rem; color: var(--primary);"></i>
+                                {{ selected_class.subject_name }}
+                            </h2>
                             <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">
                                 <span class="badge badge-warning"
                                     style="padding: 0.1rem 0.4rem; font-size: 0.65rem; vertical-align: middle;">{{
@@ -62,7 +65,10 @@
                         </div>
                     </div>
                     {% else %}
-                    <h2 style="margin: 0;">Reports &amp; Analytics</h2>
+                    <h2 class="auth-title" style="margin: 0;">
+                        <i class="fas fa-chart-bar" style="margin-right: 0.5rem; color: var(--primary);"></i>
+                        Reports &amp; Analytics
+                    </h2>
                     {% endif %}
                 </div>
                 <div class="user-menu-container">
@@ -560,18 +566,20 @@
             <i class="fas fa-edit"></i>
             <span>Manual</span>
         </a>
-        <a href="{{ url_for('teacher.reports') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.reports' %}active{% endif %}">
-            <i class="fas fa-file-chart-column"></i>
-            <span>Reports</span>
+        <a href="{{ url_for('teacher.view_excuses') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.view_excuses' %}active{% endif %}">
+            <i class="fas fa-envelope-open-text"></i>
+            <span>Excuse</span>
         </a>
+                                <a href="{{ url_for('teacher.reports') }}" class="bottom-nav-item active">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>Reports</span>
+                                </a>
         <a href="{{ url_for('teacher.profile') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.profile' %}active{% endif %}">
             <i class="fas fa-user-circle"></i>
             <span>Profile</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('teacher.qr_generator') }}'">
-        <i class="fas fa-qrcode"></i>
-    </button>
+
 
 </body>
 

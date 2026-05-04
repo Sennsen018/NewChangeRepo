@@ -517,11 +517,12 @@ a {
     color: var(--text-muted);
 }
 
-.table-wrapper {
+.table-wrapper, .table-container {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    overflow: hidden;
+    overflow-x: auto;
+    width: 100%;
 }
 
 table {
@@ -1122,3 +1123,127 @@ td {
 .p-6 { padding: 1.5rem; }
 .p-8 { padding: 2rem; }
 .p-12 { padding: 3rem; }
+
+/* =========================================
+   MOBILE RESPONSIVE TABLES (GLOBAL)
+   ========================================= */
+@media (max-width: 768px) {
+    .table-container table,
+    .table-container thead,
+    .table-container tbody,
+    .table-container th,
+    .table-container td,
+    .table-container tr {
+        display: block;
+        width: 100%;
+    }
+    
+    .table-container thead tr {
+        display: none; /* Hide desktop headers */
+    }
+    
+    .table-container tr {
+        margin-bottom: 1rem;
+        background: var(--bg-surface-soft);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    
+    .table-container td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        min-height: 44px; /* Touch-friendly height */
+        text-align: right;
+        font-size: 0.9rem;
+    }
+    
+    .table-container td:last-child {
+        border-bottom: none;
+        justify-content: center;
+        padding-top: 1rem;
+    }
+    
+    .table-container td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        margin-right: 1rem;
+        text-align: left;
+    }
+    
+    .table-container td > .badge,
+    .table-container td > .btn {
+        margin-left: auto;
+    }
+}
+
+/* =========================================
+   TABLE WRAPPER (Compact desktop table on mobile)
+   ========================================= */
+.table-wrapper {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-wrapper thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-surface);
+}
+
+.table-wrapper tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.action-cell {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 769px) {
+    .hide-on-desktop {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .hide-on-mobile {
+        display: none !important;
+    }
+    
+    .table-wrapper th,
+    .table-wrapper td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+        white-space: normal; /* allow wrapping to prevent overflow */
+    }
+    
+    .table-wrapper .badge {
+        padding: 0.1rem 0.3rem;
+        font-size: 0.7rem;
+    }
+    
+    .table-wrapper .btn {
+        padding: 0.35rem;
+        font-size: 0.8rem;
+        justify-content: center;
+    }
+    
+    /* Make action buttons icon-only on mobile */
+    .table-wrapper .btn span.btn-text {
+        display: none;
+    }
+    
+    .action-cell {
+        flex-direction: column;
+    }
+}

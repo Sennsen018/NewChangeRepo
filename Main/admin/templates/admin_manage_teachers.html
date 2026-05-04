@@ -137,14 +137,14 @@
                 <div id="tab-active" class="tab-content">
             
             <div class="glass-panel p-4" style="padding: 1.5rem;">
-                <div class="table-container">
+                <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
-                                <th>Teacher ID</th>
-                                <th>Name</th>
-                                <th>Department</th>
-                                <th>Email</th>
+                                <th class="hide-on-mobile">Teacher ID</th>
+                                <th>Teacher Details</th>
+                                <th class="hide-on-mobile">Department</th>
+                                <th class="hide-on-mobile">Email</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -152,11 +152,16 @@
                         <tbody>
                             {% for teacher in teachers if teacher.status == 'Active' %}
                             <tr>
-                                <td>{{ teacher.utid }}</td>
-                                <td>{{ teacher.first_name }} {% if teacher.middle_name %}{{ teacher.middle_name }} {% endif %}{{ teacher.last_name }}</td>
-                                <td>{{ teacher.department }}</td>
-                                <td>{{ teacher.email }}</td>
-                                <td>
+                                <td class="hide-on-mobile" data-label="Teacher ID">{{ teacher.utid }}</td>
+                                <td data-label="Teacher Details">
+                                    <div style="font-weight: 600; color: var(--text-main);">{{ teacher.first_name }} {% if teacher.middle_name %}{{ teacher.middle_name }} {% endif %}{{ teacher.last_name }}</div>
+                                    <div class="text-muted hide-on-desktop" style="font-size: 0.75rem; margin-top: 2px;">
+                                        ID: {{ teacher.utid }} &bull; {{ teacher.department }}
+                                    </div>
+                                </td>
+                                <td class="hide-on-mobile" data-label="Department">{{ teacher.department }}</td>
+                                <td class="hide-on-mobile" data-label="Email">{{ teacher.email }}</td>
+                                <td data-label="Status">
                                     <span class="badge {% if teacher.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
                                         {{ teacher.status }}
                                     </span>
@@ -166,12 +171,12 @@
                                         </span>
                                     {% endif %}
                                 </td>
-                                <td>
+                                <td class="action-cell" data-label="Action">
                                         {% if teacher.lockout_time and teacher.lockout_time > now %}
                                         <a href="{{ url_for('admin.unlock_user', user_type='teacher', user_id=teacher.utid) }}" 
                                            class="btn btn-success" 
                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
-                                            <i class="fas fa-unlock"></i> Unlock
+                                            <i class="fas fa-unlock"></i> <span class="btn-text">Unlock</span>
                                         </a>
                                         {% endif %}
                                         {% set m_name = teacher.middle_name if teacher.middle_name else '' %}
@@ -179,25 +184,25 @@
                                          <button class="btn btn-secondary" 
                                                   style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
                                                   onclick="openEditModal(`{{ teacher.utid }}`, `{{ teacher.first_name }}`, `{{ m_name }}`, `{{ teacher.last_name }}`, `{{ dept }}`, `{{ teacher.email }}`, `{{ teacher.status }}`)">
-                                              <i class="fas fa-edit"></i> Edit
+                                              <i class="fas fa-edit"></i> <span class="btn-text">Edit</span>
                                           </button>
                                          <a href="{{ url_for('admin.archive_teacher', utid=teacher.utid) }}" 
                                             class="btn btn-warning" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                             onclick="return confirm('Are you sure you want to archive this teacher?')">
-                                             <i class="fas fa-archive"></i> Archive
+                                             <i class="fas fa-archive"></i> <span class="btn-text">Archive</span>
                                          </a>
                                           <a href="#" 
                                              class="btn btn-danger" 
                                              style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                              onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_teacher', utid=teacher.utid) }}`)">
-                                              <i class="fas fa-trash-alt"></i> Delete
+                                              <i class="fas fa-trash-alt"></i> <span class="btn-text">Delete</span>
                                           </a>
                                      </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="6" class="text-center">No teachers found.</td>
+                                <td colspan="6" class="text-center" data-label="Teacher ID">No teachers found.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -220,31 +225,34 @@
                 <div id="tab-archived" class="tab-content" style="display: none;">
                     <div class="glass-panel p-4" style="padding: 1.5rem;">
                         <h3 class="mb-4 text-danger"><i class="fas fa-archive mr-2"></i> Archived Faculty</h3>
-                        <div class="table-container">
+                        <div class="table-wrapper">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Teacher ID</th>
-                                        <th>Name</th>
-                                        <th>Email</th>
+                                        <th class="hide-on-mobile">Teacher ID</th>
+                                        <th>Teacher Details</th>
+                                        <th class="hide-on-mobile">Email</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for teacher in teachers if teacher.status == 'Archived' %}
                                     <tr>
-                                        <td>{{ teacher.utid }}</td>
-                                        <td>{{ teacher.first_name }} {{ teacher.last_name }}</td>
-                                        <td>{{ teacher.email }}</td>
-                                        <td>
+                                        <td class="hide-on-mobile" data-label="Teacher ID">{{ teacher.utid }}</td>
+                                        <td data-label="Teacher Details">
+                                            <div style="font-weight: 600; color: var(--text-main);">{{ teacher.first_name }} {{ teacher.last_name }}</div>
+                                            <div class="text-muted hide-on-desktop" style="font-size: 0.75rem; margin-top: 2px;">{{ teacher.utid }}</div>
+                                        </td>
+                                        <td class="hide-on-mobile" data-label="Email">{{ teacher.email }}</td>
+                                        <td class="action-cell" data-label="Action">
                                             <a href="{{ url_for('admin.unarchive_teacher', utid=teacher.utid) }}" class="btn btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
-                                                <i class="fas fa-undo"></i> Unarchive
+                                                <i class="fas fa-undo"></i> <span class="btn-text">Unarchive</span>
                                             </a>
                                         </td>
                                     </tr>
                                     {% else %}
                                     <tr>
-                                        <td colspan="4" class="text-center" style="padding: 2rem;">No archived faculty members.</td>
+                                        <td colspan="4" class="text-center" style="padding: 2rem;" data-label="Teacher ID">No archived faculty members.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -433,9 +441,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

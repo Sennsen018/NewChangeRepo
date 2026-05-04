@@ -123,13 +123,13 @@
                             <tbody>
                                 {% for report in submitted_reports %}
                                 <tr>
-                                    <td class="text-muted">{{ report.submission_date.strftime('%b %d, %H:%M') if report.submission_date else 'N/A' }}</td>
-                                    <td style="font-weight: 500;">{{ report.first_name }} {{ report.teacher_last }}</td>
-                                    <td>
+                                    <td class="text-muted" data-label="Submission">{{ report.submission_date.strftime('%b %d, %H:%M') if report.submission_date else 'N/A' }}</td>
+                                    <td style="font-weight: 500;" data-label="Instructor">{{ report.first_name }} {{ report.teacher_last }}</td>
+                                    <td data-label="Subject">
                                         <div style="font-weight: 600; color: var(--primary);">{{ report.subject_code }}</div>
                                         <div class="text-muted" style="font-size: 0.75rem;">Section {{ report.section }}</div>
                                     </td>
-                                    <td>
+                                    <td data-label="Status">
                                         <a href="{{ url_for('admin.view_report', report_id=report.report_id) }}" class="btn btn-secondary btn-sm">
                                             View Details
                                         </a>
@@ -137,7 +137,7 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="4" style="text-align: center; padding: 4rem 0;">
+                                    <td colspan="4" style="text-align: center; padding: 4rem 0;" data-label="Submission">
                                         <i class="fas fa-inbox fa-3x" style="color: var(--bg-surface-soft); margin-bottom: 1rem; display: block;"></i>
                                         <p class="text-muted">No reports found.</p>
                                     </td>
@@ -191,9 +191,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

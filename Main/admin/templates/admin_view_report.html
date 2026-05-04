@@ -108,29 +108,34 @@
 
             <div class="glass-panel p-4">
                 <h3 class="mb-4">Attendance Summary Snapshot</h3>
-                <div class="table-container">
+                <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
-                                <th>Student ID</th>
-                                <th>Name</th>
-                                <th>Total Classes</th>
+                                <th class="hide-on-mobile">Student ID</th>
+                                <th>Student Details</th>
+                                <th class="hide-on-mobile">Total Classes</th>
                                 <th>Present</th>
                                 <th>Absent</th>
-                                <th>Late</th>
+                                <th class="hide-on-mobile">Late</th>
                                 <th>Percentage</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for row in summary %}
-                            <tr>
-                                <td><span class="badge badge-primary">{{ row.usid }}</span></td>
-                                <td>{{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}</td>
-                                <td>{{ row.total_classes }}</td>
-                                <td>{{ row.days_present }}</td>
-                                <td>{{ row.days_absent }}</td>
-                                <td>{{ row.days_late }}</td>
-                                <td>
+                             <tr>
+                                <td class="hide-on-mobile" data-label="Student ID"><span class="badge badge-primary">{{ row.usid }}</span></td>
+                                <td data-label="Student Details">
+                                    <div style="font-weight: 600;">{{ row.first_name }} {{ row.last_name }}</div>
+                                    <div class="hide-on-desktop text-muted" style="font-size: 0.75rem; margin-top: 2px;">
+                                        ID: {{ row.usid }} &bull; Total: {{ row.total_classes }} &bull; Late: {{ row.days_late }}
+                                    </div>
+                                </td>
+                                <td class="hide-on-mobile" data-label="Total Classes">{{ row.total_classes }}</td>
+                                <td style="color: #10b981; font-weight: 600;" data-label="Present">{{ row.days_present }}</td>
+                                <td style="color: #ef4444; font-weight: 600;" data-label="Absent">{{ row.days_absent }}</td>
+                                <td class="hide-on-mobile" data-label="Late">{{ row.days_late }}</td>
+                                <td data-label="Percentage">
                                     <span class="badge {% if row.percentage >= 75 %}badge-success{% else %}badge-danger{% endif %}">
                                         {{ row.percentage }}%
                                     </span>
@@ -138,7 +143,7 @@
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="7" class="text-center">No records in this snapshot.</td>
+                                <td colspan="7" class="text-center" data-label="Student ID">No records in this snapshot.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -213,9 +218,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

@@ -128,35 +128,41 @@
             
 
             <div class="glass-panel" style="padding: 1.5rem;">
-                <div class="table-container">
+                <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
                                 <th>Teacher Name</th>
-                                <th>Subject Code</th>
-                                <th>Subject Name</th>
-                                <th>Section</th>
+                                <th class="hide-on-mobile">Subject Code</th>
+                                <th class="hide-on-mobile">Subject Name</th>
+                                <th class="hide-on-mobile">Section</th>
+                                <th>Class Details</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for a in assignments %}
-                            <tr>
-                                <td>{{ a.first_name }} {{ a.middle_name }} {{ a.last_name }}</td>
-                                <td><span class="badge badge-warning">{{ a.subject_code }}</span></td>
-                                <td>{{ a.subject_name }}</td>
-                                <td>{{ a.section }}</td>
-                                <td>
+                             <tr>
+                                <td data-label="Teacher Name"><strong>{{ a.first_name }} {{ a.last_name }}</strong></td>
+                                <td class="hide-on-mobile" data-label="Subject Code"><span class="badge badge-warning">{{ a.subject_code }}</span></td>
+                                <td class="hide-on-mobile" data-label="Subject Name">{{ a.subject_name }}</td>
+                                <td class="hide-on-mobile" data-label="Section">{{ a.section }}</td>
+                                <td class="hide-on-desktop" data-label="Class Details">
+                                    <div style="font-weight: 600;">{{ a.subject_code }} &bull; Sec: {{ a.section }}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ a.subject_name }}</div>
+                                </td>
+                                <td class="action-cell" data-label="Action">
                                     <a href="{{ url_for('admin.remove_assignment', assignment_id=a.assignment_id) }}" 
                                        class="btn btn-danger btn-sm"
+                                       style="text-decoration: none;"
                                        onclick="return confirm('Are you sure to remove the subject to the assigned teacher?')">
-                                        <i class="fas fa-trash"></i> Remove
+                                        <i class="fas fa-trash"></i> <span class="btn-text">Remove</span>
                                     </a>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">No classes assigned yet.</td>
+                                <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);" data-label="Teacher Name">No classes assigned yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -185,9 +191,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

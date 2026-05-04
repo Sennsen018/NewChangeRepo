@@ -131,39 +131,47 @@
 
             <div class="glass-panel" style="padding: 1.5rem;">
                 <h3 class="mb-4" style="font-size: 1rem;">Active Schedules</h3>
-                <div class="table-container">
+                <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
                                 <th>Subject</th>
-                                <th>Teacher</th>
-                                <th>Section</th>
-                                <th>Day</th>
-                                <th>Time</th>
-                                <th>Room</th>
+                                <th class="hide-on-mobile">Teacher</th>
+                                <th class="hide-on-mobile">Section</th>
+                                <th class="hide-on-mobile">Day</th>
+                                <th class="hide-on-mobile">Time</th>
+                                <th class="hide-on-mobile">Room</th>
+                                <th>Schedule Info</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for s in schedules %}
-                            <tr>
-                                <td><strong>{{ s.subject_code }}</strong><br><small style="color: var(--text-muted);">{{ s.subject_name }}</small></td>
-                                <td>{{ s.first_name }} {{ s.middle_name }} {{ s.last_name }}</td>
-                                <td>{{ s.section }}</td>
-                                <td>{{ s.day_of_week }}</td>
-                                <td>{{ s.start_time }} - {{ s.end_time }}</td>
-                                <td>{{ s.room }}</td>
-                                <td>
+                             <tr>
+                                <td data-label="Subject"><strong>{{ s.subject_code }}</strong><br><small style="color: var(--text-muted);">{{ s.subject_name }}</small></td>
+                                <td class="hide-on-mobile" data-label="Teacher">{{ s.first_name }} {{ s.middle_name }} {{ s.last_name }}</td>
+                                <td class="hide-on-mobile" data-label="Section">{{ s.section }}</td>
+                                <td class="hide-on-mobile" data-label="Day">{{ s.day_of_week }}</td>
+                                <td class="hide-on-mobile" data-label="Time">{{ s.start_time }} - {{ s.end_time }}</td>
+                                <td class="hide-on-mobile" data-label="Room">{{ s.room }}</td>
+                                <td class="hide-on-desktop" data-label="Schedule Info">
+                                    <div style="font-weight: 600;">{{ s.day_of_week }} &bull; {{ s.start_time }} - {{ s.end_time }}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                        Room: {{ s.room }} &bull; Sec: {{ s.section }}
+                                    </div>
+                                    <div style="font-size: 0.7rem; color: var(--primary);">{{ s.first_name }} {{ s.last_name }}</div>
+                                </td>
+                                <td class="action-cell" data-label="Action">
                                     <a href="{{ url_for('admin.remove_schedule', schedule_id=s.schedule_id) }}" 
                                        class="btn btn-danger btn-sm"
                                        onclick="return confirm('Remove this schedule?')">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash"></i> <span class="btn-text">Remove</span>
                                     </a>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">No schedules defined yet.</td>
+                                <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);" data-label="Subject">No schedules defined yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -193,9 +201,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

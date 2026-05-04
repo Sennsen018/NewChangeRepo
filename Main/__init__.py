@@ -23,6 +23,10 @@ def reg_app():
     def index():
         return redirect(url_for('auth.student_login'))
 
+    @app.route('/.well-known/appspecific/com.chrome.devtools.json')
+    def chrome_devtools():
+        return "{}", 200, {'Content-Type': 'application/json'}
+
     # IMPORT BLUEPRINTS
     from Main.admin.crudPY import crud
     from Main.admin.adminPY import admin

@@ -108,43 +108,48 @@
                 </div>
 
                 <div class="glass-panel p-4" style="padding: 1.5rem;">
-                    <div class="table-container">
+                    <div class="table-wrapper">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Timestamp</th>
+                                    <th class="hide-on-mobile">Timestamp</th>
                                     <th>User</th>
                                     <th>Action</th>
-                                    <th>Table/ID</th>
+                                    <th class="hide-on-mobile">Table/ID</th>
                                     <th>Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for log in logs %}
                                 <tr>
-                                    <td style="font-size: 0.85rem; white-space: nowrap;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else 'N/A' }}</td>
-                                    <td>
+                                    <td class="hide-on-mobile" style="font-size: 0.85rem; white-space: nowrap;" data-label="Timestamp">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else 'N/A' }}</td>
+                                    <td data-label="User">
                                         <div style="display: flex; flex-direction: column;">
                                             <span style="font-weight: 600;">{{ log.performed_by_id }}</span>
                                             <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">{{ log.performed_by_role }}</span>
+                                            <span class="text-muted hide-on-desktop" style="font-size: 0.7rem; margin-top: 2px;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else 'N/A' }}</span>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td data-label="Action">
                                         <span class="badge {% if log.action == 'Create' %}badge-success{% elif log.action == 'Delete' %}badge-danger{% elif log.action == 'Update' %}badge-primary{% else %}badge-warning{% endif %}">
                                             {{ log.action }}
                                         </span>
+                                        <div class="hide-on-desktop text-muted" style="font-size: 0.7rem; margin-top: 2px;">{{ log.table_name }}</div>
                                     </td>
-                                    <td>
+                                    <td class="hide-on-mobile" data-label="Table/ID">
                                         <div style="display: flex; flex-direction: column;">
                                             <span style="font-family: monospace; font-size: 0.9rem;">{{ log.table_name }}</span>
                                             <span style="font-size: 0.7rem; color: var(--text-muted);">ID: {{ log.entity_id }}</span>
                                         </div>
                                     </td>
-                                    <td style="max-width: 400px; font-size: 0.9rem;">{{ log.details }}</td>
+                                    <td style="max-width: 400px; font-size: 0.9rem;" data-label="Details">
+                                        <div class="hide-on-desktop text-muted" style="font-size: 0.7rem; margin-bottom: 2px;">ID: {{ log.entity_id }}</div>
+                                        {{ log.details }}
+                                    </td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center" style="padding: 3rem;">No audit logs found.</td>
+                                    <td colspan="5" class="text-center" style="padding: 3rem;" data-label="Timestamp">No audit logs found.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -218,9 +223,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

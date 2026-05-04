@@ -165,8 +165,12 @@
             <i class="fas fa-edit"></i>
             <span>Manual</span>
         </a>
+        <a href="{{ url_for('teacher.view_excuses') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.view_excuses' %}active{% endif %}">
+            <i class="fas fa-envelope-open-text"></i>
+            <span>Excuse</span>
+        </a>
         <a href="{{ url_for('teacher.reports') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.reports' %}active{% endif %}">
-            <i class="fas fa-file-chart-column"></i>
+            <i class="fas fa-chart-bar"></i>
             <span>Reports</span>
         </a>
         <a href="{{ url_for('teacher.profile') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.profile' %}active{% endif %}">
@@ -174,9 +178,7 @@
             <span>Profile</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('teacher.qr_generator') }}'">
-        <i class="fas fa-qrcode"></i>
-    </button>
+
 
 </body>
 </html>

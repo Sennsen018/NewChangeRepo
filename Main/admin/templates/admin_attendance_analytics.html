@@ -83,7 +83,7 @@
                     <!-- Weekly Trends -->
                     <div class="glass-panel p-6">
                         <h3 class="mb-4 text-primary"><i class="fas fa-calendar-week mr-2"></i> Weekly Attendance</h3>
-                        <div class="table-container">
+                        <div class="table-wrapper">
                             <table>
                                 <thead>
                                     <tr>
@@ -96,16 +96,16 @@
                                 <tbody>
                                     {% for row in weekly_trends %}
                                     <tr>
-                                        <td>
+                                        <td data-label="Period">
                                             <div style="font-weight: 600;">{{ row.period }}</div>
                                             <small style="color: var(--text-muted);">{{ row.week_start.strftime('%b %d') if row.week_start else '' }} - {{ row.week_end.strftime('%b %d, %Y') if row.week_end else '' }}</small>
                                         </td>
-                                        <td class="text-center" style="color: #10b981; font-weight: 600;">{{ row.present_count }}</td>
-                                        <td class="text-center" style="color: #ef4444; font-weight: 600;">{{ row.absent_count }}</td>
-                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;">{{ row.late_count }}</td>
+                                        <td class="text-center" style="color: #10b981; font-weight: 600;" data-label="Present">{{ row.present_count }}</td>
+                                        <td class="text-center" style="color: #ef4444; font-weight: 600;" data-label="Absent">{{ row.absent_count }}</td>
+                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;" data-label="Late">{{ row.late_count }}</td>
                                     </tr>
                                     {% else %}
-                                    <tr><td colspan="4" class="text-center">No weekly data available.</td></tr>
+                                    <tr><td colspan="4" class="text-center" data-label="Period">No weekly data available.</td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -115,7 +115,7 @@
                     <!-- Monthly Trends -->
                     <div class="glass-panel p-6">
                         <h3 class="mb-4 text-secondary"><i class="fas fa-calendar-alt mr-2"></i> Monthly Attendance</h3>
-                        <div class="table-container">
+                        <div class="table-wrapper">
                             <table>
                                 <thead>
                                     <tr>
@@ -128,13 +128,13 @@
                                 <tbody>
                                     {% for row in monthly_trends %}
                                     <tr>
-                                        <td style="font-weight: 600;">{{ row.period }}</td>
-                                        <td class="text-center" style="color: #10b981; font-weight: 600;">{{ row.present_count }}</td>
-                                        <td class="text-center" style="color: #ef4444; font-weight: 600;">{{ row.absent_count }}</td>
-                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;">{{ row.late_count }}</td>
+                                        <td style="font-weight: 600;" data-label="Month">{{ row.period }}</td>
+                                        <td class="text-center" style="color: #10b981; font-weight: 600;" data-label="Present">{{ row.present_count }}</td>
+                                        <td class="text-center" style="color: #ef4444; font-weight: 600;" data-label="Absent">{{ row.absent_count }}</td>
+                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;" data-label="Late">{{ row.late_count }}</td>
                                     </tr>
                                     {% else %}
-                                    <tr><td colspan="4" class="text-center">No monthly data available.</td></tr>
+                                    <tr><td colspan="4" class="text-center" data-label="Month">No monthly data available.</td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -182,9 +182,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

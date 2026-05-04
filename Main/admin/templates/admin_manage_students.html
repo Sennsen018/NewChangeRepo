@@ -152,14 +152,14 @@
             <!-- All Students Tab -->
             <div id="tab-all" class="tab-content active">
                 <div class="glass-panel p-4" style="padding: 1.5rem;">
-                    <div class="table-container">
+                    <div class="table-wrapper">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Student ID</th>
-                                    <th>Name</th>
-                                    <th>Course & Level</th>
-                                    <th>Email</th>
+                                    <th class="hide-on-mobile">Student ID</th>
+                                    <th>Student Details</th>
+                                    <th class="hide-on-mobile">Course & Level</th>
+                                    <th class="hide-on-mobile">Email</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -167,11 +167,16 @@
                             <tbody>
                                 {% for student in students if student.status == 'Active' %}
                                 <tr>
-                                    <td>{{ student.usid }}</td>
-                                    <td>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</td>
-                                    <td>{{ student.course }} - {{ student.level }}</td>
-                                    <td>{{ student.email }}</td>
-                                    <td>
+                                    <td class="hide-on-mobile" data-label="Student ID">{{ student.usid }}</td>
+                                    <td data-label="Student Details">
+                                        <div style="font-weight: 600; color: var(--text-main);">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</div>
+                                        <div class="text-muted hide-on-desktop" style="font-size: 0.75rem; margin-top: 2px;">
+                                            ID: {{ student.usid }} &bull; {{ student.course }} - {{ student.level }}
+                                        </div>
+                                    </td>
+                                    <td class="hide-on-mobile" data-label="Course & Level">{{ student.course }} - {{ student.level }}</td>
+                                    <td class="hide-on-mobile" data-label="Email">{{ student.email }}</td>
+                                    <td data-label="Status">
                                         <span class="badge {% if student.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
                                             {{ student.status }}
                                         </span>
@@ -181,41 +186,41 @@
                                             </span>
                                         {% endif %}
                                     </td>
-                                    <td>
+                                    <td class="action-cell" data-label="Action">
                                         {% if student.lockout_time and student.lockout_time > now %}
                                         <a href="{{ url_for('admin.unlock_user', user_type='student', user_id=student.usid) }}" 
                                            class="btn btn-success" 
                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
-                                            <i class="fas fa-unlock"></i> Unlock
+                                            <i class="fas fa-unlock"></i> <span class="btn-text">Unlock</span>
                                         </a>
                                         {% endif %}
                                         <button class="btn btn-secondary" 
                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
                                                 onclick="openEditModal(`{{ student.usid }}`, `{{ student.first_name }}`, `{{ student.middle_name }}`, `{{ student.last_name }}`, `{{ student.email }}`, `{{ student.course }}`, `{{ student.level }}`, `{{ student.section }}`, `{{ student.status }}`)">
-                                            <i class="fas fa-edit"></i> Edit
+                                            <i class="fas fa-edit"></i> <span class="btn-text">Edit</span>
                                         </button>
                                          <button class="btn btn-primary" 
                                                  style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
                                                  onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}`)">
-                                            <i class="fas fa-user-plus"></i> Enroll
+                                            <i class="fas fa-user-plus"></i> <span class="btn-text">Enroll</span>
                                          </button>
                                          <a href="{{ url_for('admin.archive_student', usid=student.usid) }}" 
                                             class="btn btn-warning" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                             onclick="return confirm('Are you sure you want to archive this student?')">
-                                             <i class="fas fa-archive"></i> Archive
+                                             <i class="fas fa-archive"></i> <span class="btn-text">Archive</span>
                                          </a>
                                          <a href="#" 
                                             class="btn btn-danger" 
                                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                             onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_student', usid=student.usid) }}`)">
-                                             <i class="fas fa-trash-alt"></i> Delete
+                                             <i class="fas fa-trash-alt"></i> <span class="btn-text">Delete</span>
                                          </a>
                                     </td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="6" class="text-center">No students found.</td>
+                                    <td colspan="6" class="text-center" data-label="Student ID">No students found.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -276,14 +281,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="table-container">
+                    <div class="table-wrapper">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Student ID</th>
-                                    <th>Name</th>
-                                    <th>Section</th>
-                                    <th>Email</th>
+                                    <th class="hide-on-mobile">Student ID</th>
+                                    <th>Student Details</th>
+                                    <th class="hide-on-mobile">Section</th>
+                                    <th class="hide-on-mobile">Email</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -294,38 +299,43 @@
                                     {% if estudent.assignment_id == subject.assignment_id %}
                                     {% set ns.found = true %}
                                     <tr>
-                                        <td>{{ estudent.usid }}</td>
-                                        <td>{{ estudent.first_name }} {{ estudent.middle_name }} {{ estudent.last_name }}</td>
-                                        <td>{{ estudent.section }}</td>
-                                        <td>{{ estudent.email }}</td>
-                                        <td>
+                                        <td class="hide-on-mobile" data-label="Student ID">{{ estudent.usid }}</td>
+                                        <td data-label="Student Details">
+                                            <div style="font-weight: 600; color: var(--text-main);">{{ estudent.first_name }} {{ estudent.middle_name }} {{ estudent.last_name }}</div>
+                                            <div class="text-muted hide-on-desktop" style="font-size: 0.75rem; margin-top: 2px;">
+                                                ID: {{ estudent.usid }} &bull; Sec: {{ estudent.section }}
+                                            </div>
+                                        </td>
+                                        <td class="hide-on-mobile" data-label="Section">{{ estudent.section }}</td>
+                                        <td class="hide-on-mobile" data-label="Email">{{ estudent.email }}</td>
+                                        <td data-label="Status">
                                             <span class="badge {% if estudent.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
                                                 {{ estudent.status }}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td class="action-cell" data-label="Action">
                                             <button class="btn btn-secondary" 
                                                     style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
                                                     onclick="openEditModal('{{ estudent.usid }}', '{{ estudent.first_name }}', '{{ estudent.middle_name }}', '{{ estudent.last_name }}', '{{ estudent.email }}', '{{ estudent.course }}', '{{ estudent.level }}', '{{ estudent.section }}', '{{ estudent.status }}')">
-                                                <i class="fas fa-edit"></i> Edit
+                                                <i class="fas fa-edit"></i> <span class="btn-text">Edit</span>
                                             </button>
                                             <a href="{{ url_for('admin.archive_student', usid=estudent.usid) }}" 
                                                class="btn btn-warning" 
                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                                onclick="return confirm('Are you sure you want to archive this student?')">
-                                                <i class="fas fa-archive"></i> Archive
+                                                <i class="fas fa-archive"></i> <span class="btn-text">Archive</span>
                                             </a>
                                             <a href="{{ url_for('admin.remove_enrollment', enrollment_id=estudent.enrollment_id if estudent.enrollment_id else 0) }}" 
                                                class="btn btn-secondary" 
                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                                onclick="return confirm('Remove this student from this subject?')">
-                                                <i class="fas fa-user-minus"></i> Unenroll
+                                                <i class="fas fa-user-minus"></i> <span class="btn-text">Unenroll</span>
                                             </a>
                                             <a href="{{ url_for('admin.delete_student', usid=estudent.usid) }}" 
                                                class="btn btn-danger" 
                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
                                                onclick="return confirm('Are you sure you want to PERMANENTLY delete this student?')">
-                                                <i class="fas fa-trash-alt"></i> Delete
+                                                <i class="fas fa-trash-alt"></i> <span class="btn-text">Delete</span>
                                             </a>
                                         </td>
                                     </tr>
@@ -333,7 +343,7 @@
                                 {% endfor %}
                                 {% if not ns.found %}
                                 <tr>
-                                    <td colspan="6" class="text-center" style="padding: 3rem 1rem;">
+                                    <td colspan="6" class="text-center" style="padding: 3rem 1rem;" data-label="Student ID">
                                         <div style="opacity: 0.5;">
                                             <i class="fas fa-users-slash" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
                                             <p>No students enrolled in <strong>{{ subject.subject_name }}</strong> yet.</p>
@@ -358,34 +368,39 @@
                         </div>
                     </div>
                     
-                    <div class="table-container">
+                    <div class="table-wrapper">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Student ID</th>
-                                    <th>Full Name</th>
-                                    <th>Course & Year</th>
-                                    <th>Email Address</th>
+                                    <th class="hide-on-mobile">Student ID</th>
+                                    <th>Student Details</th>
+                                    <th class="hide-on-mobile">Course & Year</th>
+                                    <th class="hide-on-mobile">Email Address</th>
                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for student in unassigned_students %}
                                 <tr>
-                                    <td style="font-weight: 600;">{{ student.usid }}</td>
-                                    <td>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</td>
-                                    <td>{{ student.course }} - {{ student.level }}</td>
-                                    <td>{{ student.email }}</td>
-                                    <td class="text-center">
+                                    <td class="hide-on-mobile" style="font-weight: 600;" data-label="Student ID">{{ student.usid }}</td>
+                                    <td data-label="Student Details">
+                                        <div style="font-weight: 600; color: var(--text-main);">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</div>
+                                        <div class="text-muted hide-on-desktop" style="font-size: 0.75rem; margin-top: 2px;">
+                                            ID: {{ student.usid }} &bull; {{ student.course }} - {{ student.level }}
+                                        </div>
+                                    </td>
+                                    <td class="hide-on-mobile" data-label="Course & Year">{{ student.course }} - {{ student.level }}</td>
+                                    <td class="hide-on-mobile" data-label="Email Address">{{ student.email }}</td>
+                                    <td class="text-center action-cell" style="justify-content: center;" data-label="Action">
                                         <button class="btn btn-primary btn-sm" 
                                                 onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.last_name }}`)">
-                                            <i class="fas fa-plus-circle"></i> Enroll Now
+                                            <i class="fas fa-plus-circle"></i> <span class="btn-text">Enroll Now</span>
                                         </button>
                                     </td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center" style="padding: 4rem 1rem;">
+                                    <td colspan="5" class="text-center" style="padding: 4rem 1rem;" data-label="Student ID">
                                         <div style="opacity: 0.6;">
                                             <i class="fas fa-check-double" style="font-size: 3rem; margin-bottom: 1rem; color: var(--success); display: block;"></i>
                                             <p>All active students are currently enrolled in at least one subject!</p>
@@ -403,35 +418,40 @@
             <div id="tab-archived" class="tab-content" style="display: none;">
                 <div class="glass-panel p-4" style="padding: 1.5rem;">
                     <h3 class="mb-4 text-danger"><i class="fas fa-archive mr-2"></i> Archived Students</h3>
-                    <div class="table-container">
+                    <div class="table-wrapper">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Student ID</th>
-                                    <th>Name</th>
-                                    <th>Course & Level</th>
-                                    <th>Email</th>
+                                    <th class="hide-on-mobile">Student ID</th>
+                                    <th>Student Details</th>
+                                    <th class="hide-on-mobile">Course & Level</th>
+                                    <th class="hide-on-mobile">Email</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for student in students if student.status == 'Archived' %}
                                 <tr>
-                                    <td>{{ student.usid }}</td>
-                                    <td>{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</td>
-                                    <td>{{ student.course }} - {{ student.level }}</td>
-                                    <td>{{ student.email }}</td>
-                                    <td>
+                                    <td class="hide-on-mobile" data-label="Student ID">{{ student.usid }}</td>
+                                    <td data-label="Student Details">
+                                        <div style="font-weight: 600; color: var(--text-main);">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}</div>
+                                        <div class="text-muted hide-on-desktop" style="font-size: 0.75rem; margin-top: 2px;">
+                                            ID: {{ student.usid }} &bull; {{ student.course }} - {{ student.level }}
+                                        </div>
+                                    </td>
+                                    <td class="hide-on-mobile" data-label="Course & Level">{{ student.course }} - {{ student.level }}</td>
+                                    <td class="hide-on-mobile" data-label="Email">{{ student.email }}</td>
+                                    <td class="action-cell" data-label="Action">
                                         <a href="{{ url_for('admin.unarchive_student', usid=student.usid) }}" 
                                            class="btn btn-success" 
                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
-                                            <i class="fas fa-undo"></i> Unarchive
+                                            <i class="fas fa-undo"></i> <span class="btn-text">Unarchive</span>
                                         </a>
                                     </td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center" style="padding: 2rem;">No archived students.</td>
+                                    <td colspan="5" class="text-center" style="padding: 2rem;" data-label="Student ID">No archived students.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -787,9 +807,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

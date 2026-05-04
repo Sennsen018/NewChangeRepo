@@ -99,15 +99,15 @@
                 </div>
 
                 <div class="glass-panel p-4" style="padding: 1.5rem;">
-                    <div class="table-container">
+                    <div class="table-wrapper">
                         <table>
                             <thead>
                                 <tr>
                                     <th style="width: 40px;"><input type="checkbox" id="select-all" onclick="toggleSelectAll(this)"></th>
-                                    <th>Student ID</th>
-                                    <th>Full Name</th>
-                                    <th>Course & Year</th>
-                                    <th>Status</th>
+                                    <th class="hide-on-mobile">Student ID</th>
+                                    <th>Student Details</th>
+                                    <th class="hide-on-mobile">Course & Year</th>
+                                    <th class="hide-on-mobile">Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -115,20 +115,26 @@
                                 {% for student in students %}
                                 <tr>
                                     <td><input type="checkbox" class="student-checkbox" value="{{ student.usid }}" onclick="updateBulkCount()"></td>
-                                    <td><span class="badge badge-secondary">{{ student.usid }}</span></td>
-                                    <td>
-                                        {{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}
-                                        {% if student.level == 'Irregular Student' %}
-                                            <span class="irregular-badge">Irregular</span>
-                                        {% endif %}
+                                    <td class="hide-on-mobile" data-label="Student ID"><span class="badge badge-secondary">{{ student.usid }}</span></td>
+                                    <td data-label="Student Details">
+                                        <div style="font-weight: 600; color: var(--text-main);">
+                                            {{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}
+                                            {% if student.level == 'Irregular Student' %}
+                                                <span class="irregular-badge" style="margin-left: 0.25rem; font-size: 0.65rem;">Irreg</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-muted hide-on-desktop" style="font-size: 0.75rem; margin-top: 2px;">
+                                            ID: {{ student.usid }} &bull; {{ student.course }} - {{ student.level }}
+                                            <span class="badge badge-success" style="padding: 0.1rem 0.3rem; font-size: 0.6rem; margin-left: 4px;">{{ student.status }}</span>
+                                        </div>
                                     </td>
-                                    <td>{{ student.course }} - {{ student.level }}</td>
-                                    <td><span class="badge badge-success">{{ student.status }}</span></td>
-                                    <td>
+                                    <td class="hide-on-mobile" data-label="Course & Year">{{ student.course }} - {{ student.level }}</td>
+                                    <td class="hide-on-mobile" data-label="Status"><span class="badge badge-success">{{ student.status }}</span></td>
+                                    <td class="action-cell" data-label="Action">
                                         <button class="btn btn-primary" 
                                                 style="padding: 0.25rem 0.75rem; font-size: 0.8rem;"
                                                 onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.last_name }}`)">
-                                            <i class="fas fa-user-plus mr-1"></i> Enroll
+                                            <i class="fas fa-user-plus"></i> <span class="btn-text">Enroll</span>
                                         </button>
                                     </td>
                                 </tr>
@@ -263,9 +269,9 @@
             <span>Logs</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('admin.assign_classes') }}'">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 </body>
 </html>

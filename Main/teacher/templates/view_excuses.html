@@ -19,7 +19,7 @@
         .status-rejected { border-left-color: var(--danger-color); }
     </style>
 </head>
-<body>
+<body class="theme-teacher">
     <div class="dashboard-container">
         <!-- Sidebar -->
                         <aside class="sidebar">
@@ -60,7 +60,7 @@
                     </div>
                 </div>
 
-                <!-- Search Bar -->
+                <!-- Search Bars -->
                 <div class="glass-panel p-4 mb-6" style="border-radius: 15px;">
                     <form method="GET" action="{{ url_for('teacher.view_excuses') }}" style="display: flex; gap: 1rem; align-items: flex-end;">
                         <div class="form-group" style="flex: 1;">

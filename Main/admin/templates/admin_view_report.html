@@ -9,12 +9,25 @@
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="theme-admin">
     <div class="dashboard-container">
                         <aside class="sidebar">
             <div class="sidebar-logo">
-                <i class="fas fa-fingerprint"></i>
+                <div>
+                    <i class="fas fa-fingerprint"></i>
                 <span>Attendeez</span>
+                </div>
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-ellipsis-v"></i></button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item"><i class="fas fa-key"></i> Change Password</a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ url_for('admin.dashboard') }}" class="nav-item active"><i class="fas fa-house"></i> Admin Dashboard</a>
@@ -38,18 +51,7 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="header-left"><h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Report View</h2></div>
-                <div class="user-menu-container">
-                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-ellipsis-v"></i></button>
-                    <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
-                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
-                        </div>
-                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item"><i class="fas fa-key"></i> Change Password</a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
-                </div>
-            </header>
+</header>
             <div class="main-content-inner">
                 <div class="flex items-center gap-4 mb-6">
                     <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary" style="padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
@@ -149,7 +151,7 @@
                         </tbody>
                     </table>
                 </div>
-            </div> <!-- End main-content-inner -->
+            </div> <!-- End main-content-innerr -->
         </main>
     </div>
     <script>

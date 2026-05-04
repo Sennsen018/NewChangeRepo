@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,27 +8,56 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+
+<body class="theme-admin">
     <div class="dashboard-container">
-                        <aside class="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-logo">
-                <i class="fas fa-fingerprint"></i>
-                <span>Attendeez</span>
+                <div>
+                    <i class="fas fa-fingerprint"></i>
+                    <span>Attendeez</span>
+                </div>
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-ellipsis-v"></i></button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div
+                            style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{
+                                session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item"><i class="fas fa-key"></i>
+                            Change Password</a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);"><i
+                                class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
             </div>
             <nav class="sidebar-nav">
-                <a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Admin Dashboard</a>
-                <a href="{{ url_for('admin.manage_students') }}" class="nav-item"><i class="fas fa-user-graduate"></i> Manage Students</a>
-                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a>
-                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item"><i class="fas fa-book"></i> Manage Subjects</a>
-                <a href="{{ url_for('admin.manual_enroll') }}" class="nav-item"><i class="fas fa-user-plus"></i> Manual Enrollment</a>
-                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item"><i class="fas fa-link"></i> Assign Classes</a>
-                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item"><i class="fas fa-calendar-alt"></i> Manage Schedules</a>
-                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item"><i class="fas fa-chart-pie"></i> Attendance Analytics</a>
-                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item active"><i class="fas fa-user-minus"></i> Drop Requests</a>
-                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit Logs</a>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Admin
+                    Dashboard</a>
+                <a href="{{ url_for('admin.manage_students') }}" class="nav-item"><i class="fas fa-user-graduate"></i>
+                    Manage Students</a>
+                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item"><i
+                        class="fas fa-chalkboard-teacher"></i> Manage Teachers</a>
+                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item"><i class="fas fa-book"></i> Manage
+                    Subjects</a>
+                <a href="{{ url_for('admin.manual_enroll') }}" class="nav-item"><i class="fas fa-user-plus"></i> Manual
+                    Enrollment</a>
+                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item"><i class="fas fa-link"></i> Assign
+                    Classes</a>
+                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item"><i class="fas fa-calendar-alt"></i>
+                    Manage Schedules</a>
+                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item"><i class="fas fa-chart-pie"></i>
+                    Attendance Analytics</a>
+                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item active"><i class="fas fa-user-minus"></i>
+                    Drop Requests</a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit
+                    Logs</a>
             </nav>
             <div class="sidebar-bottom-actions">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i>
+                    Logout</a>
             </div>
         </aside>
         <main class="main-content">
@@ -35,17 +65,8 @@
                 <button class="sidebar-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
-                <div class="header-left"><h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Drop Requests</h2></div>
-                <div class="user-menu-container">
-                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-ellipsis-v"></i></button>
-                    <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
-                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
-                        </div>
-                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item"><i class="fas fa-key"></i> Change Password</a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
+                <div class="header-left">
+                    <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Drop Requests</h2>
                 </div>
             </header>
             <div class="main-content-inner">
@@ -54,18 +75,25 @@
                     <p class="text-muted">Review requests from teachers to drop/archive students.</p>
                 </div>
                 <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                    <form method="GET" action="{{ url_for('admin.drop_requests') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                    <form method="GET" action="{{ url_for('admin.drop_requests') }}" class="filter-grid"
+                        style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Search Requests</label>
-                            <input type="text" name="search" class="form-control" placeholder="Student, ID or Subject..." value="{{ search }}">
+                            <input type="text" name="search" class="form-control"
+                                placeholder="Student, ID or Subject..." value="{{ search }}">
                         </div>
                         <div class="flex gap-2">
-                            <button type="submit" class="btn btn-primary" style="height: 42px; width: 42px; padding: 0;"><i class="fas fa-search"></i></button>
-                            <a href="{{ url_for('admin.drop_requests', clear=1) }}" class="btn btn-secondary" style="height: 42px; width: 42px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-rotate"></i></a>
+                            <button type="submit" class="btn btn-primary"
+                                style="height: 42px; width: 42px; padding: 0;"><i class="fas fa-search"></i></button>
+                            <a href="{{ url_for('admin.drop_requests', clear=1) }}" class="btn btn-secondary"
+                                style="height: 42px; width: 42px; padding: 0; display: flex; align-items: center; justify-content: center;"><i
+                                    class="fas fa-rotate"></i></a>
                         </div>
                     </form>
                 </div>
-                {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}<div class="alert alert-{{ category }} mb-4">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
+                {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,
+                message in messages %}<div class="alert alert-{{ category }} mb-4">{{ message }}</div>{% endfor %}{%
+                endif %}{% endwith %}
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -81,26 +109,50 @@
                         </thead>
                         <tbody>
                             {% for r in requests %}
-                             <tr>
-                                <td data-label="Student"><strong>{{ r.s_first }} {{ r.s_last }}</strong><br><small class="badge badge-primary" style="font-size: 0.65rem;">{{ r.usid }}</small></td>
-                                <td class="hide-on-mobile" data-label="Subject"><strong>{{ r.subject_code }}</strong><br><small style="color: var(--text-muted);">{{ r.subject_name }}</small></td>
-                                <td class="hide-on-mobile" data-label="Requested By">Prof. {{ r.t_first }} {{ r.t_last }}</td>
-                                <td class="hide-on-mobile" style="max-width: 250px;" data-label="Reason"><p style="font-size: 0.85rem; color: var(--text-muted); white-space: normal; margin: 0;">{{ r.reason }}</p></td>
-                                <td class="hide-on-mobile" data-label="Date">{{ r.created_at.strftime('%Y-%m-%d') if r.created_at else 'N/A' }}</td>
+                            <tr>
+                                <td data-label="Student"><strong>{{ r.s_first }} {{ r.s_last }}</strong><br><small
+                                        class="badge badge-primary" style="font-size: 0.65rem;">{{ r.usid }}</small>
+                                </td>
+                                <td class="hide-on-mobile" data-label="Subject"><strong>{{ r.subject_code
+                                        }}</strong><br><small style="color: var(--text-muted);">{{ r.subject_name
+                                        }}</small></td>
+                                <td class="hide-on-mobile" data-label="Requested By">Prof. {{ r.t_first }} {{ r.t_last
+                                    }}</td>
+                                <td class="hide-on-mobile" style="max-width: 250px;" data-label="Reason">
+                                    <p
+                                        style="font-size: 0.85rem; color: var(--text-muted); white-space: normal; margin: 0;">
+                                        {{ r.reason }}</p>
+                                </td>
+                                <td class="hide-on-mobile" data-label="Date">{{ r.created_at.strftime('%Y-%m-%d') if
+                                    r.created_at else 'N/A' }}</td>
                                 <td class="hide-on-desktop" data-label="Request Info">
-                                    <div style="font-weight: 600;">{{ r.subject_code }} &bull; {{ r.created_at.strftime('%m-%d') if r.created_at else '' }}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">By: Prof. {{ r.t_last }}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-top: 2px;">"{{ r.reason }}"</div>
+                                    <div style="font-weight: 600;">{{ r.subject_code }} &bull; {{
+                                        r.created_at.strftime('%m-%d') if r.created_at else '' }}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">By: Prof. {{ r.t_last }}
+                                    </div>
+                                    <div
+                                        style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-top: 2px;">
+                                        "{{ r.reason }}"</div>
                                 </td>
                                 <td class="action-cell" data-label="Actions">
                                     <div class="flex gap-2">
-                                        <a href="{{ url_for('admin.approve_drop', request_id=r.request_id) }}" class="btn btn-sm" style="background: var(--accent); color: white;" onclick="return confirm('Approve drop?')"><i class="fas fa-check"></i> <span class="btn-text">Approve</span></a>
-                                        <a href="{{ url_for('admin.reject_drop', request_id=r.request_id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Reject?')"><i class="fas fa-times"></i> <span class="btn-text">Reject</span></a>
+                                        <a href="{{ url_for('admin.approve_drop', request_id=r.request_id) }}"
+                                            class="btn btn-sm" style="background: var(--accent); color: white;"
+                                            onclick="return confirm('Approve drop?')"><i class="fas fa-check"></i> <span
+                                                class="btn-text">Approve</span></a>
+                                        <a href="{{ url_for('admin.reject_drop', request_id=r.request_id) }}"
+                                            class="btn btn-danger btn-sm" onclick="return confirm('Reject?')"><i
+                                                class="fas fa-times"></i> <span class="btn-text">Reject</span></a>
                                     </div>
                                 </td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="6" style="text-align: center; padding: 4rem; color: var(--text-muted);" data-label="Student"><i class="fas fa-check-circle" style="font-size: 3rem; opacity: 0.15; display: block; margin-bottom: 1rem;"></i>No pending drop requests.</td></tr>
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 4rem; color: var(--text-muted);"
+                                    data-label="Student"><i class="fas fa-check-circle"
+                                        style="font-size: 3rem; opacity: 0.15; display: block; margin-bottom: 1rem;"></i>No
+                                    pending Drop requests.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -111,26 +163,32 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     <nav class="bottom-nav">
-        <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+        <a href="{{ url_for('admin.dashboard') }}"
+            class="bottom-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
-        <a href="{{ url_for('admin.manage_students') }}" class="bottom-nav-item {% if request.endpoint == 'admin.manage_students' %}active{% endif %}">
+        <a href="{{ url_for('admin.manage_students') }}"
+            class="bottom-nav-item {% if request.endpoint == 'admin.manage_students' %}active{% endif %}">
             <i class="fas fa-user-graduate"></i>
             <span>Students</span>
         </a>
-        <a href="{{ url_for('admin.manage_teachers') }}" class="bottom-nav-item {% if request.endpoint == 'admin.manage_teachers' %}active{% endif %}">
+        <a href="{{ url_for('admin.manage_teachers') }}"
+            class="bottom-nav-item {% if request.endpoint == 'admin.manage_teachers' %}active{% endif %}">
             <i class="fas fa-chalkboard-teacher"></i>
             <span>Faculty</span>
         </a>
-        <a href="{{ url_for('admin.audit_logs') }}" class="bottom-nav-item {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}">
+        <a href="{{ url_for('admin.audit_logs') }}"
+            class="bottom-nav-item {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}">
             <i class="fas fa-clipboard-list"></i>
             <span>Logs</span>
         </a>
     </nav>
-    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab"
+        style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
     </a>
 
 </body>
+
 </html>

@@ -9,38 +9,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<body>
+<body class="theme-teacher">
     <div class="dashboard-container">
         <!-- Sidebar -->
-                <aside class="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-logo">
-                <i class="fas fa-fingerprint"></i>
-                <span>Attendeez</span>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="{{ url_for('teacher.dashboard') }}" class="nav-item active"><i class="fas fa-house"></i> Teacher Dashboard</a>
-                <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users"></i> Manage Students</a>
-                <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item"><i class="fas fa-clipboard-check"></i> Manual Attendance</a>
-                <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i> Manage Marks</a>
-                <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
-                <a href="{{ url_for('teacher.reports') }}" class="nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
-            </nav>
-            <div class="sidebar-bottom-actions">
-                <a href="{{ url_for('teacher.profile') }}" class="btn btn-secondary w-full"><i class="fas fa-user-circle"></i> My Profile</a>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="top-header">
-                <button class="sidebar-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="header-left">
-                    <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Faculty Dashboard</h2>
+                <div>
+                    <i class="fas fa-fingerprint"></i>
+                    <span>Attendeez</span>
                 </div>
-
                 <div class="user-menu-container">
                     <button class="burger-btn" onclick="toggleUserMenu()">
                         <i class="fas fa-ellipsis-v"></i>
@@ -59,6 +36,37 @@
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
                     </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('teacher.dashboard') }}" class="nav-item active"><i class="fas fa-house"></i>
+                    Teacher Dashboard</a>
+                <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users"></i> Manage
+                    Students</a>
+                <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item"><i
+                        class="fas fa-clipboard-check"></i> Manual Attendance</a>
+                <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i>
+                    Manage Marks</a>
+                <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i
+                        class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
+                <a href="{{ url_for('teacher.reports') }}" class="nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+            </nav>
+            <div class="sidebar-bottom-actions">
+                <a href="{{ url_for('teacher.profile') }}" class="btn btn-secondary w-full"><i
+                        class="fas fa-user-circle"></i> My Profile</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i>
+                    Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Contents -->
+        <main class="main-content">
+            <header class="top-header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="header-left">
+                    <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Faculty Dashboard</h2>
                 </div>
             </header>
 
@@ -125,28 +133,33 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     <nav class="bottom-nav">
-        <a href="{{ url_for('teacher.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.dashboard' %}active{% endif %}">
+        <a href="{{ url_for('teacher.dashboard') }}"
+            class="bottom-nav-item {% if request.endpoint == 'teacher.dashboard' %}active{% endif %}">
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
-        <a href="{{ url_for('teacher.manual_attendance') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.manual_attendance' %}active{% endif %}">
+        <a href="{{ url_for('teacher.manual_attendance') }}"
+            class="bottom-nav-item {% if request.endpoint == 'teacher.manual_attendance' %}active{% endif %}">
             <i class="fas fa-edit"></i>
             <span>Manual</span>
         </a>
-        <a href="{{ url_for('teacher.view_excuses') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.view_excuses' %}active{% endif %}">
+        <a href="{{ url_for('teacher.view_excuses') }}"
+            class="bottom-nav-item {% if request.endpoint == 'teacher.view_excuses' %}active{% endif %}">
             <i class="fas fa-envelope-open-text"></i>
             <span>Excuse</span>
         </a>
-        <a href="{{ url_for('teacher.reports') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.reports' %}active{% endif %}">
+        <a href="{{ url_for('teacher.reports') }}"
+            class="bottom-nav-item {% if request.endpoint == 'teacher.reports' %}active{% endif %}">
             <i class="fas fa-chart-bar"></i>
             <span>Reports</span>
         </a>
-        <a href="{{ url_for('teacher.profile') }}" class="bottom-nav-item {% if request.endpoint == 'teacher.profile' %}active{% endif %}">
+        <a href="{{ url_for('teacher.profile') }}"
+            class="bottom-nav-item {% if request.endpoint == 'teacher.profile' %}active{% endif %}">
             <i class="fas fa-user-circle"></i>
             <span>Profile</span>
         </a>
     </nav>
-    
+
 </body>
 
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,27 +8,56 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+
+<body class="theme-admin">
     <div class="dashboard-container">
-                        <aside class="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-logo">
-                <i class="fas fa-fingerprint"></i>
-                <span>Attendeez</span>
+                <div>
+                    <i class="fas fa-fingerprint"></i>
+                    <span>Attendeez</span>
+                </div>
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-ellipsis-v"></i></button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div
+                            style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{
+                                session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item"><i class="fas fa-key"></i>
+                            Change Password</a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);"><i
+                                class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
             </div>
             <nav class="sidebar-nav">
-                <a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Admin Dashboard</a>
-                <a href="{{ url_for('admin.manage_students') }}" class="nav-item"><i class="fas fa-user-graduate"></i> Manage Students</a>
-                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a>
-                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item"><i class="fas fa-book"></i> Manage Subjects</a>
-                <a href="{{ url_for('admin.manual_enroll') }}" class="nav-item"><i class="fas fa-user-plus"></i> Manual Enrollment</a>
-                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item"><i class="fas fa-link"></i> Assign Classes</a>
-                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item"><i class="fas fa-calendar-alt"></i> Manage Schedules</a>
-                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item active"><i class="fas fa-chart-pie"></i> Attendance Analytics</a>
-                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item"><i class="fas fa-user-minus"></i> Drop Requests</a>
-                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit Logs</a>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Admin
+                    Dashboard</a>
+                <a href="{{ url_for('admin.manage_students') }}" class="nav-item"><i class="fas fa-user-graduate"></i>
+                    Manage Students</a>
+                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item"><i
+                        class="fas fa-chalkboard-teacher"></i> Manage Teachers</a>
+                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item"><i class="fas fa-book"></i> Manage
+                    Subjects</a>
+                <a href="{{ url_for('admin.manual_enroll') }}" class="nav-item"><i class="fas fa-user-plus"></i> Manual
+                    Enrollment</a>
+                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item"><i class="fas fa-link"></i> Assign
+                    Classes</a>
+                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item"><i class="fas fa-calendar-alt"></i>
+                    Manage Schedules</a>
+                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item active"><i
+                        class="fas fa-chart-pie"></i> Attendance Analytics</a>
+                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item"><i class="fas fa-user-minus"></i> Drop
+                    Requests</a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item"><i class="fas fa-clipboard-list"></i> Audit
+                    Logs</a>
             </nav>
             <div class="sidebar-bottom-actions">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-full"><i class="fas fa-sign-out-alt"></i>
+                    Logout</a>
             </div>
         </aside>
         <main class="main-content">
@@ -35,17 +65,8 @@
                 <button class="sidebar-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
-                <div class="header-left"><h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Analytics</h2></div>
-                <div class="user-menu-container">
-                    <button class="burger-btn" onclick="toggleUserMenu()"><i class="fas fa-ellipsis-v"></i></button>
-                    <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
-                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
-                        </div>
-                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item"><i class="fas fa-key"></i> Change Password</a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
+                <div class="header-left">
+                    <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Analytics</h2>
                 </div>
             </header>
             <div class="main-content-inner">
@@ -53,19 +74,23 @@
                     <h1 class="auth-title">Attendance Analytics</h1>
                     <p class="text-muted">View weekly and monthly attendance trends by class.</p>
                 </div>
-                
+
                 <!-- Class Selector -->
                 <div class="glass-panel p-6 mb-6">
                     <h3 class="mb-4">Select Subject & Teacher</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
                         {% for c in all_classes %}
-                        <a href="{{ url_for('admin.attendance_analytics', subject_id=c.subject_id, utid=c.utid, section=c.section) }}" 
-                           class="glass-panel p-4 {% if selected_class and selected_class.subject_id == c.subject_id and selected_class.utid == c.utid and selected_class.section == c.section %}active-class-box{% endif %}"
-                           style="text-decoration: none; color: inherit; transition: all 0.2s; border-left: 4px solid var(--primary);">
+                        <a href="{{ url_for('admin.attendance_analytics', subject_id=c.subject_id, utid=c.utid, section=c.section) }}"
+                            class="glass-panel p-4 {% if selected_class and selected_class.subject_id == c.subject_id and selected_class.utid == c.utid and selected_class.section == c.section %}active-class-box{% endif %}"
+                            style="text-decoration: none; color: inherit; transition: all 0.2s; border-left: 4px solid var(--primary);">
                             <div class="badge badge-warning mb-2">{{ c.subject_code }}</div>
-                            <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;">{{ c.subject_name }}</div>
-                            <div style="font-size: 0.85rem; color: var(--text-muted);">Prof. {{ c.last_name }}, {{ c.first_name }}</div>
-                            <div style="font-size: 0.8rem; margin-top: 0.5rem;"><span class="badge">Section {{ c.section }}</span></div>
+                            <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;">{{ c.subject_name
+                                }}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">Prof. {{ c.last_name }}, {{
+                                c.first_name }}</div>
+                            <div style="font-size: 0.8rem; margin-top: 0.5rem;"><span class="badge">Section {{ c.section
+                                    }}</span></div>
                         </a>
                         {% endfor %}
                     </div>
@@ -75,7 +100,9 @@
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 style="margin: 0;">{{ selected_class.subject_name }}</h2>
-                        <p style="color: var(--text-muted);">Analytical trends for <strong>Prof. {{ selected_class.first_name }} {{ selected_class.last_name }}</strong> (Section {{ selected_class.section }})</p>
+                        <p style="color: var(--text-muted);">Analytical trends for <strong>Prof. {{
+                                selected_class.first_name }} {{ selected_class.last_name }}</strong> (Section {{
+                            selected_class.section }})</p>
                     </div>
                 </div>
 
@@ -98,21 +125,29 @@
                                     <tr>
                                         <td data-label="Period">
                                             <div style="font-weight: 600;">{{ row.period }}</div>
-                                            <small style="color: var(--text-muted);">{{ row.week_start.strftime('%b %d') if row.week_start else '' }} - {{ row.week_end.strftime('%b %d, %Y') if row.week_end else '' }}</small>
+                                            <small style="color: var(--text-muted);">{{ row.week_start.strftime('%b %d')
+                                                if row.week_start else '' }} - {{ row.week_end.strftime('%b %d, %Y') if
+                                                row.week_end else '' }}</small>
                                         </td>
-                                        <td class="text-center" style="color: #10b981; font-weight: 600;" data-label="Present">{{ row.present_count }}</td>
-                                        <td class="text-center" style="color: #ef4444; font-weight: 600;" data-label="Absent">{{ row.absent_count }}</td>
-                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;" data-label="Late">{{ row.late_count }}</td>
+                                        <td class="text-center" style="color: #10b981; font-weight: 600;"
+                                            data-label="Present">{{ row.present_count }}</td>
+                                        <td class="text-center" style="color: #ef4444; font-weight: 600;"
+                                            data-label="Absent">{{ row.absent_count }}</td>
+                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;"
+                                            data-label="Late">{{ row.late_count }}</td>
                                     </tr>
                                     {% else %}
-                                    <tr><td colspan="4" class="text-center" data-label="Period">No weekly data available.</td></tr>
+                                    <tr>
+                                        <td colspan="4" class="text-center" data-label="Period">No weekly data
+                                            available.</td>
+                                    </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    <!-- Monthly Trends -->
+                    <!-- Monthly Trendss -->
                     <div class="glass-panel p-6">
                         <h3 class="mb-4 text-secondary"><i class="fas fa-calendar-alt mr-2"></i> Monthly Attendance</h3>
                         <div class="table-wrapper">
@@ -129,12 +164,18 @@
                                     {% for row in monthly_trends %}
                                     <tr>
                                         <td style="font-weight: 600;" data-label="Month">{{ row.period }}</td>
-                                        <td class="text-center" style="color: #10b981; font-weight: 600;" data-label="Present">{{ row.present_count }}</td>
-                                        <td class="text-center" style="color: #ef4444; font-weight: 600;" data-label="Absent">{{ row.absent_count }}</td>
-                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;" data-label="Late">{{ row.late_count }}</td>
+                                        <td class="text-center" style="color: #10b981; font-weight: 600;"
+                                            data-label="Present">{{ row.present_count }}</td>
+                                        <td class="text-center" style="color: #ef4444; font-weight: 600;"
+                                            data-label="Absent">{{ row.absent_count }}</td>
+                                        <td class="text-center" style="color: #f59e0b; font-weight: 600;"
+                                            data-label="Late">{{ row.late_count }}</td>
                                     </tr>
                                     {% else %}
-                                    <tr><td colspan="4" class="text-center" data-label="Month">No monthly data available.</td></tr>
+                                    <tr>
+                                        <td colspan="4" class="text-center" data-label="Month">No monthly data
+                                            available.</td>
+                                    </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -158,33 +199,48 @@
             border-color: var(--primary) !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        .text-primary { color: var(--primary); }
-        .text-secondary { color: var(--text-muted); }
-        .text-center { text-align: center; }
+
+        .text-primary {
+            color: var(--primary);
+        }
+
+        .text-secondary {
+            color: var(--text-muted);
+        }
+
+        .text-center {
+            text-align: center;
+        }
     </style>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     <nav class="bottom-nav">
-        <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+        <a href="{{ url_for('admin.dashboard') }}"
+            class="bottom-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
-        <a href="{{ url_for('admin.manage_students') }}" class="bottom-nav-item {% if request.endpoint == 'admin.manage_students' %}active{% endif %}">
+        <a href="{{ url_for('admin.manage_students') }}"
+            class="bottom-nav-item {% if request.endpoint == 'admin.manage_students' %}active{% endif %}">
             <i class="fas fa-user-graduate"></i>
             <span>Students</span>
         </a>
-        <a href="{{ url_for('admin.manage_teachers') }}" class="bottom-nav-item {% if request.endpoint == 'admin.manage_teachers' %}active{% endif %}">
+        <a href="{{ url_for('admin.manage_teachers') }}"
+            class="bottom-nav-item {% if request.endpoint == 'admin.manage_teachers' %}active{% endif %}">
             <i class="fas fa-chalkboard-teacher"></i>
             <span>Faculty</span>
         </a>
-        <a href="{{ url_for('admin.audit_logs') }}" class="bottom-nav-item {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}">
+        <a href="{{ url_for('admin.audit_logs') }}"
+            class="bottom-nav-item {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}">
             <i class="fas fa-clipboard-list"></i>
             <span>Logs</span>
         </a>
     </nav>
-    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
+    <a href="{{ url_for('admin.assign_classes') }}" class="fab"
+        style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
         <i class="fas fa-plus"></i>
     </a>
 
 </body>
+
 </html>

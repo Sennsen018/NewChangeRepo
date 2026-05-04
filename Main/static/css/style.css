@@ -22,9 +22,9 @@
     --warning: #f59e0b;           /* Amber 500 */
     
     /* Text */
-    --text-main: #fafafa;
-    --text-muted: #a1a1aa;
-    --text-dim: #71717a;
+    --text-main: #ffffff;         /* Pure white */
+    --text-muted: #e4e4e7;        /* Zinc 200 (Brighter) */
+    --text-dim: #a1a1aa;          /* Zinc 400 (Brighter) */
     
     /* Android / Mobile Specific */
     --app-bar-height: 64px;
@@ -53,10 +53,71 @@ body {
     background-color: var(--bg-main);
     color: var(--text-main);
     font-family: 'Inter', sans-serif;
+    font-weight: 500;             /* Increased base font weight */
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
     overflow-x: hidden;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); /* Text shadow for contrast */
+}
+
+/* Icons Brightness */
+i.fas, i.far, i.fab, i.fa {
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    opacity: 0.95;
+}
+
+/* =========================================
+   DYNAMIC PORTAL THEMES
+   ========================================= */
+
+/* Student Theme */
+body.theme-student {
+    --bg-main: #0f172a;
+    --bg-surface: rgba(30, 41, 59, 0.7);
+    --bg-surface-soft: rgba(30, 41, 59, 0.4);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --primary-soft: rgba(79, 70, 229, 0.15);
+    --accent: #fbbf24;
+    --accent-hover: #f59e0b;
+    --accent-soft: rgba(251, 191, 36, 0.15);
+    --sidebar-bg: linear-gradient(135deg, #4f46e5 0%, #1e1b4b 100%);
+    --header-bg: rgba(15, 23, 42, 0.85);
+}
+
+/* Admin Theme */
+body.theme-admin {
+    --bg-main: #0f172a;
+    --bg-surface: rgba(30, 41, 59, 0.7);
+    --bg-surface-soft: rgba(30, 41, 59, 0.4);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --primary: #ef4444;
+    --primary-hover: #dc2626;
+    --primary-soft: rgba(239, 68, 68, 0.15);
+    --accent: #f87171;
+    --accent-hover: #fca5a5;
+    --accent-soft: rgba(248, 113, 113, 0.15);
+    --danger: #ef4444;
+    --sidebar-bg: linear-gradient(135deg, #ef4444 0%, #7f1d1d 100%);
+    --header-bg: rgba(15, 23, 42, 0.85);
+}
+
+/* Teacher Theme */
+body.theme-teacher {
+    --bg-main: #0f172a;
+    --bg-surface: rgba(30, 41, 59, 0.7);
+    --bg-surface-soft: rgba(30, 41, 59, 0.4);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --primary: #10b981;
+    --primary-hover: #059669;
+    --primary-soft: rgba(16, 185, 129, 0.15);
+    --accent: #34d399;
+    --accent-hover: #6ee7b7;
+    --accent-soft: rgba(52, 211, 153, 0.15);
+    --sidebar-bg: linear-gradient(135deg, #10b981 0%, #064e3b 100%);
+    --header-bg: rgba(15, 23, 42, 0.85);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -230,19 +291,68 @@ a {
 
 .sidebar {
     width: 260px;
-    background: var(--bg-surface);
+    background: var(--sidebar-bg, var(--bg-surface));
     border-right: 1px solid var(--border-color);
     position: fixed;
     height: 100vh;
     padding: 2rem 1rem 1rem;
     display: flex;
     flex-direction: column;
-    z-index: 50;
+    z-index: 100; /* Higher z-index to stay above main content */
     transition: var(--transition);
+    overflow: visible !important; /* Force visible to allow dropdown to escape */
+}
+
+/* Scrollable area for sidebar links */
+.sidebar-nav {
+    flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
+    padding-right: 4px;
+    margin: 0 -4px; /* Offset for scrollbar space */
+    padding-left: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 99px;
+}/* Make sure sidebar content is above the background orbs */
+.sidebar > * {
+    position: relative;
+    z-index: 10;
+}
+
+.user-menu-container {
+    position: relative;
+    z-index: 1000;
+}
+
+/* Sidebar background orbs removed to allow overflow: visible without bleeding */
+
+.sidebar::before {
+    width: 300px;
+    height: 300px;
+    background: var(--accent);
+    top: -50px;
+    left: -50px;
+    animation: dashboardFloatLeft 30s ease-in-out infinite;
+}
+
+.sidebar::after {
+    width: 250px;
+    height: 250px;
+    background: var(--primary);
+    bottom: -50px;
+    right: -50px;
+    animation: dashboardFloatLeft 25s ease-in-out infinite reverse;
 }
 
 .sidebar::-webkit-scrollbar {
@@ -289,9 +399,21 @@ a {
     font-family: 'Outfit', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--primary);
+    color: #ffffff;
     margin-bottom: 2.5rem;
     padding-left: 0.75rem;
+    padding-right: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    width: 100%;
+    position: relative;
+    z-index: 100; /* Ensure it stays above the sidebar-nav links */
+}
+
+.sidebar-logo > div:first-child {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -301,6 +423,38 @@ a {
     flex: 1;
     margin-left: 260px;
     background: var(--bg-main);
+    position: relative;
+    overflow: hidden; /* Contains background orbs */
+}
+
+/* Main Content Animated Background Orbs */
+.main-content::before,
+.main-content::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: 0;
+    opacity: 0.15;
+    pointer-events: none;
+}
+
+.main-content::before {
+    width: 600px;
+    height: 600px;
+    background: var(--primary);
+    top: 5%;
+    right: -100px;
+    animation: dashboardFloatRight 35s ease-in-out infinite;
+}
+
+.main-content::after {
+    width: 500px;
+    height: 500px;
+    background: var(--accent);
+    bottom: -100px;
+    left: 10%;
+    animation: dashboardFloatRight 30s ease-in-out infinite reverse;
 }
 
 .top-header {
@@ -309,7 +463,7 @@ a {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(9, 9, 11, 0.81);
+    background: var(--header-bg, rgba(9, 9, 11, 0.81));
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
@@ -335,6 +489,22 @@ a {
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
+    position: relative;
+    z-index: 10; /* Keeps content above background orbs */
+}
+
+@keyframes dashboardFloatRight {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    33% { transform: translate(-80px, 60px) scale(1.1) rotate(15deg); }
+    66% { transform: translate(40px, -40px) scale(0.95) rotate(-10deg); }
+    100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+}
+
+@keyframes dashboardFloatLeft {
+    0% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, 40px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.95); }
+    100% { transform: translate(0, 0) scale(1); }
 }
 
 .nav-group {
@@ -424,19 +594,48 @@ a {
     transition: var(--transition);
 }
 
+.user-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
 .user-dropdown {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 10px);
     right: 0;
     width: 220px;
-    background: var(--bg-surface);
+    background: #18181b; 
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 0.5rem;
-    box-shadow: var(--shadow-lg);
-    display: none;
-    margin-top: 0.5rem;
-    z-index: 100;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.95);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+.user-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.user-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 12px;
+    width: 12px;
+    height: 12px;
+    background: #18181b;
+    border-left: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    transform: rotate(45deg);
 }
 
 /* Sidebar Toggle for Mobile */
@@ -477,15 +676,31 @@ a {
 .dropdown-item {
     display: flex;
     align-items: center;
+    gap: 0.85rem;
     padding: 0.75rem 1rem;
     color: var(--text-muted);
-    font-size: 0.875rem;
+    font-size: 0.9rem;
+    font-weight: 500;
     border-radius: var(--radius-sm);
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.dropdown-item i {
+    font-size: 1rem;
+    width: 1.25rem;
+    text-align: center;
+    color: var(--primary); /* Uses portal theme color */
     transition: var(--transition);
 }
 
 .dropdown-item:hover {
     background: var(--bg-surface-soft);
+    color: var(--text-main);
+}
+
+.dropdown-item:hover i {
+    transform: scale(1.1);
     color: var(--text-main);
 }
 
@@ -1238,7 +1453,7 @@ td {
         justify-content: center;
     }
     
-    /* Make action buttons icon-only on mobile */
+    /* Make action buttons icon-only on mobilee */
     .table-wrapper .btn span.btn-text {
         display: none;
     }

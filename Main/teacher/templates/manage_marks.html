@@ -7,13 +7,32 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="theme-teacher">
     <div class="dashboard-container">
         <!-- Sidebar -->
                 <aside class="sidebar">
             <div class="sidebar-logo">
-                <i class="fas fa-fingerprint"></i>
+                <div>
+                    <i class="fas fa-fingerprint"></i>
                 <span>Attendeez</span>
+                </div>
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ name }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Faculty Member</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ url_for('teacher.dashboard') }}" class="nav-item"><i class="fas fa-house"></i> Teacher Dashboard</a>
@@ -53,25 +72,7 @@
                     <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Attendance Marks</h2>
                     {% endif %}
                 </div>
-
-                <div class="user-menu-container">
-                    <button class="burger-btn" onclick="toggleUserMenu()">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <div id="user-dropdown" class="user-dropdown">
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ name }}</p>
-                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Faculty Member</p>
-                        </div>
-                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
-                            <i class="fas fa-key"></i> Change Password
-                        </a>
-                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </div>
-                </div>
-            </header>
+</header>
 
             <div class="main-content-inner">
                 {% if selected_class %}
@@ -284,7 +285,7 @@
                 {% endfor %}
             </div>
             {% endif %}
-            </div> <!-- End main-content-inner -->
+            </div> <!-- End main-content-inners -->
         </main>
     </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

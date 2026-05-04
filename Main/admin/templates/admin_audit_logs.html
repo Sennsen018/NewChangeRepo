@@ -10,7 +10,7 @@
 <body class="theme-admin">
     <div class="dashboard-container">
         <!-- Sidebar -->
-                        <aside class="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-logo">
                 <div>
                     <i class="fas fa-fingerprint"></i>
@@ -60,7 +60,7 @@
                 <div class="header-left">
                     <h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Audit Logs</h2>
                 </div>
-</header>
+            </header>
 
             <div class="main-content-inner">
                 <div class="mb-8">
@@ -157,7 +157,7 @@
                         </table>
                     </div>
 
-                    <!-- Pagination Controlss -->
+                    <!-- Pagination Controls -->
                     {% if total_pages > 1 %}
                     <div class="pagination-container mt-4" style="display: flex; justify-content: center; gap: 0.5rem; align-items: center; margin-top: 2rem;">
                         <a href="{{ url_for('admin.audit_logs', page=current_page-1, search=search, table_filter=table_filter, action_filter=action_filter) }}" 

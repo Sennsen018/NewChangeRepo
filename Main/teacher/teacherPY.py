@@ -245,20 +245,6 @@ def manage_students():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-    # Fetch all assigned classes for the selector view
-    cursor.execute("""
-        SELECT s.subject_id, s.subject_code, s.subject_name, ta.section 
-        FROM Teacher_Assignments ta
-        JOIN Subjects s ON ta.subject_id = s.subject_id
-        WHERE ta.utid = %s
-    """, (utid,))
-    utid = session['user_id']
-    subject_id = request.args.get('subject_id')
-    section = request.args.get('section')
-
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-
     if request.method == 'POST':
         sid = request.form.get('usid')
         action = request.form.get('action')
@@ -901,8 +887,9 @@ def manual_attendance():
             SELECT s.usid, s.first_name, s.middle_name, s.last_name, s.email, s.level
             FROM Enrollments e
             JOIN Students s ON e.usid = s.usid
-            WHERE e.subject_id = %s
-              AND e.section    = %s
+            JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+            WHERE ta.subject_id = %s
+              AND ta.section    = %s
               AND s.status     = 'Active'
             ORDER BY s.last_name, s.first_name
         """, (selected_subject_id, selected_section))

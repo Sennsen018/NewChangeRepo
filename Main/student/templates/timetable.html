@@ -222,16 +222,14 @@
         </a>
         <a href="{{ url_for('user.notifications_page') }}" class="bottom-nav-item {% if request.endpoint == 'user.notifications_page' %}active{% endif %}">
             <i class="fas fa-bell"></i>
-            <span>Alerts</span>
+            <span>Notifications</span>
         </a>
         <a href="{{ url_for('user.profile') }}" class="bottom-nav-item {% if request.endpoint == 'user.profile' %}active{% endif %}">
             <i class="fas fa-user-circle"></i>
             <span>Profile</span>
         </a>
     </nav>
-    <button class="fab" onclick="window.location.href='{{ url_for('user.scan_qr') }}'">
-        <i class="fas fa-camera"></i>
-    </button>
+    
 
 </body>
 </html>

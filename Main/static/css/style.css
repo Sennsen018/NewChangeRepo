@@ -221,6 +221,7 @@ a {
 .gap-4 { gap: 1rem; }
 .mb-8 { margin-bottom: 2rem; }
 .w-full { width: 100%; }
+.w-fit { width: fit-content; }
 
 .dashboard-container {
     display: flex;
@@ -808,6 +809,10 @@ td {
     
     .flex-responsive > * {
         width: 100%;
+    }
+    
+    .flex-responsive > .w-fit {
+        width: fit-content;
     }
 }
 

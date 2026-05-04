@@ -72,7 +72,7 @@
                     </div>
                 </div>
 
-                <div class="glass-panel p-6" style="max-width: 800px;">
+                <div class="glass-panel p-4 mobile-p-6">
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
                             {% for category, message in messages %}
@@ -82,46 +82,45 @@
                     {% endwith %}
 
                     <form action="{{ url_for('user.submit_excuse') }}" method="POST" enctype="multipart/form-data">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group mb-4">
                             <label for="class_id" class="form-label">Select Class</label>
-                            <select name="class_id" id="class_id" class="form-control" required style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color);">
+                            <select name="class_id" id="class_id" class="form-control" required style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color); font-size: 0.9rem;">
                                 <option value="" disabled selected>-- Select a Class --</option>
                                 {% for c in enrollments %}
                                 <option value="{{ c.subject_id }}|{{ c.utid }}">
-                                    {{ c.subject_code }} - {{ c.subject_name }} ({{ c.first_name }} {{ c.middle_name }} {{ c.last_name }})
+                                    {{ c.subject_code }} - {{ c.subject_name }}
                                 </option>
                                 {% endfor %}
                             </select>
-                            <small style="color: var(--text-muted);">Only teachers assigned to your subjects are shown.</small>
+                            <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">Only assigned teachers are shown.</small>
                         </div>
 
                         <div class="form-group mb-4">
-                            <label for="message" class="form-label">Reason / Message <span style="font-weight:400; font-size:0.8rem; color: var(--text-muted);">(max 600 characters)</span></label>
-                            <textarea name="message" id="message" rows="5" class="form-control" placeholder="Explain why you missed the class..." required maxlength="600" oninput="updateCharCount(this)" style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color);"></textarea>
+                            <label for="message" class="form-label">Reason / Message <span style="font-weight:400; font-size:0.75rem; color: var(--text-muted);">(max 600 chars)</span></label>
+                            <textarea name="message" id="message" rows="4" class="form-control" placeholder="Explain why you missed the class..." required maxlength="600" oninput="updateCharCount(this)" style="background: var(--bg-surface); color: white; border: 1px solid var(--border-color); font-size: 0.9rem;"></textarea>
                             <div style="display:flex; justify-content:flex-end; margin-top:0.35rem;">
-                                <small id="char-count" style="color: var(--text-muted); font-size:0.78rem;"><span id="chars-used">0</span> / 600</small>
+                                <small id="char-count" style="color: var(--text-muted); font-size:0.75rem;"><span id="chars-used">0</span> / 600</small>
                             </div>
                         </div>
 
                         <div class="form-group mb-6">
-                            <label for="excuse_file" class="form-label">Attachment (PDF, Word, or Image)</label>
-                            <div style="border: 2px dashed var(--border-color); padding: 2rem; border-radius: 12px; text-align: center; position: relative; transition: border-color 0.3s; cursor: pointer;" 
+                            <label class="form-label">Attachment</label>
+                            <div class="upload-area" 
                                  onclick="document.getElementById('excuse_file').click()"
-                                 onmouseover="this.style.borderColor='var(--primary)'"
-                                 onmouseout="this.style.borderColor='var(--border-color)'">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;"></i>
-                                <p id="file-name" style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Click to upload or drag and drop files</p>
-                                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">Accepted: .pdf, .doc, .docx, .png, .jpg &amp;nbsp;&amp;bull;&amp;nbsp; Max size: <strong>10 MB</strong></p>
+                                 style="border: 2px dashed var(--border-color); padding: 1.25rem; border-radius: 12px; text-align: center; position: relative; transition: border-color 0.3s; cursor: pointer;">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.75rem;"></i>
+                                <p id="file-name" style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Click to upload file</p>
+                                <p style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.5rem;">PDF, Word, or Images (Max 10 MB)</p>
                                 <input type="file" name="excuse_file" id="excuse_file" style="display: none;" onchange="updateFileName(this)">
                             </div>
                         </div>
 
-                        <div class="flex gap-4">
-                            <button type="submit" class="btn btn-primary">
+                        <div class="flex flex-responsive gap-3">
+                            <button type="submit" class="btn btn-primary w-full">
                                 <i class="fas fa-paper-plane mr-2"></i> Send Excuse
                             </button>
-                            <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary">Cancel</a>
+                            <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary w-full text-center">Cancel</a>
                         </div>
                     </form>
                 </div>

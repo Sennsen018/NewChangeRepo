@@ -25,7 +25,7 @@
             --accent-gradient: linear-gradient(135deg, #34d399 0%, var(--secondary-color) 100%);
             --accent-color: var(--secondary-color);
             --accent-soft: rgba(16, 185, 129, 0.1);
-            
+
             --radius-md: 12px;
             --radius-lg: 20px;
             --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
@@ -75,7 +75,8 @@
             height: 50vw;
             max-width: 600px;
             max-height: 600px;
-            background: #34d399; /* Light Green */
+            background: #34d399;
+            /* Light Green */
             border-radius: 50%;
             filter: blur(100px);
             top: -20%;
@@ -93,7 +94,8 @@
             height: 40vw;
             max-width: 500px;
             max-height: 500px;
-            background: #fbbf24; /* Gold */
+            background: #fbbf24;
+            /* Gold */
             border-radius: 50%;
             filter: blur(100px);
             bottom: -30%;
@@ -105,9 +107,17 @@
         }
 
         @keyframes floatLeft {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-40px, 50px) scale(1.1); }
-            100% { transform: translate(30px, -30px) scale(0.9); }
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(-40px, 50px) scale(1.1);
+            }
+
+            100% {
+                transform: translate(30px, -30px) scale(0.9);
+            }
         }
 
         .admin-link {
@@ -158,12 +168,29 @@
         }
 
         @keyframes teacherWiggle {
-            0% { transform: rotate(0deg) scale(1); }
-            20% { transform: rotate(-15deg) scale(1.1); }
-            40% { transform: rotate(15deg) scale(1.1); }
-            60% { transform: rotate(-15deg) scale(1.1); }
-            80% { transform: rotate(15deg) scale(1.1); }
-            100% { transform: rotate(0deg) scale(1); }
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            20% {
+                transform: rotate(-15deg) scale(1.1);
+            }
+
+            40% {
+                transform: rotate(15deg) scale(1.1);
+            }
+
+            60% {
+                transform: rotate(-15deg) scale(1.1);
+            }
+
+            80% {
+                transform: rotate(15deg) scale(1.1);
+            }
+
+            100% {
+                transform: rotate(0deg) scale(1);
+            }
         }
 
         .brand-title {
@@ -293,13 +320,15 @@
         }
 
         .login-panel::before {
-            background: #10b981; /* secondary / emerald */
+            background: #10b981;
+            /* secondary / emerald */
             top: -10%;
             left: -10%;
         }
 
         .login-panel::after {
-            background: #4f46e5; /* primary */
+            background: #4f46e5;
+            /* primary */
             bottom: -10%;
             right: -10%;
             animation-delay: -6s;
@@ -307,10 +336,21 @@
         }
 
         @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, 50px) scale(1.1); }
-            66% { transform: translate(-30px, 20px) scale(0.9); }
-            100% { transform: translate(0, 0) scale(1); }
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, 50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-30px, 20px) scale(0.9);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
         }
 
         /* Input fields overrides */
@@ -460,7 +500,7 @@
             color: var(--text-primary);
             border-color: var(--text-secondary);
         }
-        
+
         .portal-links {
             display: flex;
             gap: 0.5rem;
@@ -482,7 +522,8 @@
             display: flex;
         }
 
-        .alert-error, .alert-danger {
+        .alert-error,
+        .alert-danger {
             background: rgba(244, 63, 94, 0.15);
             color: #fb7185;
             border: 1px solid rgba(244, 63, 94, 0.3);
@@ -495,8 +536,15 @@
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Mobile responsiveness */
@@ -540,17 +588,34 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
-        .btn-accent.loading .spinner { display: inline-block; }
-        .btn-accent.loading .btn-text { opacity: 0.8; }
-        .btn-accent.loading { pointer-events: none; }
+        .btn-accent.loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-accent.loading .btn-text {
+            opacity: 0.8;
+        }
+
+        .btn-accent.loading {
+            pointer-events: none;
+        }
 
         /* Entrance Animations */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .animate-fade-up {
@@ -558,7 +623,9 @@
             animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .delay-100 { animation-delay: 100ms; }
+        .delay-100 {
+            animation-delay: 100ms;
+        }
     </style>
 </head>
 
@@ -577,7 +644,8 @@
             <h1 class="brand-title">Attendeez</h1>
             <p class="brand-subtitle">Faculty Access</p>
             <p class="brand-desc">
-                Streamline your classroom management. Track attendance efficiently and securely with our intuitive portal.
+                Streamline your classroom management. Track attendance efficiently and securely with our intuitive
+                portal.
             </p>
 
             <ul class="feature-list">
@@ -614,7 +682,8 @@
             {% if messages %}
             {% for category, message in messages %}
             <div class="alert-box show alert-{{ category }}">
-                <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                <i
+                    class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
                 <span>{{ message }}</span>
             </div>
             {% endfor %}
@@ -647,7 +716,8 @@
                 </div>
 
                 <div class="forgot-link-wrapper">
-                    <a href="{{ url_for('auth.forgot_password', role='teacher') }}" class="forgot-link">Forgot password?</a>
+                    <a href="{{ url_for('auth.forgot_password', role='teacher') }}" class="forgot-link">Forgot
+                        password?</a>
                 </div>
 
                 <button type="submit" class="btn-accent" id="submitBtn">
@@ -708,7 +778,7 @@
             submitBtn.classList.add('loading');
         });
 
-        // Auto dismiss flash messages from backend
+        // Auto dismiss flash messages from backendss
         document.addEventListener('DOMContentLoaded', () => {
             const backendAlerts = document.querySelectorAll('.alert-box.show:not(#js-alert)');
             backendAlerts.forEach(alert => {

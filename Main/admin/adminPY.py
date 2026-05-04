@@ -251,6 +251,7 @@ def manage_students():
 
     # Pagination, Search and Filter parameters
     page = request.args.get('page', 1, type=int)
+    if page < 1: page = 1
     per_page = 10
     offset = (page - 1) * per_page
     
@@ -554,6 +555,7 @@ def manage_teachers():
 
     # Pagination, Search and Filter parameters
     page = request.args.get('page', 1, type=int)
+    if page < 1: page = 1
     per_page = 10
     offset = (page - 1) * per_page
     
@@ -1307,6 +1309,8 @@ def audit_logs():
     View system-wide audit logs with pagination, search, and filtering.
     """
     page = request.args.get('page', 1, type=int)
+    if page < 1:
+        page = 1
     per_page = 20
     offset = (page - 1) * per_page
     

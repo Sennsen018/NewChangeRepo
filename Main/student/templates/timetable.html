@@ -175,6 +175,24 @@
                 .color-3 { background: linear-gradient(135deg, #f59e0b, #d97706); }
                 .color-4 { background: linear-gradient(135deg, #ec4899, #db2777); }
                 .color-5 { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+                @media (max-width: 768px) {
+                    .timetable-container {
+                        max-height: 70vh;
+                        border-radius: 8px;
+                    }
+                    .timetable-grid {
+                        grid-template-columns: 80px repeat(7, 120px);
+                    }
+                    .grid-header {
+                        font-size: 0.75rem;
+                        height: 50px;
+                    }
+                    .grid-time-column {
+                        width: 80px;
+                        font-size: 0.6rem;
+                    }
+                }
             </style>
 
             <div class="timetable-container">

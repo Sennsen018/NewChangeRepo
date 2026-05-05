@@ -12,6 +12,7 @@
 <body class="theme-admin">
     <div class="dashboard-container">
         <aside class="sidebar">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="sidebar-logo">
                 <div>
                     <i class="fas fa-fingerprint"></i>
@@ -205,7 +206,7 @@
             });
         });
     </script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 
     <nav class="bottom-nav">
         <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">

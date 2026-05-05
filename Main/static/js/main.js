@@ -47,18 +47,20 @@ window.addEventListener('click', function(e) {
 
 // Global Loading & Transition Logic
 document.addEventListener('DOMContentLoaded', function() {
-    // Inject UI elements
-    const extraUI = `
-        <div id="loading-overlay">
-            <div class="spinner-container">
-                <div class="spinner-ring"></div>
-                <div class="spinner-ring"></div>
+    // Inject UI elements (Guard against multiple injections if script is loaded twice)
+    if (!document.getElementById('loading-overlay')) {
+        const extraUI = `
+            <div id="loading-overlay">
+                <div class="spinner-container">
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                </div>
+                <div class="loading-text">Attendeez Loading...</div>
             </div>
-            <div class="loading-text">Attendeez Loading...</div>
-        </div>
-        <div class="sidebar-overlay"></div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', extraUI);
+            <div class="sidebar-overlay"></div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', extraUI);
+    }
 
     const loader = document.getElementById('loading-overlay');
     let loaderTimeout = null;
@@ -164,7 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     `;
 
-    document.body.insertAdjacentHTML('beforeend', logoutModalHTML);
+    if (!document.getElementById('logout-modal-overlay')) {
+        document.body.insertAdjacentHTML('beforeend', logoutModalHTML);
+    }
 
     window.closeLogoutModal = function() {
         document.getElementById('logout-modal-overlay').classList.remove('active');
@@ -181,7 +185,9 @@ document.addEventListener('DOMContentLoaded', function() {
         link.addEventListener('click', showLogoutModal);
     });
 
-    document.body.insertAdjacentHTML('beforeend', pinModalsHTML);
+    if (!document.getElementById('pinVerifyModal')) {
+        document.body.insertAdjacentHTML('beforeend', pinModalsHTML);
+    }
 });
 
 let pendingDeleteUrl = null;
@@ -210,7 +216,7 @@ window.confirmWithPin = function(deleteUrl) {
         formData.append('csrf_token', document.querySelector('input[name="csrf_token"]')?.value || '');
 
         try {
-            const response = await fetch('/admin/verify_deletion_pin', {
+            const response = await fetch('/admin/verify_pin', {
                 method: 'POST',
                 body: formData
             });

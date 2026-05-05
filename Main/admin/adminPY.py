@@ -879,15 +879,12 @@ def enroll_student():
             JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
             JOIN Subjects s ON ta.subject_id = s.subject_id
             JOIN Teachers t ON ta.utid = t.utid
-            WHERE e.usid = %s AND (ta.subject_id = %s OR ta.utid = %s)
-        """, (usid, assignment['subject_id'], assignment['utid']))
+            WHERE e.usid = %s AND ta.subject_id = %s
+        """, (usid, assignment['subject_id']))
         
         conflict = cursor.fetchone()
         if conflict:
-            if conflict['subject_id'] == assignment['subject_id']:
-                flash(f"Student is already enrolled in '{conflict['subject_name']}'. Duplicate subject enrollment is not allowed.", 'warning')
-            else:
-                flash(f"Student is already assigned to teacher {conflict['teacher_name']} in another subject. Each subject must have a unique teacher.", 'warning')
+            flash(f"Student is already enrolled in '{conflict['subject_name']}'. Duplicate subject enrollment is not allowed.", 'warning')
         else:
             cursor.execute("INSERT INTO Enrollments (usid, assignment_id) VALUES (%s, %s) RETURNING enrollment_id", 
                            (usid, assignment_id))
@@ -1235,10 +1232,10 @@ def bulk_enroll():
             AND usid NOT IN (
                 SELECT e.usid FROM Enrollments e
                 JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
-                WHERE ta.subject_id = %s OR ta.utid = %s
+                WHERE ta.subject_id = %s
             )
         """
-        params = [assignment['subject_id'], assignment['utid']]
+        params = [assignment['subject_id']]
         
         if course_filter:
             query += " AND course = %s"
@@ -1266,7 +1263,7 @@ def bulk_enroll():
         cursor.close()
         conn.close()
         
-    return redirect(url_for('admin.manual_enroll'))
+    return redirect(url_for('admin.manage_students'))
 
 @admin.route('/bulk_enroll_selected', methods=['POST'])
 def bulk_enroll_selected():
@@ -1287,14 +1284,14 @@ def bulk_enroll_selected():
         
         if not assignment:
             flash('Selected class assignment not found.', 'error')
-            return redirect(url_for('admin.manage_students'))
+            return redirect(url_for('admin.manual_enroll'))
             
         # Filter out students already enrolled in this subject or with this teacher
         cursor.execute("""
             SELECT e.usid FROM Enrollments e
             JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
-            WHERE ta.subject_id = %s OR ta.utid = %s
-        """, (assignment['subject_id'], assignment['utid']))
+            WHERE ta.subject_id = %s
+        """, (assignment['subject_id'],))
         ineligible_usids = {row['usid'] for row in cursor.fetchall()}
         
         to_enroll = [usid for usid in selected_usids if usid not in ineligible_usids]
@@ -1488,8 +1485,8 @@ def attendance_analytics():
 
 # --- DELETION PIN SECURITY ---
 
-@admin.route('/verify_deletion_pin', methods=['POST'])
-def verify_deletion_pin():
+@admin.route('/verify_pin', methods=['POST'])
+def verify_pin():
     """
     Verifies if the entered PIN matches the admin's stored deletion PIN.
     """
@@ -1631,10 +1628,7 @@ def manual_enroll():
                 conn.commit()
                 flash('Student successfully enrolled.', 'success')
             else:
-                if conflict['subject_id'] == assignment['subject_id']:
-                    flash(f"Student is already enrolled in '{conflict['subject_name']}'. Duplicate subject enrollment is not allowed.", 'warning')
-                else:
-                    flash(f"Student is already assigned to teacher {conflict['teacher_name']} in another subject. Each subject must have a unique teacher.", 'warning')
+                flash(f"Student is already enrolled in '{conflict['subject_name']}'. Duplicate subject enrollment is not allowed.", 'warning')
         else:
             flash('Selected class not found.', 'error')
             

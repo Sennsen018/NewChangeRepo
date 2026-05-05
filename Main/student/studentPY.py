@@ -115,7 +115,32 @@ def subject_performance(subject_id):
     total = sum(stats.values())
     present = stats.get('Present', 0)
     attendance_pct = (present / total * 100) if total > 0 else 100
-    
+
+    # Get schedule for this subject
+    cursor.execute("""
+        SELECT sch.day_of_week, sch.start_time, sch.end_time, sch.room
+        FROM schedule sch
+        JOIN Teacher_Assignments ta ON sch.subject_id = ta.subject_id AND sch.section = ta.section AND sch.utid = ta.utid
+        JOIN Enrollments e ON ta.assignment_id = e.assignment_id
+        WHERE sch.subject_id = %s AND e.usid = %s
+        ORDER BY CASE sch.day_of_week
+            WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2 WHEN 'Wednesday' THEN 3
+            WHEN 'Thursday' THEN 4 WHEN 'Friday' THEN 5 WHEN 'Saturday' THEN 6 WHEN 'Sunday' THEN 7
+        END
+    """, (subject_id, usid))
+    schedules = cursor.fetchall()
+
+    # Format times for display
+    for sch in schedules:
+        for key in ('start_time', 'end_time'):
+            t = sch[key]
+            if hasattr(t, 'strftime'):
+                sch[key] = t.strftime('%I:%M %p')
+            elif hasattr(t, 'total_seconds'):
+                secs = int(t.total_seconds())
+                h, m = secs // 3600, (secs % 3600) // 60
+                sch[key] = f"{h % 12 or 12}:{m:02d} {'AM' if h < 12 else 'PM'}"
+
     # Get Sidebar Data
     cursor.execute("""
     SELECT s.subject_id, s.subject_code, s.subject_name 
@@ -137,6 +162,7 @@ def subject_performance(subject_id):
                            stats=stats,
                            attendance_pct=round(attendance_pct, 1),
                            subjects=subjects,
+                           schedules=schedules,
                            unread_count=unread_count)
 
 @user.route('/mark_notifications_read', methods=['POST'])
@@ -530,6 +556,16 @@ def submit_excuse():
         else:
             try:
                 subject_id, utid = class_data.split('|')
+                
+                # Check daily limit (max 3 per day)
+                cursor.execute("""
+                    SELECT COUNT(*) as count FROM Excuse_Letters
+                    WHERE usid = %s AND created_at::date = CURRENT_DATE
+                """, (usid,))
+                if cursor.fetchone()['count'] >= 3:
+                    flash('You have reached the maximum of 3 excuse letter submissions for today.', 'error')
+                    return redirect(url_for('user.submit_excuse'))
+                
                 filename = None
                 
                 if file and file.filename != '':

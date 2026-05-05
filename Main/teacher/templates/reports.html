@@ -48,6 +48,7 @@
                 <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i> Manage Marks</a>
                 <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
                 <a href="{{ url_for('teacher.reports') }}" class="nav-item active"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="{{ url_for('teacher.daily_attendance_log') }}" class="nav-item" style="padding-left: 2rem; font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> Daily Attendance Log</a>
             </nav>
             
         </aside>
@@ -288,138 +289,15 @@
                     </div>
                 </div>
 
-                <!-- Daily Attendance Log Section -->
-                <div class="glass-panel p-4" style="padding: 1.5rem;">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3>Daily Attendance Log</h3>
-                        <div class="flex gap-2">
-                            <button
-                                onclick="exportTableToCSV('dailyTable', '{{ selected_class.subject_code }}_Daily_Log.csv')"
-                                class="btn btn-success"><i class="fas fa-file-csv"></i> CSV</button>
-                            <button
-                                onclick="exportTableToExcel('dailyTable', '{{ selected_class.subject_code }}_Daily_Log')"
-                                class="btn btn-primary" style="background:#10b981;"><i class="fas fa-file-excel"></i>
-                                Excel</button>
-                            <button
-                                onclick="exportTableToPDF('dailyTable', '{{ selected_class.subject_code }}_Daily_Log.pdf')"
-                                class="btn btn-danger"><i class="fas fa-file-pdf"></i> PDF</button>
-                        </div>
+                <!-- Daily Attendance Log moved to its own page -->
+                <div class="glass-panel" style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 1rem;"><i class="fas fa-calendar-check" style="color: var(--primary); margin-right: 0.5rem;"></i> Daily Attendance Log</h4>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">View per-student attendance records grouped by date.</p>
                     </div>
-
-                    {% if daily_logs %}
-                    {% set grouped = daily_logs | groupby('date') | list %}
-                    <div class="accordion-container">
-                        {% for date, logs in grouped %}
-                        {% set logs = logs | list %}
-                        <div class="accordion-item"
-                            style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 1rem;">
-                            <div class="accordion-header"
-                                class="flex flex-responsive" style="background: rgba(255,255,255,0.05); padding: 1rem 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s;"
-                                onclick="toggleAccordion('acc-{{ loop.index }}')">
-                                <h4 style="margin: 0; color: var(--text-main);">
-                                    <i class="fas fa-calendar-day"
-                                        style="color: var(--primary); margin-right: 0.5rem;"></i>
-                                    {{ date }}
-                                </h4>
-                                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <span class="badge"
-                                        style="background: rgba(255,255,255,0.1); color: var(--text-muted);">{{ logs
-                                        | length }} Records</span>
-                                    <form method="POST" action="{{ url_for('teacher.delete_daily_attendance') }}"
-                                        data-inline
-                                        style="margin: 0;"
-                                        onsubmit="return confirm('Delete ALL attendance records for {{ date }}? This cannot be undone.');">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                        <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
-                                        <input type="hidden" name="section" value="{{ selected_class.section }}">
-                                        <input type="hidden" name="date" value="{{ date }}">
-                                        <button type="submit" class="btn btn-danger"
-                                            style="padding: 0.2rem 0.6rem; font-size: 0.78rem; border-radius: 4px;"
-                                            onclick="event.stopPropagation();">
-                                            <i class="fas fa-trash-alt"></i> Delete
-                                        </button>
-                                    </form>
-                                    <i class="fas fa-chevron-down acc-icon" id="icon-acc-{{ loop.index }}"
-                                        style="transition: transform 0.3s;"></i>
-                                </div>
-                            </div>
-                            <div id="content-acc-{{ loop.index }}" class="accordion-content"
-                                style="display: none; padding: 1rem;">
-                                <div class="table-container">
-                                    <table style="margin: 0;">
-                                        <thead>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Status</th>
-                                                <th>Validity</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for row in logs %}
-                                            <tr>
-                                                <td>{{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}</td>
-                                                <td>
-                                                    {% if row.status == 'Present' %}
-                                                    <span class="badge badge-success">Present</span>
-                                                    {% elif row.status == 'Absent' %}
-                                                    <span class="badge"
-                                                        style="background:var(--danger-color);color:white;">Absent</span>
-                                                    {% elif row.status == 'Late' %}
-                                                    <span class="badge badge-warning">Late</span>
-                                                    {% else %}
-                                                    <span class="badge" style="background:#ef4444;color:white;">{{
-                                                        row.status }}</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if row.is_valid == 'Valid' %}
-                                                    <span style="color:var(--success-color);"><i
-                                                            class="fas fa-check-circle"></i> Valid</span>
-                                                    {% else %}
-                                                    <span style="color:var(--danger-color);"><i
-                                                            class="fas fa-exclamation-triangle"></i> Invalid</span>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                        <i class="fas fa-calendar-times"
-                            style="font-size: 2rem; display: block; margin-bottom: 1rem; opacity: 0.4;"></i>
-                        <p>No attendance logs found for this class.</p>
-                    </div>
-                    {% endif %}
-
-                    <!-- Hidden table used for CSV/Excel/PDF export -->
-                    <div style="display: none;">
-                        <table id="dailyTable">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Name</th>
-                                    <th>Status</th>
-                                    <th>Validity</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in daily_logs %}
-                                <tr>
-                                    <td>{{ row.date }}</td>
-                                    <td>{{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}</td>
-                                    <td>{{ row.status }}</td>
-                                    <td>{{ row.is_valid }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    <a href="{{ url_for('teacher.daily_attendance_log', subject_id=selected_class.subject_id, section=selected_class.section) }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right"></i> Open Log
+                    </a>
                 </div>
 
                 {% else %}
@@ -466,6 +344,14 @@
                 content.style.display = 'none';
                 icon.style.transform = 'rotate(0deg)';
             }
+        }
+
+        function toggleDailyLog() {
+            const body = document.getElementById('dailyLogBody');
+            const icon = document.getElementById('toggleLogIcon');
+            const isHidden = body.style.display === 'none';
+            body.style.display = isHidden ? 'block' : 'none';
+            icon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
         }
 
         // Auto-open first accordion on page loads

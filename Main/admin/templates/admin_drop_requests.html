@@ -84,68 +84,65 @@
                 {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,
                 message in messages %}<div class="alert alert-{{ category }} mb-4">{{ message }}</div>{% endfor %}{%
                 endif %}{% endwith %}
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Student</th>
-                                <th class="hide-on-mobile">Subject</th>
-                                <th class="hide-on-mobile">Requested By</th>
-                                <th class="hide-on-mobile">Reason</th>
-                                <th class="hide-on-mobile">Date</th>
-                                <th>Request Info</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for r in requests %}
-                            <tr>
-                                <td data-label="Student"><strong>{{ r.s_first }} {{ r.s_last }}</strong><br><small
-                                        class="badge badge-primary" style="font-size: 0.65rem;">{{ r.usid }}</small>
-                                </td>
-                                <td class="hide-on-mobile" data-label="Subject"><strong>{{ r.subject_code
-                                        }}</strong><br><small style="color: var(--text-muted);">{{ r.subject_name
-                                        }}</small></td>
-                                <td class="hide-on-mobile" data-label="Requested By">Prof. {{ r.t_first }} {{ r.t_last
-                                    }}</td>
-                                <td class="hide-on-mobile" style="max-width: 250px;" data-label="Reason">
-                                    <p
-                                        style="font-size: 0.85rem; color: var(--text-muted); white-space: normal; margin: 0;">
-                                        {{ r.reason }}</p>
-                                </td>
-                                <td class="hide-on-mobile" data-label="Date">{{ r.created_at.strftime('%Y-%m-%d') if
-                                    r.created_at else 'N/A' }}</td>
-                                <td class="hide-on-desktop" data-label="Request Info">
-                                    <div style="font-weight: 600;">{{ r.subject_code }} &bull; {{
-                                        r.created_at.strftime('%m-%d') if r.created_at else '' }}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">By: Prof. {{ r.t_last }}
-                                    </div>
-                                    <div
-                                        style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-top: 2px;">
-                                        "{{ r.reason }}"</div>
-                                </td>
-                                <td class="action-cell" data-label="Actions">
-                                    <div class="flex gap-2">
-                                        <a href="{{ url_for('admin.approve_drop', request_id=r.request_id) }}"
-                                            class="btn btn-sm" style="background: var(--accent); color: white;"
-                                            onclick="return confirm('Approve drop?')"><i class="fas fa-check"></i> <span
-                                                class="btn-text">Approve</span></a>
-                                        <a href="{{ url_for('admin.reject_drop', request_id=r.request_id) }}"
-                                            class="btn btn-danger btn-sm" onclick="return confirm('Reject?')"><i
-                                                class="fas fa-times"></i> <span class="btn-text">Reject</span></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 4rem; color: var(--text-muted);"
-                                    data-label="Student"><i class="fas fa-check-circle"
-                                        style="font-size: 3rem; opacity: 0.15; display: block; margin-bottom: 1rem;"></i>No
-                                    pending Drop requests.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="glass-panel" style="padding: 1.5rem;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Subject</th>
+                                    <th>Requested By</th>
+                                    <th>Reason</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in requests %}
+                                <tr>
+                                    <td data-label="Student">
+                                        <div style="font-weight: 600;">{{ r.s_first }} {{ r.s_last }}</div>
+                                        <small class="badge badge-primary" style="font-size: 0.65rem;">{{ r.usid }}</small>
+                                    </td>
+                                    <td data-label="Subject">
+                                        <div style="font-weight: 600;">{{ r.subject_code }}</div>
+                                        <small style="color: var(--text-muted); font-size: 0.8rem;">{{ r.subject_name }}</small>
+                                    </td>
+                                    <td data-label="Requested By">Prof. {{ r.t_first }} {{ r.t_last }}</td>
+                                    <td data-label="Reason" style="max-width: 220px;">
+                                        <p style="font-size: 0.85rem; color: var(--text-muted); white-space: normal; margin: 0;">{{ r.reason }}</p>
+                                    </td>
+                                    <td data-label="Date" style="white-space: nowrap;">{{ r.created_at.strftime('%Y-%m-%d') if r.created_at else 'N/A' }}</td>
+                                    <td class="action-cell" data-label="Actions">
+                                        <div style="display: flex; gap: 0.3rem;">
+                                            <a href="{{ url_for('admin.approve_drop', request_id=r.request_id) }}"
+                                               class="btn btn-success"
+                                               style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                                               title="Approve"
+                                               onclick="return confirm('Approve this drop request?')">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                            <a href="{{ url_for('admin.reject_drop', request_id=r.request_id) }}"
+                                               class="btn btn-danger"
+                                               style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                                               title="Reject"
+                                               onclick="return confirm('Reject this drop request?')">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                                        <i class="fas fa-check-circle" style="font-size: 3rem; opacity: 0.15; display: block; margin-bottom: 1rem;"></i>
+                                        No pending drop requests.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>

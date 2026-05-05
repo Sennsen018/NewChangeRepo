@@ -190,6 +190,7 @@ def student_login():
             
         cursor.close()
         conn.close()
+        return render_template('student_login.html', prefill_id=email)
         
     return render_template('student_login.html')
 
@@ -243,6 +244,7 @@ def teacher_login():
             
         cursor.close()
         conn.close()
+        return render_template('teacher_login.html', prefill_id=email)
         
     return render_template('teacher_login.html')
 
@@ -288,6 +290,7 @@ def admin_login():
             flash('Invalid credentials.', 'error')
         cursor.close()
         conn.close()
+        return render_template('admin_login.html', prefill_id=username)
     return render_template('admin_login.html')
 
 @auth.route('/forgot-password', methods=['GET', 'POST'])

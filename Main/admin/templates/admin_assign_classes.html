@@ -129,6 +129,12 @@
             
 
             <div class="glass-panel" style="padding: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1rem; margin: 0;">Active Class Assignments</h3>
+                    <a href="{{ url_for('admin.assign_classes', view='archived') }}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                        <i class="fas fa-archive"></i> Archived Assignments
+                    </a>
+                </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -137,33 +143,31 @@
                                 <th class="hide-on-mobile">Subject Code</th>
                                 <th class="hide-on-mobile">Subject Name</th>
                                 <th class="hide-on-mobile">Section</th>
-                                <th>Class Details</th>
-                                <th>Action</th>
+                                <th class="hide-on-desktop">Class Details</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for a in assignments %}
                              <tr>
                                 <td data-label="Teacher Name"><strong>{{ a.first_name }} {{ a.last_name }}</strong></td>
-                                <td class="hide-on-mobile" data-label="Subject Code"><span class="badge badge-warning">{{ a.subject_code }}</span></td>
+                                <td class="hide-on-mobile" data-label="Subject Code"><span class="badge badge-primary">{{ a.subject_code }}</span></td>
                                 <td class="hide-on-mobile" data-label="Subject Name">{{ a.subject_name }}</td>
-                                <td class="hide-on-mobile" data-label="Section">{{ a.section }}</td>
-                                <td class="hide-on-desktop" data-label="Class Details">
-                                    <div style="font-weight: 600;">{{ a.subject_code }} &bull; Sec: {{ a.section }}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ a.subject_name }}</div>
+                                <td class="hide-on-mobile" data-label="Section"><strong>{{ a.section }}</strong></td>
+                                <td class="hide-on-desktop" data-label="Class Details" style="font-size: 0.9rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ a.subject_code }} • Sec: {{ a.section }}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">{{ a.subject_name }}</div>
+                                    <div style="font-size: 0.8rem; color: var(--primary);">👨‍🏫 {{ a.first_name }} {{ a.last_name }}</div>
                                 </td>
-                                <td class="action-cell" data-label="Action">
-                                    <a href="{{ url_for('admin.remove_assignment', assignment_id=a.assignment_id) }}" 
-                                       class="btn btn-danger btn-sm"
-                                       style="text-decoration: none;"
-                                       onclick="return confirm('Are you sure to remove the subject to the assigned teacher?')">
-                                        <i class="fas fa-trash"></i> <span class="btn-text">Remove</span>
-                                    </a>
+                                <td class="action-cell" data-label="Actions">
+                                    <button type="button" class="btn btn-warning btn-sm" style="margin-right: 0.5rem;" onclick="archiveAssignment({{ a.assignment_id }}, '{{ a.subject_code }}')">
+                                        <i class="fas fa-archive"></i> <span class="btn-text">Archive</span>
+                                    </button>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);" data-label="Teacher Name">No classes assigned yet.</td>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">No classes assigned yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -195,5 +199,32 @@
 
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+    function archiveAssignment(assignmentId, subjectCode) {
+        if (confirm(`Archive this assignment for ${subjectCode}?`)) {
+            // Send archive request to backend
+            fetch(`/admin/archive_assignment/${assignmentId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload or update the table
+                    location.reload();
+                } else {
+                    alert('Error archiving assignment: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error archiving assignment');
+            });
+        }
+    }
+</script>
 </body>
 </html>

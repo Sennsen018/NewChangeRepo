@@ -110,33 +110,39 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Subject Code</th>
-                                <th>Subject Name</th>
-                                <th>Action</th>
+                                <th style="min-width: 120px;">Code</th>
+                                <th style="min-width: 280px;">Subject Name</th>
+                                <th style="min-width: 150px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for subject in subjects %}
                             <tr>
-                                <td data-label="Subject Code"><span class="badge badge-primary">{{ subject.subject_code }}</span></td>
-                                <td data-label="Subject Name">{{ subject.subject_name }}</td>
-                                <td class="action-cell" data-label="Action">
-                                        <button class="btn btn-secondary" 
-                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                <td data-label="Code" style="font-weight: 600;"><span class="badge badge-primary">{{ subject.subject_code }}</span></td>
+                                <td data-label="Subject Name">{{ subject.subject_name|truncate(50, true) }}</td>
+                                <td class="action-cell" data-label="Actions" style="text-align: right;">
+                                        <button class="btn btn-sm btn-secondary" 
+                                                 style="margin-right: 0.25rem;"
                                                  onclick="openEditModal(`{{ subject.subject_id }}`, `{{ subject.subject_code }}`, `{{ subject.subject_name }}`)">
-                                             <i class="fas fa-edit"></i> <span class="btn-text">Edit</span>
+                                             <i class="fas fa-edit"></i>
                                          </button>
+                                         <a href="{{ url_for('admin.archive_subject', subject_id=subject.subject_id) }}" 
+                                            class="btn btn-sm btn-warning" 
+                                            style="margin-right: 0.25rem; text-decoration: none;"
+                                            onclick="return confirm('Archive this subject?')">
+                                             <i class="fas fa-archive"></i>
+                                         </a>
                                          <a href="#" 
-                                            class="btn btn-danger" 
-                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                            class="btn btn-sm btn-danger" 
+                                            style="text-decoration: none;"
                                             onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_subject', subject_id=subject.subject_id) }}`)">
-                                             <i class="fas fa-trash-alt"></i> <span class="btn-text">Delete</span>
+                                             <i class="fas fa-trash-alt"></i>
                                          </a>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="3" class="text-center" style="padding: 2rem;" data-label="Subject Code">No subjects defined yet.</td>
+                                <td colspan="3" class="text-center" style="padding: 2rem;" data-label="Code">No subjects defined yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -195,7 +201,22 @@
 
     <script>
         function openAddModal() {
+            restoreAddForm();
             document.getElementById('addSubjectModal').classList.add('active');
+        }
+
+        function saveAddForm() {
+            const f = document.getElementById('addSubjectModal');
+            const data = {};
+            f.querySelectorAll('input').forEach(el => { if (el.name && el.name !== 'csrf_token') data[el.name] = el.value; });
+            localStorage.setItem('addSubjectForm', JSON.stringify(data));
+        }
+        function restoreAddForm() {
+            const saved = localStorage.getItem('addSubjectForm');
+            if (!saved) return;
+            const data = JSON.parse(saved);
+            const f = document.getElementById('addSubjectModal');
+            Object.keys(data).forEach(k => { const el = f.querySelector(`[name="${k}"]`); if (el) el.value = data[k]; });
         }
 
         function openEditModal(id, code, name) {
@@ -208,6 +229,20 @@
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const hasError = document.querySelector('.alert-error, .alert-danger');
+            if (hasError && localStorage.getItem('addSubjectForm')) {
+                openAddModal();
+            }
+            document.getElementById('addSubjectModal').querySelectorAll('input').forEach(el => {
+                el.addEventListener('input', saveAddForm);
+            });
+        });
+
+        document.querySelectorAll('form').forEach(f => {
+            f.addEventListener('submit', () => localStorage.removeItem('addSubjectForm'));
+        });
 
 
         function validateSubjectForm(form) {

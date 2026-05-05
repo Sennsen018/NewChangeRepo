@@ -176,7 +176,7 @@
                                         </div>
                                     </td>
                                     <td class="hide-on-mobile" data-label="Course & Level">{{ student.course }} - {{ student.level }}</td>
-                                    <td class="hide-on-mobile" data-label="Email">{{ student.email }}</td>
+                                    <td class="hide-on-mobile" data-label="Email" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ student.email }}">{{ student.email }}</td>
                                     <td data-label="Status">
                                         <span class="badge {% if student.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
                                             {{ student.status }}
@@ -188,35 +188,41 @@
                                         {% endif %}
                                     </td>
                                     <td class="action-cell" data-label="Action">
+                                        <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
                                         {% if student.lockout_time and student.lockout_time > now %}
                                         <a href="{{ url_for('admin.unlock_user', user_type='student', user_id=student.usid) }}" 
                                            class="btn btn-success" 
-                                           style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
-                                            <i class="fas fa-unlock"></i> <span class="btn-text">Unlock</span>
+                                           style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Unlock">
+                                            <i class="fas fa-unlock"></i>
                                         </a>
                                         {% endif %}
                                         <button class="btn btn-secondary" 
-                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                                style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                                title="Edit"
                                                 onclick="openEditModal(`{{ student.usid }}`, `{{ student.first_name }}`, `{{ student.middle_name }}`, `{{ student.last_name }}`, `{{ student.email }}`, `{{ student.course }}`, `{{ student.level }}`, `{{ student.section }}`, `{{ student.status }}`)">
-                                            <i class="fas fa-edit"></i> <span class="btn-text">Edit</span>
+                                            <i class="fas fa-edit"></i>
                                         </button>
-                                         <button class="btn btn-primary" 
-                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
-                                                 onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}`)">
-                                            <i class="fas fa-user-plus"></i> <span class="btn-text">Enroll</span>
-                                         </button>
-                                         <a href="{{ url_for('admin.archive_student', usid=student.usid) }}" 
-                                            class="btn btn-warning" 
-                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
-                                            onclick="return confirm('Are you sure you want to archive this student?')">
-                                             <i class="fas fa-archive"></i> <span class="btn-text">Archive</span>
-                                         </a>
-                                         <a href="#" 
-                                            class="btn btn-danger" 
-                                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
-                                            onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_student', usid=student.usid) }}`)">
-                                             <i class="fas fa-trash-alt"></i> <span class="btn-text">Delete</span>
-                                         </a>
+                                        <button class="btn btn-primary" 
+                                                style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                                title="Enroll"
+                                                onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}`)">
+                                            <i class="fas fa-user-plus"></i>
+                                        </button>
+                                        <a href="{{ url_for('admin.archive_student', usid=student.usid) }}" 
+                                           class="btn btn-warning" 
+                                           style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                                           title="Archive"
+                                           onclick="return confirm('Are you sure you want to archive this student?')">
+                                            <i class="fas fa-archive"></i>
+                                        </a>
+                                        <a href="#" 
+                                           class="btn btn-danger" 
+                                           style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                                           title="Delete"
+                                           onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_student', usid=student.usid) }}`)">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% else %}
@@ -308,36 +314,42 @@
                                             </div>
                                         </td>
                                         <td class="hide-on-mobile" data-label="Section">{{ estudent.section }}</td>
-                                        <td class="hide-on-mobile" data-label="Email">{{ estudent.email }}</td>
+                                        <td class="hide-on-mobile" data-label="Email" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ estudent.email }}">{{ estudent.email }}</td>
                                         <td data-label="Status">
                                             <span class="badge {% if estudent.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
                                                 {{ estudent.status }}
                                             </span>
                                         </td>
                                         <td class="action-cell" data-label="Action">
+                                            <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
                                             <button class="btn btn-secondary" 
-                                                    style="padding: 0.25rem 0.5rem; font-size: 0.8rem;"
+                                                    style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                                    title="Edit"
                                                     onclick="openEditModal('{{ estudent.usid }}', '{{ estudent.first_name }}', '{{ estudent.middle_name }}', '{{ estudent.last_name }}', '{{ estudent.email }}', '{{ estudent.course }}', '{{ estudent.level }}', '{{ estudent.section }}', '{{ estudent.status }}')">
-                                                <i class="fas fa-edit"></i> <span class="btn-text">Edit</span>
+                                                <i class="fas fa-edit"></i>
                                             </button>
                                             <a href="{{ url_for('admin.archive_student', usid=estudent.usid) }}" 
                                                class="btn btn-warning" 
-                                               style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                               style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                                               title="Archive"
                                                onclick="return confirm('Are you sure you want to archive this student?')">
-                                                <i class="fas fa-archive"></i> <span class="btn-text">Archive</span>
+                                                <i class="fas fa-archive"></i>
                                             </a>
                                             <a href="{{ url_for('admin.remove_enrollment', enrollment_id=estudent.enrollment_id if estudent.enrollment_id else 0) }}" 
                                                class="btn btn-secondary" 
-                                               style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                               style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                                               title="Unenroll"
                                                onclick="return confirm('Remove this student from this subject?')">
-                                                <i class="fas fa-user-minus"></i> <span class="btn-text">Unenroll</span>
+                                                <i class="fas fa-user-minus"></i>
                                             </a>
                                             <a href="#" 
                                                class="btn btn-danger" 
-                                               style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
+                                               style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                                               title="Delete"
                                                onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_student', usid=estudent.usid) }}`)">
-                                                <i class="fas fa-trash-alt"></i> <span class="btn-text">Delete</span>
+                                                <i class="fas fa-trash-alt"></i>
                                             </a>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endif %}
@@ -391,11 +403,13 @@
                                         </div>
                                     </td>
                                     <td class="hide-on-mobile" data-label="Course & Year">{{ student.course }} - {{ student.level }}</td>
-                                    <td class="hide-on-mobile" data-label="Email Address">{{ student.email }}</td>
+                                    <td class="hide-on-mobile" data-label="Email Address" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ student.email }}">{{ student.email }}</td>
                                     <td class="text-center action-cell" style="justify-content: center;" data-label="Action">
-                                        <button class="btn btn-primary btn-sm" 
+                                        <button class="btn btn-primary" 
+                                                style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                                title="Enroll Now"
                                                 onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.last_name }}`)">
-                                            <i class="fas fa-plus-circle"></i> <span class="btn-text">Enroll Now</span>
+                                            <i class="fas fa-plus-circle"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -441,12 +455,13 @@
                                         </div>
                                     </td>
                                     <td class="hide-on-mobile" data-label="Course & Level">{{ student.course }} - {{ student.level }}</td>
-                                    <td class="hide-on-mobile" data-label="Email">{{ student.email }}</td>
+                                    <td class="hide-on-mobile" data-label="Email" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ student.email }}">{{ student.email }}</td>
                                     <td class="action-cell" data-label="Action">
                                         <a href="{{ url_for('admin.unarchive_student', usid=student.usid) }}" 
                                            class="btn btn-success" 
-                                           style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
-                                            <i class="fas fa-undo"></i> <span class="btn-text">Unarchive</span>
+                                           style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                                           title="Unarchive">
+                                            <i class="fas fa-undo"></i>
                                         </a>
                                     </td>
                                 </tr>
@@ -686,7 +701,23 @@
         }
 
         function openModal() {
+            restoreAddForm();
             document.getElementById('addStudentModal').classList.add('active');
+        }
+
+        // Save/restore add student form
+        function saveAddForm() {
+            const f = document.getElementById('addStudentModal');
+            const data = {};
+            f.querySelectorAll('input,select').forEach(el => { if (el.name && el.name !== 'csrf_token') data[el.name] = el.value; });
+            localStorage.setItem('addStudentForm', JSON.stringify(data));
+        }
+        function restoreAddForm() {
+            const saved = localStorage.getItem('addStudentForm');
+            if (!saved) return;
+            const data = JSON.parse(saved);
+            const f = document.getElementById('addStudentModal');
+            Object.keys(data).forEach(k => { const el = f.querySelector(`[name="${k}"]`); if (el) el.value = data[k]; });
         }
         
         function openEditModal(sid, fname, mname, lname, email, course, level, section, status) {
@@ -716,6 +747,22 @@
         function openBulkModal() {
             document.getElementById('bulkEnrollModal').classList.add('active');
         }
+
+        // On page load: reopen add modal if error + saved data
+        document.addEventListener('DOMContentLoaded', () => {
+            const hasError = document.querySelector('.alert-error, .alert-danger');
+            if (hasError && localStorage.getItem('addStudentForm')) {
+                openModal();
+            }
+            document.getElementById('addStudentModal').querySelectorAll('input,select').forEach(el => {
+                el.addEventListener('input', saveAddForm);
+            });
+        });
+
+        // Clear on submit
+        document.querySelectorAll('form').forEach(f => {
+            f.addEventListener('submit', () => localStorage.removeItem('addStudentForm'));
+        });
 
 
         /**

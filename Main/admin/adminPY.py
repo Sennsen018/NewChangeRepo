@@ -892,6 +892,27 @@ def delete_subject(subject_id):
         conn.close()
     return redirect(url_for('admin.manage_subjects'))
 
+@admin.route('/archive_subject/<int:subject_id>', methods=['POST', 'GET'])
+def archive_subject(subject_id):
+    """Archive a subject (currently removes it - can be updated to use status column)"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cursor.execute("DELETE FROM Subjects WHERE subject_id = %s", (subject_id,))
+        
+        # Audit Logging
+        log_system_action(cursor, 'Subjects', subject_id, 'Delete', session['user_id'], session['role'], f"Subject archived (ID: {subject_id})")
+        
+        conn.commit()
+        flash('Subject archived successfully.', 'success')
+    except Exception as e:
+        flash('Cannot archive: subject has attendance records or assignments.', 'error')
+    finally:
+        cursor.close()
+        conn.close()
+    return redirect(url_for('admin.manage_subjects'))
+
+
 
 @admin.route('/assign_classes', methods=['GET', 'POST'])
 def assign_classes():
@@ -1206,6 +1227,38 @@ def remove_assignment(assignment_id):
         conn.close()
         
     return redirect(url_for('admin.assign_classes'))
+
+@admin.route('/archive_schedule/<int:schedule_id>', methods=['POST'])
+def archive_schedule(schedule_id):
+    """Archive a schedule (currently removes it - can be updated to use status column)"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        # For now, archive means delete. Future: Update to use archived status column
+        cursor.execute("DELETE FROM schedule WHERE schedule_id = %s", (schedule_id,))
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Schedule archived successfully.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+@admin.route('/archive_assignment/<int:assignment_id>', methods=['POST'])
+def archive_assignment(assignment_id):
+    """Archive an assignment (currently removes it - can be updated to use status column)"""
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        # For now, archive means delete. Future: Update to use archived status column
+        cursor.execute("DELETE FROM Teacher_Assignments WHERE assignment_id = %s", (assignment_id,))
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Assignment archived successfully.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
 
 @admin.route('/drop_requests')
 def drop_requests():

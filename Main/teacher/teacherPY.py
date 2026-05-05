@@ -470,23 +470,20 @@ def reports():
                 else:
                     row['percentage'] = 0.0
 
-            # Daily Report: Raw Logs
+            # Daily Report: Raw Logs — all records with date and time
             query_daily = """
-            SELECT a.scan_time::date as date, s.first_name, s.middle_name, s.last_name, a.status, a.is_valid
+            SELECT a.scan_time::date as date,
+                   to_char(a.scan_time, 'HH12:MI AM') as time,
+                   s.usid, s.first_name, s.middle_name, s.last_name,
+                   a.status, a.is_valid
             FROM Attendance a
-            JOIN (
-                SELECT MAX(a2.attendance_id) as max_id
-                FROM Attendance a2
-                JOIN Sessions ses2 ON a2.session_id = ses2.session_id
-                WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
-                GROUP BY a2.scan_time::date, a2.usid
-            ) max_a ON a.attendance_id = max_a.max_id
+            JOIN Sessions ses2 ON a.session_id = ses2.session_id
             JOIN Students s ON a.usid = s.usid
-            ORDER BY date DESC, s.last_name ASC, s.first_name ASC
+            WHERE ses2.utid = %s AND ses2.subject_id = %s AND ses2.section = %s
+            ORDER BY a.scan_time DESC, s.last_name ASC, s.first_name ASC
             """
             cursor.execute(query_daily, (utid, subject_id, section))
             daily_logs = cursor.fetchall()
-            # Convert date objects to strings so Jinja groupby works correctly
             for row in daily_logs:
                 if row['date'] and not isinstance(row['date'], str):
                     row['date'] = row['date'].strftime('%Y-%m-%d')
@@ -653,6 +650,18 @@ def submit_report():
             
     # Save the snapshot to Submitted_Reports table
     summary_json = json.dumps(summary)
+    
+    # Block duplicate submissions
+    cursor.execute("""
+        SELECT COUNT(*) as count FROM Submitted_Reports 
+        WHERE utid = %s AND subject_id = %s AND section = %s
+    """, (utid, subject_id, section))
+    if cursor.fetchone()['count'] > 0:
+        flash('You have already submitted a report for this subject.', 'warning')
+        cursor.close()
+        conn.close()
+        return redirect(url_for('teacher.reports', subject_id=subject_id, section=section))
+
     cursor.execute("""
         INSERT INTO Submitted_Reports (utid, subject_id, section, summary_json, teacher_message)
         VALUES (%s, %s, %s, %s, %s)
@@ -665,6 +674,80 @@ def submit_report():
     
     flash('files successfully sent to the admin', 'success')
     return redirect(url_for('teacher.reports', subject_id=subject_id, section=section))
+
+@teacher.route('/daily_attendance_log')
+def daily_attendance_log():
+    utid = session['user_id']
+    subject_id = request.args.get('subject_id', type=int)
+    section = request.args.get('section')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor.execute("""
+        SELECT s.subject_id, s.subject_code, s.subject_name, ta.section
+        FROM Teacher_Assignments ta
+        JOIN Subjects s ON ta.subject_id = s.subject_id
+        WHERE ta.utid = %s
+    """, (utid,))
+    classes = cursor.fetchall()
+
+    daily_logs = []
+    selected_class = None
+
+    if subject_id and section:
+        for c in classes:
+            if c['subject_id'] == subject_id and c['section'] == section:
+                selected_class = c
+                break
+
+        if selected_class:
+            cursor.execute("""
+                SELECT a.scan_time::date as date,
+                       to_char(a.scan_time, 'HH12:MI AM') as time,
+                       s.usid, s.first_name, s.middle_name, s.last_name,
+                       a.status, a.is_valid
+                FROM Attendance a
+                JOIN Sessions ses ON a.session_id = ses.session_id
+                JOIN Students s ON a.usid = s.usid
+                WHERE ses.utid = %s AND ses.subject_id = %s AND ses.section = %s
+                ORDER BY a.scan_time DESC, s.last_name ASC, s.first_name ASC
+            """, (utid, subject_id, section))
+            daily_logs = cursor.fetchall()
+            for row in daily_logs:
+                if row['date'] and not isinstance(row['date'], str):
+                    row['date'] = row['date'].strftime('%Y-%m-%d')
+
+            # All active students for Save Attendance form
+            cursor.execute("""
+                SELECT s.usid FROM Students s
+                JOIN Enrollments e ON s.usid = e.usid
+                JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+                WHERE ta.utid = %s AND ta.subject_id = %s AND ta.section = %s AND s.status = 'Active'
+            """, (utid, subject_id, section))
+            all_students = cursor.fetchall()
+
+            # Check if today's attendance is already locked
+            cursor.execute("""
+                SELECT COUNT(*) as count FROM Sessions
+                WHERE utid = %s AND subject_id = %s AND section = %s
+                  AND start_time::date = CURRENT_DATE
+            """, (utid, subject_id, section))
+            attendance_locked = cursor.fetchone()['count'] >= 1
+
+    cursor.close()
+    conn.close()
+
+    return render_template('daily_attendance_log.html',
+                           name=session.get('name'),
+                           classes=classes,
+                           selected_class=selected_class,
+                           daily_logs=daily_logs,
+                           all_students=all_students if selected_class else [],
+                           attendance_locked=attendance_locked if selected_class else False,
+                           subject_id=subject_id,
+                           section=section)
+
 
 @teacher.route('/delete_daily_attendance', methods=['POST'])
 def delete_daily_attendance():
@@ -946,6 +1029,9 @@ def manual_attendance():
     students            = []
     selected_class      = None
     already_recorded    = False
+    attendance_locked   = False
+    attendance_method   = None  # 'manual' or 'qr'
+    today_session_count = 0
 
     if selected_subject_id and selected_section:
         # Find the label for the currently selected class
@@ -968,14 +1054,21 @@ def manual_attendance():
         """, (utid, selected_subject_id, selected_section))
         students = cursor.fetchall()
 
-        # Check if attendance is already recorded for today for this class
+        # Check today's session — 1 per day max, detect method
         cursor.execute("""
-            SELECT COUNT(*) as count 
-            FROM Sessions 
-            WHERE utid = %s AND subject_id = %s AND section = %s 
+            SELECT session_id, random_token
+            FROM Sessions
+            WHERE utid = %s AND subject_id = %s AND section = %s
               AND start_time::date = CURRENT_DATE
+            ORDER BY start_time DESC LIMIT 1
         """, (utid, selected_subject_id, selected_section))
-        already_recorded = cursor.fetchone()['count'] > 0
+        existing_session = cursor.fetchone()
+        if existing_session:
+            today_session_count = 1
+            already_recorded = True
+            attendance_method = 'manual' if existing_session['random_token'] == 'MANUAL' else 'qr'
+            # Locked = attendance already recorded (once per day rule)
+            attendance_locked = True
 
     cursor.close()
     conn.close()
@@ -989,7 +1082,10 @@ def manual_attendance():
         selected_subject_id=selected_subject_id,
         selected_section=selected_section,
         selected_class=selected_class,
-        already_recorded=already_recorded
+        already_recorded=already_recorded,
+        attendance_locked=attendance_locked,
+        attendance_method=attendance_method,
+        today_session_count=today_session_count
     )
 
 
@@ -1021,7 +1117,7 @@ def submit_manual_attendance():
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     try:
-        # Prevent duplication: check if attendance already exists for today
+        # Prevent duplication: once per day per class
         cursor.execute("""
             SELECT COUNT(*) as count 
             FROM Sessions 
@@ -1029,8 +1125,8 @@ def submit_manual_attendance():
               AND start_time::date = CURRENT_DATE
         """, (utid, subject_id, section))
         
-        if cursor.fetchone()['count'] > 0:
-            flash('Attendance for this class has already been recorded today. Please use Manage Marks to edit it.', 'warning')
+        if cursor.fetchone()['count'] >= 1:
+            flash('Attendance for this class has already been recorded today. Use Manage Marks to edit.', 'warning')
             cursor.close()
             conn.close()
             return redirect(url_for('teacher.manage_marks', subject_id=subject_id, section=section))

@@ -140,8 +140,9 @@
                         {% for group_name in ['BSIT - 1st Year', 'BSIT - 2nd Year', 'BSIT - 3rd Year', 'BSIT - 4th Year', 'BSCS - 1st Year', 'BSCS - 2nd Year', 'BSCS - 3rd Year', 'BSCS - 4th Year', 'OTHER - 1st Year', 'OTHER - 2nd Year', 'OTHER - 3rd Year', 'OTHER - 4th Year'] %}
                             {% if group_name in grouped_students and grouped_students[group_name]|length > 0 %}
                             <div class="enrollment-group" style="margin-bottom: 2rem;">
-                                <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 1rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem; margin-bottom: 1rem;" onclick="toggleGroup('{{ group_name|replace(' ', '_') }}')">
-                                    <i class="fas fa-chevron-down" id="icon-{{ group_name|replace(' ', '_') }}" style="transition: transform 0.3s;"></i>
+                                {% set safe_group_name = group_name|replace(' ', '_') %}
+                                <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 1rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem; margin-bottom: 1rem;" onclick="toggleGroup('{{ safe_group_name }}')">
+                                    <i class="fas fa-chevron-down" id="icon-{{ safe_group_name }}" style="transition: transform 0.3s;"></i>
                                     <h4 style="margin: 0; flex: 1; font-size: 1rem; color: var(--text-main);">
                                         {% if 'BSIT' in group_name %}
                                             <i class="fas fa-microchip" style="color: #6366f1; margin-right: 0.5rem;"></i>
@@ -154,11 +155,11 @@
                                     </h4>
                                     <span class="badge badge-primary" style="margin-left: auto;">{{ grouped_students[group_name]|length }} students</span>
                                 </div>
-                                <div id="group-{{ group_name|replace(' ', '_') }}" class="table-wrapper" style="display: none;">
+                                <div id="group-{{ safe_group_name }}" class="table-wrapper" style="display: none;">
                                     <table>
                                         <thead>
                                             <tr>
-                                                <th style="width: 40px;"><input type="checkbox" class="group-select-all" onclick="toggleGroupSelectAll('{{ group_name|replace(' ', '_') }}', this)"></th>
+                                                <th style="width: 40px;"><input type="checkbox" class="group-select-all" onclick="toggleGroupSelectAll('{{ safe_group_name }}', this)"></th>
                                                 <th class="hide-on-mobile">Student ID</th>
                                                 <th>Student Name</th>
                                                 <th class="hide-on-mobile">Email</th>
@@ -169,7 +170,8 @@
                                         <tbody>
                                             {% for student in grouped_students[group_name] %}
                                             <tr>
-                                                <td><input type="checkbox" class="student-checkbox group-{{ group_name|replace(' ', '_') }}" value="{{ student.usid }}" onclick="updateBulkCount()"></td>
+                                                <td><input type="checkbox" class="student-checkbox group-{{ safe_group_name }}" value="{{ student.usid }}" onclick="updateBulkCount()"></td>
+
                                                 <td class="hide-on-mobile" data-label="Student ID"><span class="badge badge-secondary">{{ student.usid }}</span></td>
                                                 <td data-label="Student Name" style="font-weight: 600;">
                                                     {{ student.first_name }} {{ student.middle_name if student.middle_name else '' }} {{ student.last_name }}

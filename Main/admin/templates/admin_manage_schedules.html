@@ -174,7 +174,7 @@
                                     <div style="font-size: 0.8rem; color: var(--primary);">👨‍🏫 {{ s.first_name }} {{ s.last_name }}</div>
                                 </td>
                                 <td class="action-cell" data-label="Actions">
-                                    <button type="button" class="btn btn-warning btn-sm" style="margin-right: 0.5rem;" onclick="archiveSchedule({{ s.schedule_id }}, '{{ s.subject_code }}')">
+                                    <button type="button" class="btn btn-warning btn-sm" style="margin-right: 0.5rem;" onclick="archiveSchedule('{{ s.schedule_id }}', '{{ s.subject_code }}')">
                                         <i class="fas fa-archive"></i> <span class="btn-text">Archive</span>
                                     </button>
                                 </td>

@@ -161,7 +161,7 @@
                                     <div style="font-size: 0.8rem; color: var(--primary);">👨‍🏫 {{ a.first_name }} {{ a.last_name }}</div>
                                 </td>
                                 <td class="action-cell" data-label="Actions">
-                                    <button type="button" class="btn btn-warning btn-sm" style="margin-right: 0.5rem;" onclick="archiveAssignment({{ a.assignment_id }}, '{{ a.subject_code }}')">
+                                    <button type="button" class="btn btn-warning btn-sm" style="margin-right: 0.5rem;" onclick="archiveAssignment('{{ a.assignment_id }}', '{{ a.subject_code }}')">
                                         <i class="fas fa-archive"></i> <span class="btn-text">Archive</span>
                                     </button>
                                 </td>

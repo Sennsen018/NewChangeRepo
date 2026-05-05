@@ -120,6 +120,14 @@ def _clear_otp_session():
 
 auth = Blueprint('auth', __name__, template_folder='templates')
 
+@auth.after_request
+def add_header(response):
+    """Prevent caching of authentication pages."""
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
 @auth.route('/login')
 def login_redirect():
     """Redirects generic login path to the correct dashboard if logged in, else student login."""
@@ -134,8 +142,11 @@ def login_redirect():
 @auth.route('/student/login', methods=['GET', 'POST'])
 def student_login():
     """Handles student authentication, session creation, and brute-force lockout."""
-    if 'user_id' in session and session.get('role') == 'student':
-        return redirect(url_for('user.dashboard'))
+    if 'user_id' in session:
+        role = session.get('role')
+        if role == 'student': return redirect(url_for('user.dashboard'))
+        if role == 'teacher': return redirect(url_for('teacher.dashboard'))
+        if role == 'admin': return redirect(url_for('admin.dashboard'))
         
     if request.method == 'POST':
         email = request.form.get('email')
@@ -159,6 +170,7 @@ def student_login():
                 # Reset attempts
                 cursor.execute("UPDATE Students SET failed_attempts = 0, lockout_time = NULL WHERE usid = %s", (student['usid'],))
                 conn.commit()
+                session.permanent = True
                 session['user_id'] = student['usid']
                 session['role'] = 'student'
                 session['name'] = f"{student['first_name']} {student['middle_name']} {student['last_name']}"
@@ -184,8 +196,11 @@ def student_login():
 @auth.route('/teacher/login', methods=['GET', 'POST'])
 def teacher_login():
     """Handles teacher authentication and dashboard redirection."""
-    if 'user_id' in session and session.get('role') == 'teacher':
-        return redirect(url_for('teacher.dashboard'))
+    if 'user_id' in session:
+        role = session.get('role')
+        if role == 'student': return redirect(url_for('user.dashboard'))
+        if role == 'teacher': return redirect(url_for('teacher.dashboard'))
+        if role == 'admin': return redirect(url_for('admin.dashboard'))
         
     if request.method == 'POST':
         email = request.form.get('email')
@@ -208,6 +223,7 @@ def teacher_login():
             elif teacher['password_hash'] and check_password_hash(teacher['password_hash'], password):
                 cursor.execute("UPDATE Teachers SET failed_attempts = 0, lockout_time = NULL WHERE utid = %s", (teacher['utid'],))
                 conn.commit()
+                session.permanent = True
                 session['user_id'] = teacher['utid']
                 session['role'] = 'teacher'
                 session['name'] = f"{teacher['first_name']} {teacher['middle_name']} {teacher['last_name']}"
@@ -233,8 +249,11 @@ def teacher_login():
 @auth.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     """Handles admin authentication and dashboard redirection."""
-    if 'user_id' in session and session.get('role') == 'admin':
-        return redirect(url_for('admin.dashboard'))
+    if 'user_id' in session:
+        role = session.get('role')
+        if role == 'student': return redirect(url_for('user.dashboard'))
+        if role == 'teacher': return redirect(url_for('teacher.dashboard'))
+        if role == 'admin': return redirect(url_for('admin.dashboard'))
         
     if request.method == 'POST':
         username = request.form.get('username')
@@ -251,6 +270,7 @@ def admin_login():
             elif admin['password_hash'] and check_password_hash(admin['password_hash'], password):
                 cursor.execute("UPDATE Admins SET failed_attempts = 0, lockout_time = NULL WHERE admin_id = %s", (admin['admin_id'],))
                 conn.commit()
+                session.permanent = True
                 session['user_id'] = admin['admin_id']
                 session['role'] = 'admin'
                 return redirect(url_for('admin.dashboard'))

@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, session
 import os
 from datetime import timedelta
 
@@ -12,7 +12,7 @@ def reg_app():
     app.config['SESSION_COOKIE_SECURE'] = False  # 🔥 IMPORTANT (local dev)
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=6)
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 
     from flask_wtf.csrf import CSRFProtect
@@ -21,6 +21,11 @@ def reg_app():
 
     @app.route('/')
     def index():
+        if 'user_id' in session:
+            role = session.get('role')
+            if role == 'student': return redirect(url_for('user.dashboard'))
+            if role == 'teacher': return redirect(url_for('teacher.dashboard'))
+            if role == 'admin': return redirect(url_for('admin.dashboard'))
         return redirect(url_for('auth.student_login'))
 
     @app.route('/.well-known/appspecific/com.chrome.devtools.json')

@@ -485,7 +485,7 @@
     </style>
 
     <!-- Add Student Modal -->
-    <div id="addStudentModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+    <div id="addStudentModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
         <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
             <button onclick="closeModal('addStudentModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Add New Student</h3>
@@ -537,7 +537,7 @@
     </div>
 
     <!-- Edit Student Modal -->
-    <div id="editStudentModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+    <div id="editStudentModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
         <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
             <button onclick="closeModal('editStudentModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Edit Student</h3>
@@ -597,7 +597,7 @@
     </div>
 
     <!-- Enroll Student Modal -->
-    <div id="enrollStudentModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+    <div id="enrollStudentModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
         <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
             <button onclick="closeModal('enrollStudentModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Enroll <span id="enroll_student_name"></span></h3>
@@ -622,7 +622,7 @@
         </div>
     </div>
     <!-- Bulk Enroll Modal -->
-    <div id="bulkEnrollModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+    <div id="bulkEnrollModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
         <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
             <button onclick="closeModal('bulkEnrollModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
             <h3 class="mb-4">Quick Bulk Enrollment</h3>
@@ -683,7 +683,7 @@
         }
 
         function openModal() {
-            document.getElementById('addStudentModal').style.display = 'flex';
+            document.getElementById('addStudentModal').classList.add('active');
         }
         
         function openEditModal(sid, fname, mname, lname, email, course, level, section, status) {
@@ -697,21 +697,21 @@
             document.getElementById('edit_section').value = section;
             document.getElementById('edit_status').value = status;
             
-            document.getElementById('editStudentModal').style.display = 'flex';
+            document.getElementById('editStudentModal').classList.add('active');
         }
 
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            document.getElementById(modalId).classList.remove('active');
         }
 
         function openEnrollModal(sid, name) {
             document.getElementById('enroll_usid').value = sid;
             document.getElementById('enroll_student_name').innerText = name;
-            document.getElementById('enrollStudentModal').style.display = 'flex';
+            document.getElementById('enrollStudentModal').classList.add('active');
         }
 
         function openBulkModal() {
-            document.getElementById('bulkEnrollModal').style.display = 'flex';
+            document.getElementById('bulkEnrollModal').classList.add('active');
         }
 
 
@@ -805,9 +805,7 @@
             <span>Logs</span>
         </a>
     </nav>
-    <a href="{{ url_for('admin.assign_classes') }}" class="fab" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
-        <i class="fas fa-plus"></i>
-    </a>
+
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>

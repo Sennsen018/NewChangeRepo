@@ -88,13 +88,14 @@ def dashboard():
     cursor.execute("SELECT COUNT(*) as count FROM Subjects")
     subject_count = cursor.fetchone()['count']
     
-    # Fetch submitted reports from teachers
+    # Fetch submitted reports from teachers (exclude archived)
     cursor.execute("""
         SELECT sr.report_id, sr.submission_date, sr.section, t.first_name, t.middle_name as teacher_middle, t.last_name as teacher_last, 
                sub.subject_code, sub.subject_name
         FROM Submitted_Reports sr
         JOIN Teachers t ON sr.utid = t.utid
         JOIN Subjects sub ON sr.subject_id = sub.subject_id
+        WHERE sr.is_archived IS NOT TRUE
         ORDER BY sr.submission_date DESC
         LIMIT 10
     """)
@@ -132,6 +133,12 @@ def view_report(report_id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
+    # Ensure is_archived column exists
+    cursor.execute("""
+        ALTER TABLE Submitted_Reports ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE
+    """)
+    conn.commit()
+    
     cursor.execute("""
         SELECT sr.*, t.first_name, t.middle_name, t.last_name, s.subject_code, s.subject_name
         FROM Submitted_Reports sr
@@ -166,6 +173,51 @@ def view_report(report_id):
     cursor.close()
     conn.close()
     return render_template('admin_view_report.html', report=report, summary=summary, report_stats=report_stats)
+
+@admin.route('/archive_report/<int:report_id>')
+def archive_report(report_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("ALTER TABLE Submitted_Reports ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE")
+    cursor.execute("UPDATE Submitted_Reports SET is_archived = TRUE WHERE report_id = %s", (report_id,))
+    log_system_action(cursor, 'Submitted_Reports', report_id, 'Update', session['user_id'], session['role'], f"Report archived (ID: {report_id})")
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash('Report archived successfully.', 'success')
+    return redirect(url_for('admin.dashboard'))
+
+@admin.route('/unarchive_report/<int:report_id>')
+def unarchive_report(report_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("UPDATE Submitted_Reports SET is_archived = FALSE WHERE report_id = %s", (report_id,))
+    log_system_action(cursor, 'Submitted_Reports', report_id, 'Update', session['user_id'], session['role'], f"Report unarchived (ID: {report_id})")
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash('Report unarchived successfully.', 'success')
+    return redirect(url_for('admin.archived_reports'))
+
+@admin.route('/archived_reports')
+def archived_reports():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("ALTER TABLE Submitted_Reports ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE")
+    cursor.execute("""
+        SELECT sr.report_id, sr.submission_date, sr.section,
+               t.first_name, t.last_name,
+               s.subject_code, s.subject_name
+        FROM Submitted_Reports sr
+        JOIN Teachers t ON sr.utid = t.utid
+        JOIN Subjects s ON sr.subject_id = s.subject_id
+        WHERE sr.is_archived = TRUE
+        ORDER BY sr.submission_date DESC
+    """)
+    reports = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('admin_archived_reports.html', reports=reports)
 
 @admin.route('/unlock_user/<user_type>/<user_id>')
 def unlock_user(user_type, user_id):

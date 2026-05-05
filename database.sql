@@ -167,6 +167,7 @@ CREATE TABLE IF NOT EXISTS Submitted_Reports (
     summary_json TEXT,
     teacher_message TEXT,
     status VARCHAR(20) DEFAULT 'Submitted' CHECK (status IN ('Submitted', 'Reviewed')),
+    is_archived BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (uTID) REFERENCES Teachers(uTID),
     FOREIGN KEY (subject_id) REFERENCES Subjects(subject_id)
 );

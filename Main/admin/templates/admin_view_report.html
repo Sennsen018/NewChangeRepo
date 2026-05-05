@@ -59,14 +59,24 @@
                 <div class="header-left"><h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Report View</h2></div>
             </header>
             <div class="main-content-inner">
-                <div class="flex items-center gap-4 mb-6">
+                <div class="flex items-center gap-4 mb-6" style="flex-wrap: wrap;">
                     <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary" style="padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
                         <i class="fas fa-chevron-left" style="margin: 0;"></i>
                     </a>
-                    <div>
+                    <div style="flex: 1;">
                         <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
                             Submitted by {{ report.first_name }} {{ report.middle_name }} {{ report.last_name }} on {{ report.submission_date.strftime('%Y-%m-%d %H:%M') }}
                         </p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        {% if not report.is_archived %}
+                        <a href="{{ url_for('admin.archive_report', report_id=report.report_id) }}" class="btn btn-warning" style="display: flex; align-items: center; gap: 0.4rem; text-decoration: none; font-size: 0.85rem;"
+                           onclick="return confirm('Archive this report?')">
+                            <i class="fas fa-box-archive"></i> Archive
+                        </a>
+                        {% else %}
+                        <span class="badge badge-warning" style="padding: 0.5rem 0.75rem;"><i class="fas fa-archive"></i> Archived</span>
+                        {% endif %}
                     </div>
                 </div>
 

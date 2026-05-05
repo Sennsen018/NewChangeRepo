@@ -145,7 +145,16 @@ def view_report(report_id):
         flash('Report not found.', 'error')
         return redirect(url_for('admin.dashboard'))
         
-    summary = json.loads(report['summary_json'])
+    summary_data = report.get('summary_json')
+    if isinstance(summary_data, str):
+        try:
+            summary = json.loads(summary_data)
+        except (json.JSONDecodeError, TypeError):
+            summary = []
+    elif isinstance(summary_data, list):
+        summary = summary_data
+    else:
+        summary = []
     
     # Calculate aggregate stats for the Pie Chart from the JSON snapshot
     report_stats = {

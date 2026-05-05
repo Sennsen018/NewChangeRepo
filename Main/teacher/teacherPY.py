@@ -273,10 +273,16 @@ def get_session_stats(session_id):
     students = cursor.fetchall()
     
     for s in students:
-        if s['behavior_flags']:
-            try: s['behavior_flags'] = json.loads(s['behavior_flags'])
-            except: s['behavior_flags'] = []
-        else: s['behavior_flags'] = []
+        flags = s.get('behavior_flags')
+        if isinstance(flags, str):
+            try:
+                s['behavior_flags'] = json.loads(flags)
+            except (json.JSONDecodeError, TypeError):
+                s['behavior_flags'] = []
+        elif isinstance(flags, list):
+            s['behavior_flags'] = flags
+        else:
+            s['behavior_flags'] = []
             
     cursor.close()
     conn.close()

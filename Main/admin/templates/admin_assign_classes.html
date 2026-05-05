@@ -79,7 +79,7 @@
             {% endwith %}
             
             <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                <form method="POST" action="{{ url_for('admin.assign_classes') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                <form method="POST" action="{{ url_for('admin.assign_classes') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Select Teacher</label>
@@ -103,24 +103,25 @@
                         <label class="form-label">Section</label>
                         <input type="text" name="section" class="form-control" placeholder="e.g. A" required>
                     </div>
-                    <div>
-                        <button type="submit" class="btn btn-primary" style="height: 42px;"><i class="fas fa-plus"></i> Assign</button>
+                    <!-- Centered Assign Button -->
+                    <div style="grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary" style="height: 45px; min-width: 150px;"><i class="fas fa-plus"></i> Assign Class</button>
                     </div>
                 </form>
             </div>
 
             <!-- Search Bar -->
             <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                <form method="GET" action="{{ url_for('admin.assign_classes') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                <form method="GET" action="{{ url_for('admin.assign_classes') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Search Assignments</label>
                         <input type="text" name="search" class="form-control" placeholder="Code, Subject, Teacher or Section..." value="{{ search }}">
                     </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary" style="height: 42px; width: 42px; padding: 0;">
+                    <div class="flex gap-2" style="margin-bottom: 0;">
+                        <button type="submit" class="btn btn-primary" style="height: 45px; width: 45px; padding: 0; display: flex; align-items: center; justify-content: center;">
                             <i class="fas fa-search"></i>
                         </button>
-                        <a href="{{ url_for('admin.assign_classes', clear=1) }}" class="btn btn-secondary" style="height: 42px; width: 42px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                        <a href="{{ url_for('admin.assign_classes', clear=1) }}" class="btn btn-secondary" style="height: 45px; width: 45px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;">
                             <i class="fas fa-rotate"></i>
                         </a>
                     </div>

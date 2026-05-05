@@ -13,8 +13,79 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
-        #reader { width: 100%; max-width: 500px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 2px solid var(--border-color); }
-        #map { width: 100%; height: 250px; border-radius: 16px; margin-top: 1.5rem; display: none; border: 1px solid var(--border-color); }
+        #reader { 
+            width: 100%; 
+            max-width: 500px; 
+            margin: 0 auto; 
+            border-radius: 20px; 
+            overflow: visible; /* Crucial: Allow dropdown to escape the box */
+            border: 2px solid var(--border-color); 
+            background: var(--bg-surface-soft);
+            position: relative;
+        }
+        
+        /* Styling html5-qrcode internal elements */
+        #reader button {
+            background-color: var(--primary) !important;
+            color: white !important;
+            border: none !important;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: var(--radius-sm) !important;
+            font-family: 'Outfit', sans-serif !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            margin: 10px 5px !important;
+            transition: var(--transition) !important;
+            font-size: 0.9rem !important;
+        }
+        
+        #reader button:hover {
+            background-color: var(--primary-hover) !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        #reader select {
+            background-color: #1f2937 !important; /* Darker background for contrast */
+            color: #ffffff !important; /* Force white text */
+            border: 1px solid var(--border-color) !important;
+            padding: 0.6rem !important;
+            border-radius: var(--radius-sm) !important;
+            margin: 10px 0 !important;
+            width: 100% !important;
+            max-width: 320px !important;
+            cursor: pointer !important;
+            font-size: 0.9rem !important;
+        }
+
+        /* Ensure options inside select are readable */
+        #reader select option {
+            background-color: #1f2937;
+            color: #ffffff;
+        }
+        
+        #reader a {
+            color: var(--primary) !important;
+            text-decoration: none !important;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+        }
+
+        #reader__dashboard_section_csr span {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        #map { 
+            width: 100%; 
+            height: 250px; 
+            border-radius: 16px; 
+            margin-top: 1.5rem; 
+            display: none; 
+            border: 1px solid var(--border-color); 
+            box-shadow: var(--shadow-md);
+        }
     </style>
 </head>
 <body class="theme-student">
@@ -93,7 +164,30 @@
                         <span style="color: var(--warning-color); font-size: 0.9rem;"><i class="fas fa-exclamation-circle"></i> Do not switch tabs during the scanning process.</span>
                     </p>
                     
-                    <div id="reader"></div>
+                    <div class="scanner-wrapper">
+                        <div id="reader-container">
+                            <div id="reader"></div>
+                            <div class="scanner-overlay" id="scanner-status">
+                                <div class="scanner-line"></div>
+                                <div class="scanner-text">Scanning...</div>
+                            </div>
+                        </div>
+
+                        <div class="scanner-controls mt-4">
+                            <div class="form-group">
+                                <label class="form-label" style="text-align: left;">Select Camera</label>
+                                <select id="camera-select" class="form-control"></select>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="start-btn" class="btn btn-primary w-full">
+                                    <i class="fas fa-camera"></i> Start Camera
+                                </button>
+                                <button id="stop-btn" class="btn btn-danger w-full" style="display: none;">
+                                    <i class="fas fa-stop"></i> Stop Camera
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div id="map"></div>
                     
@@ -103,14 +197,77 @@
         </main>
     </div>
 
+    <style>
+        .scanner-wrapper {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        #reader-container {
+            position: relative;
+            width: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            background: #000;
+            aspect-ratio: 1/1;
+        }
+        #reader { width: 100%; height: 100%; }
+        #reader video { object-fit: cover !important; }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .scanner-overlay.active { display: flex; }
+        
+        .scanner-line {
+            width: 80%;
+            height: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            position: absolute;
+            top: 10%;
+            animation: scanMove 2s infinite ease-in-out;
+        }
+        .scanner-text {
+            margin-top: 60%;
+            background: rgba(0,0,0,0.6);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: white;
+            backdrop-filter: blur(4px);
+        }
+        
+        @keyframes scanMove {
+            0% { top: 20%; }
+            50% { top: 80%; }
+            100% { top: 20%; }
+        }
+
+        .scanner-controls {
+            background: var(--bg-surface);
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+
     <script>
         let tabSwitched = false;
         let userLocation = null;
         let map = null;
         let userMarker = null;
         let behaviorFlags = [];
+        let html5QrCode = null;
 
-        // 0. Screenshot Detection (PrintScreen)
+        // 0. Security Logic
         window.addEventListener("keyup", (e) => {
             if (e.key === "PrintScreen") {
                 behaviorFlags.push("Screenshot Attempted");
@@ -118,111 +275,100 @@
             }
         });
         
-        // 0. Fullscreen detection
-        document.addEventListener("fullscreenchange", () => {
-            if (!document.fullscreenElement) {
-                behaviorFlags.push("Exited Fullscreen");
-            }
-        });
-
-        // 1. Tab/Window Switching Detection
         document.addEventListener("visibilitychange", () => {
             if (document.hidden) {
                 tabSwitched = true;
                 behaviorFlags.push("Tab Hidden");
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Suspicious Activity',
-                    text: 'Tab was hidden. This will be flagged.',
-                });
             }
         });
 
-        window.addEventListener("blur", () => {
-            tabSwitched = true;
-            behaviorFlags.push("Window Blurred");
-        });
-
-        // 1. Prevent Inspect / Shortcuts
-        window.addEventListener("keydown", (e) => {
-            if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C")) || (e.ctrlKey && e.key === "U")) {
-                e.preventDefault();
-                behaviorFlags.push("DevTools Attempted");
-                return false;
-            }
-        });
-
-        document.addEventListener('contextmenu', e => {
-            e.preventDefault();
-            behaviorFlags.push("Right Click (Context Menu)");
-        });
-
-        // 2. Get Location & Init Map
+        // 1. Get Location
         function getLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        userLocation = {
-                            lat: position.coords.latitude,
-                            lon: position.coords.longitude
-                        };
-                        
-                        // Laguna Bounds (Roughly)
-                        const lagunaBounds = L.latLngBounds(
-                            L.latLng(13.91, 120.95), // Southwest
-                            L.latLng(14.53, 121.74)  // Northeast
-                        );
-
-                        if (!lagunaBounds.contains([userLocation.lat, userLocation.lon])) {
-                            Swal.fire('Out of Range', 'Access Denied: You are outside the authorized Laguna area.', 'error');
-                            userLocation = null;
-                            return;
-                        }
-
-                        // Initialize Leaflet Map
-                        const mapDiv = document.getElementById('map');
-                        mapDiv.style.display = 'block';
-                        
-                        if (!map) {
-                            map = L.map('map', {
-                                maxBounds: lagunaBounds,
-                                maxBoundsViscosity: 1.0,
-                                minZoom: 10
-                            }).setView([userLocation.lat, userLocation.lon], 18);
-
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                attribution: '© OpenStreetMap contributors'
-                            }).addTo(map);
-                            
-                            userMarker = L.marker([userLocation.lat, userLocation.lon]).addTo(map)
-                                .bindPopup("Your Location. (Laguna Authorized)").openPopup();
-                                
-                            L.circle([userLocation.lat, userLocation.lon], {
-                                color: 'blue',
-                                fillColor: '#3b82f6',
-                                fillOpacity: 0.2,
-                                radius: 50
-                            }).addTo(map);
-                        } else {
-                            map.setView([userLocation.lat, userLocation.lon]);
-                            userMarker.setLatLng([userLocation.lat, userLocation.lon]);
-                        }
-                    },
-                    (error) => {
-                        Swal.fire('Location Error', 'Please enable location services to mark attendance.', 'error');
-                    }
-                );
-            } else {
-                Swal.fire('Error', 'Geolocation is not supported by this browser.', 'error');
+                navigator.geolocation.getCurrentPosition((position) => {
+                    userLocation = { lat: position.coords.latitude, lon: position.coords.longitude };
+                    initMap();
+                }, (error) => {
+                    Swal.fire('Location Error', 'Please enable location services to mark attendance.', 'error');
+                });
+            }
+        }
+        
+        function initMap() {
+            const lagunaBounds = L.latLngBounds(L.latLng(13.91, 120.95), L.latLng(14.53, 121.74));
+            const mapDiv = document.getElementById('map');
+            mapDiv.style.display = 'block';
+            
+            if (!map) {
+                map = L.map('map', { maxBounds: lagunaBounds, minZoom: 10 }).setView([userLocation.lat, userLocation.lon], 18);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                userMarker = L.marker([userLocation.lat, userLocation.lon]).addTo(map).bindPopup("Authorized Area").openPopup();
+                L.circle([userLocation.lat, userLocation.lon], { color: 'blue', radius: 50 }).addTo(map);
             }
         }
 
         getLocation();
 
-        // 3. Setup QR Scanner
-        function onScanSuccess(decodedText, decodedResult) {
+        // 2. Custom QR Logic
+        const cameraSelect = document.getElementById('camera-select');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const statusOverlay = document.getElementById('scanner-status');
+
+        async function initScanner() {
+            html5QrCode = new Html5Qrcode("reader");
+            
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                if (cameras && cameras.length > 0) {
+                    cameras.forEach(camera => {
+                        const option = document.createElement('option');
+                        option.value = camera.id;
+                        option.text = camera.label || `Camera ${camera.id}`;
+                        cameraSelect.add(option);
+                    });
+                }
+            } catch (err) {
+                console.error("Error getting cameras", err);
+            }
+        }
+
+        startBtn.addEventListener('click', async () => {
+            const cameraId = cameraSelect.value;
+            if (!cameraId) {
+                Swal.fire('Camera Error', 'Please select a camera first.', 'warning');
+                return;
+            }
+
+            try {
+                await html5QrCode.start(
+                    cameraId, 
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    onScanSuccess
+                );
+                
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+                statusOverlay.classList.add('active');
+                cameraSelect.disabled = true;
+            } catch (err) {
+                Swal.fire('Camera Error', 'Could not start camera. Please check permissions.', 'error');
+            }
+        });
+
+        stopBtn.addEventListener('click', async () => {
+            if (html5QrCode) {
+                await html5QrCode.stop();
+                startBtn.style.display = 'block';
+                stopBtn.style.display = 'none';
+                statusOverlay.classList.remove('active');
+                cameraSelect.disabled = false;
+            }
+        });
+
+        function onScanSuccess(decodedText) {
             if (!userLocation) {
-                Swal.fire('Error', 'Waiting for location. Please ensure location services are enabled.', 'error');
+                Swal.fire('Error', 'Waiting for location...', 'error');
                 return;
             }
             
@@ -234,47 +380,38 @@
                 qrData = { session_id: parts[0], token: parts[1] };
             }
 
-            html5QrcodeScanner.clear();
-
-            fetch('{{ url_for("user.submit_attendance") }}', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    session_id: qrData.session_id,
-                    token: qrData.token,
-                    lat: userLocation.lat,
-                    lon: userLocation.lon,
-                    tab_switched: tabSwitched,
-                    behavior_flags: behaviorFlags
+            html5QrCode.stop().then(() => {
+                fetch('{{ url_for("user.submit_attendance") }}', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        session_id: qrData.session_id,
+                        token: qrData.token,
+                        lat: userLocation.lat,
+                        lon: userLocation.lon,
+                        tab_switched: tabSwitched,
+                        behavior_flags: behaviorFlags
+                    })
                 })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire('Success', data.message, 'success').then(() => {
-                        window.location.href = '{{ url_for("user.dashboard") }}';
-                    });
-                } else {
-                    Swal.fire('Error', data.message, 'error').then(() => {
-                        window.location.reload();
-                    });
-                }
-            })
-            .catch(err => {
-                Swal.fire('Error', 'Failed to submit attendance.', 'error');
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Success', data.message, 'success').then(() => {
+                            window.location.href = '{{ url_for("user.dashboard") }}';
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error').then(() => {
+                            window.location.reload();
+                        });
+                    }
+                });
             });
         }
 
-        function onScanFailure(error) {}
-
-        let html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader",
-            { fps: 10, qrbox: {width: 250, height: 250} },
-            /* verbosee= */ false);
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        initScanner();
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 

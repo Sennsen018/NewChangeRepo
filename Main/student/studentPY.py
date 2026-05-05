@@ -142,9 +142,17 @@ def subject_performance(subject_id):
 @user.route('/mark_notifications_read', methods=['POST'])
 def mark_notifications_read():
     usid = session['user_id']
+    data = request.get_json(silent=True) or {}
+    notif_id = data.get('notification_id')
+    
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("UPDATE Notifications SET is_read = TRUE WHERE usid = %s", (usid,))
+    
+    if notif_id:
+        cursor.execute("UPDATE Notifications SET is_read = TRUE WHERE notification_id = %s AND usid = %s", (notif_id, usid))
+    else:
+        cursor.execute("UPDATE Notifications SET is_read = TRUE WHERE usid = %s", (usid,))
+        
     conn.commit()
     cursor.close()
     conn.close()

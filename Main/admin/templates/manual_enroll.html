@@ -110,16 +110,16 @@
 
                 <!-- Search and Selection Panel -->
                 <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                    <form method="GET" action="{{ url_for('admin.manual_enroll') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
-                        <div class="form-group">
+                    <form method="GET" action="{{ url_for('admin.manual_enroll') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
+                        <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Search Student</label>
                             <input type="text" name="search" class="form-control" placeholder="Search by ID, Name, or Email..." value="{{ search }}">
                         </div>
-                        <div class="flex gap-2">
-                            <button type="submit" class="btn btn-primary" style="height: 42px; width: 42px; padding: 0;">
+                        <div class="flex gap-2" style="margin-bottom: 0;">
+                            <button type="submit" class="btn btn-primary" style="height: 45px; width: 45px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-search"></i>
                             </button>
-                            <a href="{{ url_for('admin.manual_enroll', clear=1) }}" class="btn btn-secondary" style="height: 42px; width: 42px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <a href="{{ url_for('admin.manual_enroll', clear=1) }}" class="btn btn-secondary" style="height: 45px; width: 45px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;">
                                 <i class="fas fa-rotate"></i>
                             </a>
                         </div>

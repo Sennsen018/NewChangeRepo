@@ -82,7 +82,7 @@
                 <h3 class="mb-4" style="font-size: 1rem;">Add Schedule</h3>
                 <form method="POST" action="{{ url_for('admin.manage_schedules') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <div class="filter-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: end;">
+                    <div class="filter-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: flex-end;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Class (Subject - Section - Teacher)</label>
                             <select name="assignment_id" class="form-control" required>
@@ -116,8 +116,9 @@
                             <label class="form-label">Room</label>
                             <input type="text" name="room" class="form-control" placeholder="e.g. Lab 1" required>
                         </div>
-                        <div>
-                            <button type="submit" class="btn btn-primary w-full" style="height: 42px;"><i class="fas fa-plus"></i> Add</button>
+                        <!-- Centered Add Button -->
+                        <div style="grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 1rem;">
+                            <button type="submit" class="btn btn-primary" style="height: 45px; min-width: 150px;"><i class="fas fa-plus"></i> Add Schedule</button>
                         </div>
                     </div>
                 </form>
@@ -125,14 +126,14 @@
 
             <!-- Search Bar -->
             <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-                <form method="GET" action="{{ url_for('admin.manage_schedules') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                <form method="GET" action="{{ url_for('admin.manage_schedules') }}" class="filter-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Search Schedules</label>
                         <input type="text" name="search" class="form-control" placeholder="Subject, Teacher, Room or Section..." value="{{ search }}">
                     </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary" style="height: 42px; width: 42px; padding: 0;"><i class="fas fa-search"></i></button>
-                        <a href="{{ url_for('admin.manage_schedules', clear=1) }}" class="btn btn-secondary" style="height: 42px; width: 42px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-rotate"></i></a>
+                    <div class="flex gap-2" style="margin-bottom: 0;">
+                        <button type="submit" class="btn btn-primary" style="height: 45px; width: 45px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-search"></i></button>
+                        <a href="{{ url_for('admin.manage_schedules', clear=1) }}" class="btn btn-secondary" style="height: 45px; width: 45px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;"><i class="fas fa-rotate"></i></a>
                     </div>
                 </form>
             </div>

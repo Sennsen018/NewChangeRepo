@@ -152,33 +152,11 @@
             margin-bottom: 1.5rem;
             color: var(--text-primary);
             filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
-            cursor: pointer;
-            perspective: 1000px;
         }
 
         .brand-icon i {
             display: inline-block;
             transition: all 0.3s ease;
-        }
-
-        .brand-icon:hover i {
-            animation: shieldSpin 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-            color: #fca5a5;
-            filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.9));
-        }
-
-        @keyframes shieldSpin {
-            0% {
-                transform: rotateY(0deg) scale(1);
-            }
-
-            50% {
-                transform: rotateY(180deg) scale(1.1);
-            }
-
-            100% {
-                transform: rotateY(360deg) scale(1);
-            }
         }
 
         .brand-title {

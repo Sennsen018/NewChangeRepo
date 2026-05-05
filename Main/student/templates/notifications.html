@@ -7,12 +7,22 @@
     <title>Notifications | Attendeez</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         .notif-card {
             padding: 1.5rem;
             margin-bottom: 1rem;
             border-left: 4px solid transparent;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notif-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-left-color: var(--primary-light, #818cf8);
         }
 
         .notif-card.unread {
@@ -20,10 +30,33 @@
             background: rgba(79, 70, 229, 0.05);
         }
 
-        .notif-card:hover {
-            transform: translateX(5px);
-            background: rgba(255, 255, 255, 0.05);
+        .notif-card.unread::after {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
         }
+
+        .notif-message {
+            margin: 0;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .notif-card.open .notif-message {
+            -webkit-line-clamp: unset;
+        }
+
 
         .notif-type-icon {
             width: 40px;
@@ -38,6 +71,81 @@
         .type-info { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
         .type-warning { background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
         .type-alert { background: rgba(239, 68, 68, 0.1); color: #f87171; }
+
+        /* Notification Modal Styles */
+        .notif-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .notif-modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .notif-modal-content {
+            width: 100%;
+            max-width: 450px;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 2.5rem 2rem;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .notif-modal-overlay.active .notif-modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-main);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .modal-notif-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .modal-notif-body {
+            color: var(--text-main);
+            line-height: 1.6;
+            font-size: 1.05rem;
+        }
     </style>
 </head>
 
@@ -115,7 +223,8 @@
 
                 <div id="notifications-list">
                     {% for n in notifications %}
-                    <div class="glass-panel notif-card {% if not n.is_read %}unread{% endif %}">
+                    <div class="glass-panel notif-card {% if not n.is_read %}unread{% endif %}" 
+                         onclick="openNotification(this, '{{ n.notification_id or 0 }}')">
                         <div class="flex items-center gap-4">
                             <div class="notif-type-icon {% if n.type == 'Warning' %}type-warning{% elif n.type == 'Alert' %}type-alert{% else %}type-info{% endif %}">
                                 <i class="fas {% if n.type == 'Warning' %}fa-exclamation-triangle{% elif n.type == 'Alert' %}fa-bell{% else %}fa-info-circle{% endif %}"></i>
@@ -125,7 +234,7 @@
                                     <h4 style="margin: 0 0 0.3rem; font-size: 1rem;">{{ n.type }}</h4>
                                     <small style="color: var(--text-muted);">{{ n.created_at }}</small>
                                 </div>
-                                <p style="margin: 0; color: var(--text-main); font-size: 0.95rem; line-height: 1.5;">{{ n.message }}</p>
+                                <p class="notif-message">{{ n.message }}</p>
                             </div>
                         </div>
                     </div>
@@ -177,7 +286,8 @@
                 const typeClass = n.type === 'Warning' ? 'type-warning' : (n.type === 'Alert' ? 'type-alert' : 'type-info');
                 
                 return `
-                    <div class="glass-panel notif-card ${!n.is_read ? 'unread' : ''}">
+                    <div class="glass-panel notif-card ${!n.is_read ? 'unread' : ''}" 
+                         onclick="openNotification(this, '${n.notification_id || 0}')">
                         <div class="flex items-center gap-4">
                             <div class="notif-type-icon ${typeClass}">
                                 <i class="fas fa-${icon}"></i>
@@ -187,7 +297,7 @@
                                     <h4 style="margin: 0 0 0.3rem; font-size: 1rem;">${n.type}</h4>
                                     <small style="color: var(--text-muted);">${n.created_at}</small>
                                 </div>
-                                <p style="margin: 0; color: var(--text-main); font-size: 0.95rem; line-height: 1.5;">${n.message}</p>
+                                <p class="notif-message">${n.message}</p>
                             </div>
                         </div>
                     </div>
@@ -206,9 +316,94 @@
             }
         }
 
+        let currentNotifIsUnread = false;
+        let currentNotifElement = null;
+
+        async function openNotification(element, notifId) {
+            currentNotifElement = element;
+            currentNotifIsUnread = element.classList.contains('unread');
+            
+            const type = element.querySelector('h4').innerText;
+            const time = element.querySelector('small').innerText;
+            const message = element.querySelector('.notif-message').innerText;
+            const iconHtml = element.querySelector('.notif-type-icon').innerHTML;
+            const typeClass = element.querySelector('.notif-type-icon').classList[1];
+
+            // Populate Modal
+            document.getElementById('modal-type-icon').innerHTML = iconHtml;
+            document.getElementById('modal-type-icon').className = 'notif-type-icon ' + typeClass;
+            document.getElementById('modal-type-text').innerText = type;
+            document.getElementById('modal-time').innerText = time;
+            document.getElementById('modal-message').innerText = message;
+
+            // Show Modal
+            const overlay = document.getElementById('notif-modal');
+            overlay.classList.add('active');
+            
+            // Mark as read if it's currently unread
+            if (element.classList.contains('unread')) {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                try {
+                    const response = await fetch(MARK_READ_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({ notification_id: notifId })
+                    });
+                    
+                    if (response.ok) {
+                        // We mark it in DB, but wait for close to update UI if user preferred
+                        // Actually, let's mark it as 'processed' so we know to update UI on close
+                    }
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                }
+            }
+        }
+
+        function closeNotification() {
+            const overlay = document.getElementById('notif-modal');
+            overlay.classList.remove('active');
+            
+            if (currentNotifIsUnread && currentNotifElement) {
+                currentNotifElement.classList.remove('unread');
+                updateBadge();
+                currentNotifIsUnread = false;
+                currentNotifElement = null;
+            }
+        }
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeNotification();
+        });
+
+        function updateBadge() {
+            const unreadCount = document.querySelectorAll('.notif-card.unread').length;
+            const badge = document.getElementById('notif-badge-sidebar');
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.innerText = unreadCount;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
         async function markAllAsRead() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             try {
-                await fetch(MARK_READ_URL, { method: 'POST' });
+                await fetch(MARK_READ_URL, { 
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({}) // Send empty object for "mark all"
+                });
                 fetchNotifications();
             } catch (error) {
                 console.error('Error marking notifications as read:', error);
@@ -246,6 +441,28 @@
     </nav>
     
     
+
+    <!-- Notification Modal -->
+    <div id="notif-modal" class="notif-modal-overlay" onclick="if(event.target === this) closeNotification()">
+        <div class="glass-panel notif-modal-content">
+            <button class="modal-close" onclick="closeNotification()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-notif-header">
+                <div id="modal-type-icon" class="notif-type-icon"></div>
+                <div style="flex: 1;">
+                    <h3 id="modal-type-text" style="margin: 0; font-size: 1.2rem;"></h3>
+                    <small id="modal-time" style="color: var(--text-muted);"></small>
+                </div>
+            </div>
+            <div class="modal-notif-body">
+                <p id="modal-message"></p>
+            </div>
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                <button class="btn btn-primary btn-sm" onclick="closeNotification()">Close</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 

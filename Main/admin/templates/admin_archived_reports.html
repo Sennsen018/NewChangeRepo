@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Archived Reports | Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="theme-admin">
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="sidebar-logo">
+                <div>
+                    <i class="fas fa-fingerprint"></i>
+                    <span>Attendeez</span>
+                </div>
+                <div class="user-menu-container">
+                    <button class="burger-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ session.get('name', 'Admin') }}</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Administrator</p>
+                        </div>
+                        <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}"><i class="fas fa-house"></i> Admin Dashboard</a>
+                <a href="{{ url_for('admin.manage_students') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_students' else '' }}"><i class="fas fa-user-graduate"></i> Manage Students</a>
+                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_teachers' else '' }}"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a>
+                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_subjects' else '' }}"><i class="fas fa-book"></i> Manage Subjects</a>
+                <a href="{{ url_for('admin.manual_enroll') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manual_enroll' else '' }}"><i class="fas fa-user-plus"></i> Manual Enrollment</a>
+                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.assign_classes' else '' }}"><i class="fas fa-link"></i> Assign Classes</a>
+                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_schedules' else '' }}"><i class="fas fa-calendar-alt"></i> Manage Schedules</a>
+                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.attendance_analytics' else '' }}"><i class="fas fa-chart-pie"></i> Attendance Analytics</a>
+                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.drop_requests' else '' }}"><i class="fas fa-user-minus"></i> Drop Requests</a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.audit_logs' else '' }}"><i class="fas fa-clipboard-list"></i> Audit Logs</a>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <header class="top-header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="header-left"><h2 class="auth-title" style="font-size: 1.25rem; margin: 0;">Archived Reports</h2></div>
+            </header>
+            <div class="main-content-inner">
+                <div class="flex items-center gap-4 mb-6">
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary" style="padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                        <i class="fas fa-chevron-left" style="margin: 0;"></i>
+                    </a>
+                    <h3 style="margin: 0;"><i class="fas fa-archive" style="color: var(--text-muted);"></i> Archived Reports</h3>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mb-4">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <div class="glass-panel p-4">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="hide-on-mobile">Report ID</th>
+                                    <th>Subject</th>
+                                    <th class="hide-on-mobile">Section</th>
+                                    <th class="hide-on-mobile">Submitted By</th>
+                                    <th class="hide-on-mobile">Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in reports %}
+                                <tr>
+                                    <td class="hide-on-mobile" data-label="Report ID"><span class="badge badge-primary">#{{ r.report_id }}</span></td>
+                                    <td data-label="Subject">
+                                        <div style="font-weight: 600;">{{ r.subject_name }}</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">{{ r.subject_code }}</div>
+                                        <div class="hide-on-desktop text-muted" style="font-size: 0.75rem; margin-top: 2px;">
+                                            Section {{ r.section }} &bull; {{ r.first_name }} {{ r.last_name }}
+                                        </div>
+                                    </td>
+                                    <td class="hide-on-mobile" data-label="Section">{{ r.section }}</td>
+                                    <td class="hide-on-mobile" data-label="Submitted By">{{ r.first_name }} {{ r.last_name }}</td>
+                                    <td class="hide-on-mobile" data-label="Date">{{ r.submission_date.strftime('%Y-%m-%d') }}</td>
+                                    <td data-label="Action" style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                        <a href="{{ url_for('admin.view_report', report_id=r.report_id) }}" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.6rem; text-decoration: none;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('admin.unarchive_report', report_id=r.report_id) }}" class="btn btn-success" style="font-size: 0.8rem; padding: 0.3rem 0.6rem; text-decoration: none;" title="Unarchive" onclick="return confirm('Unarchive this report?')">
+                                            <i class="fas fa-undo"></i> Unarchive
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center" style="padding: 3rem 1rem;">
+                                        <div style="opacity: 0.6;">
+                                            <i class="fas fa-archive" style="font-size: 2.5rem; display: block; margin-bottom: 0.75rem;"></i>
+                                            <p>No archived reports.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i><span>Home</span>
+        </a>
+        <a href="{{ url_for('admin.manage_students') }}" class="bottom-nav-item {% if request.endpoint == 'admin.manage_students' %}active{% endif %}">
+            <i class="fas fa-user-graduate"></i><span>Students</span>
+        </a>
+        <a href="{{ url_for('admin.manage_teachers') }}" class="bottom-nav-item {% if request.endpoint == 'admin.manage_teachers' %}active{% endif %}">
+            <i class="fas fa-chalkboard-teacher"></i><span>Faculty</span>
+        </a>
+        <a href="{{ url_for('admin.audit_logs') }}" class="bottom-nav-item {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}">
+            <i class="fas fa-clipboard-list"></i><span>Logs</span>
+        </a>
+    </nav>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

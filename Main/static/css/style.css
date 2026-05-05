@@ -898,26 +898,157 @@ span.btn:not([onclick]):not([href]) {
     width: 100%;
 }
 
+/* =========================================
+   ENHANCED TABLE STYLING
+   ========================================= */
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-color);
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: auto;
+}
+
+thead {
+    background: rgba(255, 255, 255, 0.03);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 th {
-    background: rgba(255, 255, 255, 0.02);
-    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem 1.25rem;
     text-align: left;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     color: var(--text-dim);
     font-weight: 700;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--border-color);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Column width distribution for better alignment */
+th:nth-child(1) { min-width: 120px; }
+th:nth-child(2) { min-width: 140px; }
+th:nth-child(3) { min-width: 140px; }
+th:nth-child(4) { min-width: 120px; }
+th:nth-child(5) { min-width: 100px; }
+th:nth-child(6) { min-width: 100px; }
+th:nth-child(7) { min-width: 100px; }
+th:nth-child(8) { min-width: 120px; }
+
+tbody tr {
+    transition: background-color var(--transition);
     border-bottom: 1px solid var(--border-color);
 }
 
+tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
 td {
-    padding: 1rem;
+    padding: 1.25rem;
     border-bottom: 1px solid var(--border-color);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    vertical-align: middle;
+    word-wrap: break-word;
+}
+
+/* Action cell styling - consistent alignment */
+.action-cell {
+    text-align: right;
+    padding: 1.25rem;
+    min-width: 150px;
+    vertical-align: middle;
+}
+
+.action-cell .btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+/* Hide text labels on very small action buttons */
+.btn-text {
+    display: inline;
+}
+
+/* Mobile table responsiveness */
+@media (max-width: 768px) {
+    .hide-on-mobile {
+        display: none !important;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 600px;
+    }
+    
+    th, td {
+        padding: 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    th {
+        font-size: 0.7rem;
+    }
+    
+    .action-cell {
+        padding: 0.75rem;
+        min-width: 120px;
+    }
+    
+    .btn-text {
+        display: none;
+    }
+    
+    .action-cell .btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .hide-on-mobile {
+        display: none !important;
+    }
+    
+    .hide-on-desktop {
+        display: table-cell !important;
+    }
+    
+    th, td {
+        padding: 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    th {
+        font-size: 0.65rem;
+    }
+    
+    .action-cell {
+        padding: 0.6rem;
+        min-width: 100px;
+    }
 }
 
 .badge {
@@ -2015,4 +2146,136 @@ td {
 .sidebar-overlay.active {
     opacity: 1;
     visibility: visible;
+}
+
+/* =========================================
+   ENROLLMENT GROUP STYLING
+   ========================================= */
+.enrollment-group {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.enrollment-group > div:first-child {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%);
+    border-bottom: 2px solid var(--border-color);
+    cursor: pointer;
+    user-select: none;
+}
+
+.enrollment-group > div:first-child:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.1) 100%);
+}
+
+.enrollment-group .table-wrapper {
+    border-radius: 0;
+    border: none;
+    background: transparent;
+}
+
+.enrollment-group table {
+    border-collapse: collapse;
+}
+
+.enrollment-group tbody tr:hover {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+/* =========================================
+   BUTTON STYLING ENHANCEMENTS
+   ========================================= */
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: all var(--transition);
+    white-space: nowrap;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-secondary {
+    background: var(--bg-surface-soft);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+}
+
+.btn-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.btn-warning:hover {
+    background: rgba(245, 158, 11, 0.3);
+}
+
+.btn-danger {
+    background: rgba(244, 63, 94, 0.2);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background: rgba(244, 63, 94, 0.3);
+}
+
+/* =========================================
+   GLASS PANEL IMPROVEMENTS
+   ========================================= */
+.glass-panel {
+    background: rgba(24, 24, 27, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }

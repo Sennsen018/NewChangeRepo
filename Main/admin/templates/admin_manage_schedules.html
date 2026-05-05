@@ -139,7 +139,12 @@
             </div>
 
             <div class="glass-panel" style="padding: 1.5rem;">
-                <h3 class="mb-4" style="font-size: 1rem;">Active Schedules</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1rem; margin: 0;">Active Schedules</h3>
+                    <a href="{{ url_for('admin.manage_schedules', view='archived') }}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                        <i class="fas fa-archive"></i> Archived Schedules
+                    </a>
+                </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -150,37 +155,33 @@
                                 <th class="hide-on-mobile">Day</th>
                                 <th class="hide-on-mobile">Time</th>
                                 <th class="hide-on-mobile">Room</th>
-                                <th>Schedule Info</th>
-                                <th>Action</th>
+                                <th class="hide-on-desktop">Schedule Info</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for s in schedules %}
                              <tr>
-                                <td data-label="Subject"><strong>{{ s.subject_code }}</strong><br><small style="color: var(--text-muted);">{{ s.subject_name }}</small></td>
-                                <td class="hide-on-mobile" data-label="Teacher">{{ s.first_name }} {{ s.middle_name }} {{ s.last_name }}</td>
-                                <td class="hide-on-mobile" data-label="Section">{{ s.section }}</td>
+                                <td data-label="Subject"><strong>{{ s.subject_code }}</strong><br><small style="color: var(--text-muted); font-size: 0.8rem;">{{ s.subject_name }}</small></td>
+                                <td class="hide-on-mobile" data-label="Teacher">{{ s.first_name }} {{ s.middle_name if s.middle_name else '' }} {{ s.last_name }}</td>
+                                <td class="hide-on-mobile" data-label="Section"><strong>{{ s.section }}</strong></td>
                                 <td class="hide-on-mobile" data-label="Day">{{ s.day_of_week }}</td>
                                 <td class="hide-on-mobile" data-label="Time">{{ s.start_time }} - {{ s.end_time }}</td>
-                                <td class="hide-on-mobile" data-label="Room">{{ s.room }}</td>
-                                <td class="hide-on-desktop" data-label="Schedule Info">
-                                    <div style="font-weight: 600;">{{ s.day_of_week }} &bull; {{ s.start_time }} - {{ s.end_time }}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                        Room: {{ s.room }} &bull; Sec: {{ s.section }}
-                                    </div>
-                                    <div style="font-size: 0.7rem; color: var(--primary);">{{ s.first_name }} {{ s.last_name }}</div>
+                                <td class="hide-on-mobile" data-label="Room"><strong>{{ s.room }}</strong></td>
+                                <td class="hide-on-desktop" data-label="Schedule Info" style="font-size: 0.9rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ s.day_of_week }} • {{ s.start_time }}-{{ s.end_time }}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">📍 {{ s.room }} | Sec: {{ s.section }}</div>
+                                    <div style="font-size: 0.8rem; color: var(--primary);">👨‍🏫 {{ s.first_name }} {{ s.last_name }}</div>
                                 </td>
-                                <td class="action-cell" data-label="Action">
-                                    <a href="{{ url_for('admin.remove_schedule', schedule_id=s.schedule_id) }}" 
-                                       class="btn btn-danger btn-sm"
-                                       onclick="return confirm('Remove this schedule?')">
-                                        <i class="fas fa-trash"></i> <span class="btn-text">Remove</span>
-                                    </a>
+                                <td class="action-cell" data-label="Actions">
+                                    <button type="button" class="btn btn-warning btn-sm" style="margin-right: 0.5rem;" onclick="archiveSchedule({{ s.schedule_id }}, '{{ s.subject_code }}')">
+                                        <i class="fas fa-archive"></i> <span class="btn-text">Archive</span>
+                                    </button>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);" data-label="Subject">No Schedules defined yet.</td>
+                                <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">No active schedules defined yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -213,5 +214,32 @@
 
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+    function archiveSchedule(scheduleId, subjectCode) {
+        if (confirm(`Archive this schedule for ${subjectCode}?`)) {
+            // Send archive request to backend
+            fetch(`/admin/archive_schedule/${scheduleId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload or update the table
+                    location.reload();
+                } else {
+                    alert('Error archiving schedule: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error archiving schedule');
+            });
+        }
+    }
+</script>
 </body>
 </html>

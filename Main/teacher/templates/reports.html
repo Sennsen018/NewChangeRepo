@@ -48,6 +48,7 @@
                 <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i> Manage Marks</a>
                 <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
                 <a href="{{ url_for('teacher.reports') }}" class="nav-item active"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="{{ url_for('teacher.daily_attendance_log') }}" class="nav-item" style="padding-left: 2rem; font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> Daily Attendance Log</a>
             </nav>
             
         </aside>
@@ -288,6 +289,7 @@
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 <!-- Daily Attendance Log Section -->
                 <div class="glass-panel p-4" style="padding: 1.5rem;">
                     <div class="flex justify-between items-center mb-4">
@@ -418,7 +420,17 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+=======
+                <!-- Daily Attendance Log moved to its own page -->
+                <div class="glass-panel" style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 1rem;"><i class="fas fa-calendar-check" style="color: var(--primary); margin-right: 0.5rem;"></i> Daily Attendance Log</h4>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">View per-student attendance records grouped by date.</p>
+>>>>>>> 1fe3e0cd8381d550f94bc1ebd16dfe77b8fab0a1
                     </div>
+                    <a href="{{ url_for('teacher.daily_attendance_log', subject_id=selected_class.subject_id, section=selected_class.section) }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right"></i> Open Log
+                    </a>
                 </div>
 
                 {% else %}
@@ -467,6 +479,14 @@
                 content.style.maxHeight = '0';
                 icon.style.transform = 'rotate(0deg)';
             }
+        }
+
+        function toggleDailyLog() {
+            const body = document.getElementById('dailyLogBody');
+            const icon = document.getElementById('toggleLogIcon');
+            const isHidden = body.style.display === 'none';
+            body.style.display = isHidden ? 'block' : 'none';
+            icon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
         }
 
         // Auto-open first accordion on page loads

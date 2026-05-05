@@ -51,7 +51,7 @@
                     </button>
                     <div class="accordion-content">
                         {% for s in subjects %}
-                        <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="nav-item">
+                        <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="nav-item" title="{{ s.subject_name }}">
                             <i class="fas fa-book"></i> {{ s.subject_code }}
                         </a>
                         {% endfor %}
@@ -86,6 +86,31 @@
                     <div class="badge {% if attendance_pct >= 75 %}badge-success{% else %}badge-danger{% endif %}" style="font-size: 1.2rem; padding: 0.8rem 1.5rem;">
                         Attendance: {{ attendance_pct }}%
                     </div>
+                </div>
+
+                <!-- Schedule Info -->
+                <div class="glass-panel" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+                    <h4 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+                        <i class="fas fa-clock" style="color: var(--primary); margin-right: 0.4rem;"></i> Class Schedule
+                    </h4>
+                    {% if schedules %}
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                        {% for sch in schedules %}
+                        <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.9rem; font-size: 0.88rem;">
+                            <i class="fas fa-calendar-day" style="color: var(--primary); font-size: 0.8rem;"></i>
+                            <span style="font-weight: 600;">{{ sch.day_of_week }}</span>
+                            <span style="color: var(--text-muted);">{{ sch.start_time }} – {{ sch.end_time }}</span>
+                            <span style="color: var(--text-muted);">•</span>
+                            <i class="fas fa-door-open" style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                            <span style="color: var(--text-muted);">{{ sch.room }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0;">
+                        <i class="fas fa-info-circle" style="margin-right: 0.3rem;"></i> No Schedule Yet
+                    </p>
+                    {% endif %}
                 </div>
 
 

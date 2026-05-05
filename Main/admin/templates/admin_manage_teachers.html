@@ -121,12 +121,16 @@
 
                 <!-- Tab Navigation -->
                 <div class="glass-panel" style="padding: 0.5rem; margin-bottom: 2rem; border-radius: var(--radius-md);">
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="tab-btn active" onclick="showTab('active')">
-                            Active Faculty <span class="badge badge-secondary" style="margin-left: 0.5rem;">{{ total_count }}</span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="tab-btn active" onclick="showTab('active')" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            Active Faculty
+                            <span class="badge badge-success" style="margin-left: 0.25rem;">{{ total_count }}</span>
                         </button>
-                        <button class="tab-btn" onclick="showTab('archived')" style="margin-left: auto; color: var(--danger);">
-                            <i class="fas fa-archive mr-1"></i> Archived
+                        <button class="tab-btn" onclick="showTab('archived')" style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-archive"></i>
+                            Archived
+                            <span class="badge badge-danger" style="margin-left: 0.25rem;">{{ teachers | selectattr('status', 'equalto', 'Archived') | list | length }}</span>
                         </button>
                     </div>
                 </div>
@@ -158,7 +162,7 @@
                                     </div>
                                 </td>
                                 <td class="hide-on-mobile" data-label="Department">{{ teacher.department }}</td>
-                                <td class="hide-on-mobile" data-label="Email">{{ teacher.email }}</td>
+                                <td class="hide-on-mobile" data-label="Email" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ teacher.email }}">{{ teacher.email }}</td>
                                 <td data-label="Status">
                                     <span class="badge {% if teacher.status == 'Active' %}badge-success{% else %}badge-danger{% endif %}">
                                         {{ teacher.status }}
@@ -241,7 +245,7 @@
                                             <div style="font-weight: 600; color: var(--text-main);">{{ teacher.first_name }} {{ teacher.last_name }}</div>
                                             <div class="text-muted hide-on-desktop" style="font-size: 0.75rem; margin-top: 2px;">{{ teacher.utid }}</div>
                                         </td>
-                                        <td class="hide-on-mobile" data-label="Email">{{ teacher.email }}</td>
+                                        <td class="hide-on-mobile" data-label="Email" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ teacher.email }}">{{ teacher.email }}</td>
                                         <td class="action-cell" data-label="Action">
                                             <a href="{{ url_for('admin.unarchive_teacher', utid=teacher.utid) }}" class="btn btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;">
                                                 <i class="fas fa-undo"></i> <span class="btn-text">Unarchive</span>
@@ -340,7 +344,23 @@
     </div>
 
     <script>
+        // Persist add form data in localStorage
+        function saveAddForm() {
+            const f = document.getElementById('addTeacherModal');
+            const data = {};
+            f.querySelectorAll('input,select').forEach(el => { if (el.name && el.name !== 'csrf_token') data[el.name] = el.value; });
+            localStorage.setItem('addTeacherForm', JSON.stringify(data));
+        }
+        function restoreAddForm() {
+            const saved = localStorage.getItem('addTeacherForm');
+            if (!saved) return;
+            const data = JSON.parse(saved);
+            const f = document.getElementById('addTeacherModal');
+            Object.keys(data).forEach(k => { const el = f.querySelector(`[name="${k}"]`); if (el) el.value = data[k]; });
+        }
+
         function openAddModal() {
+            restoreAddForm();
             document.getElementById('addTeacherModal').classList.add('active');
         }
 
@@ -352,7 +372,6 @@
             document.getElementById('edit_department').value = dept;
             document.getElementById('edit_email').value = email;
             document.getElementById('edit_status').value = status;
-            
             document.getElementById('editTeacherModal').classList.add('active');
         }
 
@@ -360,6 +379,17 @@
             document.getElementById(modalId).classList.remove('active');
         }
 
+        // On page load: if there's a flash error, reopen the add modal with saved data
+        document.addEventListener('DOMContentLoaded', () => {
+            const hasError = document.querySelector('.alert-error, .alert-danger');
+            if (hasError && localStorage.getItem('addTeacherForm')) {
+                openAddModal();
+            }
+            // Attach input listeners to save form data
+            document.getElementById('addTeacherModal').querySelectorAll('input,select').forEach(el => {
+                el.addEventListener('input', saveAddForm);
+            });
+        });
 
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
@@ -418,6 +448,10 @@
             return true;
         }
 
+        // Clear saved form data on successful submit
+        document.querySelectorAll('form').forEach(f => {
+            f.addEventListener('submit', () => localStorage.removeItem('addTeacherForm'));
+        });
     </script>
 
 

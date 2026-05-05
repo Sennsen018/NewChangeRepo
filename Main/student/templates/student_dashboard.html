@@ -51,7 +51,7 @@
                     </button>
                     <div class="accordion-content">
                         {% for s in subjects %}
-                        <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="nav-item">
+                        <a href="{{ url_for('user.subject_performance', subject_id=s.subject_id) }}" class="nav-item" title="{{ s.subject_name }}" style="position: relative;">
                             <i class="fas fa-book"></i> {{ s.subject_code }}
                         </a>
                         {% endfor %}

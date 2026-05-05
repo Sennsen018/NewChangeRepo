@@ -127,53 +127,77 @@
                 </div>
 
                 <div class="glass-panel p-4" style="padding: 1.5rem;">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="width: 40px;"><input type="checkbox" id="select-all" onclick="toggleSelectAll(this)"></th>
-                                    <th class="hide-on-mobile">Student ID</th>
-                                    <th>Student Details</th>
-                                    <th class="hide-on-mobile">Course & Year</th>
-                                    <th class="hide-on-mobile">Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for student in students %}
-                                <tr>
-                                    <td><input type="checkbox" class="student-checkbox" value="{{ student.usid }}" onclick="updateBulkCount()"></td>
-                                    <td class="hide-on-mobile" data-label="Student ID"><span class="badge badge-secondary">{{ student.usid }}</span></td>
-                                    <td data-label="Student Details">
-                                        <div style="font-weight: 600; color: var(--text-main);">
-                                            {{ student.first_name }} {{ student.middle_name }} {{ student.last_name }}
-                                            {% if student.level == 'Irregular Student' %}
-                                                <span class="irregular-badge" style="margin-left: 0.25rem; font-size: 0.65rem;">Irreg</span>
-                                            {% endif %}
-                                        </div>
-                                        <div class="text-muted hide-on-desktop" style="font-size: 0.75rem; margin-top: 2px;">
-                                            ID: {{ student.usid }} &bull; {{ student.course }} - {{ student.level }}
-                                            <span class="badge badge-success" style="padding: 0.1rem 0.3rem; font-size: 0.6rem; margin-left: 4px;">{{ student.status }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="hide-on-mobile" data-label="Course & Year">{{ student.course }} - {{ student.level }}</td>
-                                    <td class="hide-on-mobile" data-label="Status"><span class="badge badge-success">{{ student.status }}</span></td>
-                                    <td class="action-cell" data-label="Action">
-                                        <button class="btn btn-primary" 
-                                                style="padding: 0.25rem 0.75rem; font-size: 0.8rem;"
-                                                onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.last_name }}`)">
-                                            <i class="fas fa-user-plus"></i> <span class="btn-text">Enroll</span>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center" style="padding: 2rem;">No students found matching your search.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    {% set grouped_students = {} %}
+                    {% for student in students %}
+                        {% set course_year = student.course ~ ' - ' ~ student.level %}
+                        {% if course_year not in grouped_students %}
+                            {% set _ = grouped_students.update({course_year: []}) %}
+                        {% endif %}
+                        {% set _ = grouped_students[course_year].append(student) %}
+                    {% endfor %}
+
+                    {% if students %}
+                        {% for group_name in ['BSIT - 1st Year', 'BSIT - 2nd Year', 'BSIT - 3rd Year', 'BSIT - 4th Year', 'BSCS - 1st Year', 'BSCS - 2nd Year', 'BSCS - 3rd Year', 'BSCS - 4th Year', 'OTHER - 1st Year', 'OTHER - 2nd Year', 'OTHER - 3rd Year', 'OTHER - 4th Year'] %}
+                            {% if group_name in grouped_students and grouped_students[group_name]|length > 0 %}
+                            <div class="enrollment-group" style="margin-bottom: 2rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 1rem; background: rgba(99, 102, 241, 0.1); border-radius: 0.5rem; margin-bottom: 1rem;" onclick="toggleGroup('{{ group_name|replace(' ', '_') }}')">
+                                    <i class="fas fa-chevron-down" id="icon-{{ group_name|replace(' ', '_') }}" style="transition: transform 0.3s;"></i>
+                                    <h4 style="margin: 0; flex: 1; font-size: 1rem; color: var(--text-main);">
+                                        {% if 'BSIT' in group_name %}
+                                            <i class="fas fa-microchip" style="color: #6366f1; margin-right: 0.5rem;"></i>
+                                        {% elif 'BSCS' in group_name %}
+                                            <i class="fas fa-laptop-code" style="color: #6366f1; margin-right: 0.5rem;"></i>
+                                        {% else %}
+                                            <i class="fas fa-book" style="color: #6366f1; margin-right: 0.5rem;"></i>
+                                        {% endif %}
+                                        {{ group_name }}
+                                    </h4>
+                                    <span class="badge badge-primary" style="margin-left: auto;">{{ grouped_students[group_name]|length }} students</span>
+                                </div>
+                                <div id="group-{{ group_name|replace(' ', '_') }}" class="table-wrapper" style="display: none;">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 40px;"><input type="checkbox" class="group-select-all" onclick="toggleGroupSelectAll('{{ group_name|replace(' ', '_') }}', this)"></th>
+                                                <th class="hide-on-mobile">Student ID</th>
+                                                <th>Student Name</th>
+                                                <th class="hide-on-mobile">Email</th>
+                                                <th class="hide-on-mobile">Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for student in grouped_students[group_name] %}
+                                            <tr>
+                                                <td><input type="checkbox" class="student-checkbox group-{{ group_name|replace(' ', '_') }}" value="{{ student.usid }}" onclick="updateBulkCount()"></td>
+                                                <td class="hide-on-mobile" data-label="Student ID"><span class="badge badge-secondary">{{ student.usid }}</span></td>
+                                                <td data-label="Student Name" style="font-weight: 600;">
+                                                    {{ student.first_name }} {{ student.middle_name if student.middle_name else '' }} {{ student.last_name }}
+                                                    {% if student.level == 'Irregular Student' %}
+                                                        <span class="irregular-badge" style="margin-left: 0.25rem;">Irreg</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="hide-on-mobile" data-label="Email" style="font-size: 0.9rem; color: var(--text-muted);">{{ student.email if student.email else 'N/A' }}</td>
+                                                <td class="hide-on-mobile" data-label="Status"><span class="badge badge-success">{{ student.status }}</span></td>
+                                                <td class="action-cell" data-label="Action">
+                                                    <button type="button" class="btn btn-primary btn-sm" onclick="openEnrollModal(`{{ student.usid }}`, `{{ student.first_name }} {{ student.last_name }}`)">
+                                                        <i class="fas fa-user-plus"></i> <span class="btn-text">Enroll</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                    <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <i class="fas fa-search" style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>No students found matching your search.</p>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </main>
@@ -242,6 +266,24 @@
     </div>
 
     <script>
+        function toggleGroup(groupName) {
+            const groupElement = document.getElementById(`group-${groupName}`);
+            const iconElement = document.getElementById(`icon-${groupName}`);
+            
+            if (groupElement.style.display === 'none') {
+                groupElement.style.display = 'block';
+                iconElement.style.transform = 'rotate(0deg)';
+            } else {
+                groupElement.style.display = 'none';
+                iconElement.style.transform = 'rotate(-90deg)';
+            }
+        }
+
+        function toggleGroupSelectAll(groupName, source) {
+            document.querySelectorAll(`.group-${groupName}`).forEach(cb => cb.checked = source.checked);
+            updateBulkCount();
+        }
+
         function openEnrollModal(usid, name) {
             document.getElementById('enroll_usid').value = usid;
             document.getElementById('enroll_student_display').innerText = "Enrolling: " + name + " (" + usid + ")";
@@ -271,7 +313,7 @@
             document.getElementById(id).classList.remove('active');
         }
 
-        // Close on escapee
+        // Close on escape
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeModal('enrollModal');

@@ -113,7 +113,7 @@
                 <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i> Manage Marks</a>
                 <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
                 <a href="{{ url_for('teacher.reports') }}" class="nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
-            </nav>
+                <a href="{{ url_for('teacher.daily_attendance_log') }}" class="nav-item" style="padding-left: 2rem; font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> Daily Attendance Log</a>
             
         </aside>
 
@@ -185,16 +185,28 @@
 
             {% if students %}
 
-            {% if already_recorded %}
-            <div class="alert alert-warning mb-4" class="flex flex-responsive" style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <i class="fas fa-exclamation-triangle"></i> 
-                    <strong>Duplicate Warning:</strong> Attendance for this class has already been recorded today. To avoid duplication, please edit existing records instead.
+            {% if attendance_locked %}
+                {% if attendance_method == 'qr' %}
+                <div class="alert alert-warning mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                    <div>
+                        <i class="fas fa-qrcode"></i>
+                        <strong>QR Attendance Already Recorded:</strong> Today's attendance was taken via QR Code scanning. Manual attendance is not available.
+                    </div>
+                    <a href="{{ url_for('teacher.manage_marks', subject_id=selected_subject_id, section=selected_section) }}" class="btn btn-primary" style="background:#f59e0b; border:none; padding: 0.4rem 1rem;">
+                        <i class="fas fa-edit"></i> Edit in Manage Marks
+                    </a>
                 </div>
-                <a href="{{ url_for('teacher.manage_marks', subject_id=selected_subject_id, section=selected_section) }}" class="btn btn-primary" style="background:#f59e0b; border:none; padding: 0.4rem 1rem;">
-                    <i class="fas fa-edit"></i> Edit in Manage Marks
-                </a>
-            </div>
+                {% else %}
+                <div class="alert alert-warning mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                    <div>
+                        <i class="fas fa-lock"></i>
+                        <strong>Attendance Recorded &amp; Locked:</strong> Today's attendance has been recorded. No further changes allowed here.
+                    </div>
+                    <a href="{{ url_for('teacher.manage_marks', subject_id=selected_subject_id, section=selected_section) }}" class="btn btn-primary" style="background:#f59e0b; border:none; padding: 0.4rem 1rem;">
+                        <i class="fas fa-edit"></i> Edit in Manage Marks
+                    </a>
+                </div>
+                {% endif %}
             {% endif %}
 
             <!-- Live attendance counter bar (updated by JavaScript) -->
@@ -291,13 +303,14 @@
 
                 <!-- Submit button -->
                 <div style="margin-top:1.5rem; display:flex; justify-content:flex-end;">
-                    {% if already_recorded %}
+                    {% if attendance_locked %}
                     <button type="button" class="btn btn-primary" style="min-width:200px; opacity:0.5; cursor:not-allowed;" disabled>
-                        <i class="fas fa-save"></i>&nbsp; Save Attendance
+                        <i class="fas fa-lock"></i>&nbsp; Attendance Locked
                     </button>
                     {% else %}
-                    <button type="submit" class="btn btn-primary" style="min-width:200px;">
-                        <i class="fas fa-save"></i>&nbsp; Save Attendance
+                    <button type="submit" class="btn btn-primary" style="min-width:200px;"
+                            onclick="return confirm('Record attendance for today? This will lock editing via this form.');">
+                        <i class="fas fa-clipboard-check"></i>&nbsp; Record Attendance
                     </button>
                     {% endif %}
                 </div>

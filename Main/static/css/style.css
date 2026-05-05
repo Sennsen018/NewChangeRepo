@@ -209,7 +209,7 @@ a {
     color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:not(:disabled):not(.disabled):hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
@@ -221,7 +221,7 @@ a {
     color: var(--text-main);
 }
 
-.btn-secondary:hover {
+.btn-secondary:not(:disabled):not(.disabled):hover {
     background: var(--bg-surface-soft);
     border-color: var(--text-dim);
 }
@@ -231,7 +231,7 @@ a {
     color: white;
 }
 
-.btn-danger:hover {
+.btn-danger:not(:disabled):not(.disabled):hover {
     background: #e11d48;
     box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4);
 }
@@ -246,7 +246,7 @@ a {
     color: white;
 }
 
-.btn-warning:hover {
+.btn-warning:not(:disabled):not(.disabled):hover {
     background: #d97706;
     box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
 }
@@ -256,7 +256,7 @@ a {
     color: white;
 }
 
-.btn-success:hover {
+.btn-success:not(:disabled):not(.disabled):hover {
     background: #059669;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
@@ -267,9 +267,23 @@ a {
     color: var(--primary);
 }
 
-.btn-outline-primary:hover {
+.btn-outline-primary:not(:disabled):not(.disabled):hover {
     background: var(--primary-soft);
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn:disabled, .btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Ensure spans acting as labels don't have pointer cursor or hover effects */
+span.btn:not([onclick]):not([href]) {
+    cursor: default !important;
+    pointer-events: none;
 }
 
 /* =========================================
@@ -1503,202 +1517,7 @@ td {
         justify-content: center;
     }
     
-    /* Make action buttons icon-only on mobilee */
-    .table-wrapper .btn span.btn-text {
-        display: none;
-    }
-    font-weight: 500;
-    letter-spacing: 0.05em;
-}
-
-/* =========================================
-   PAGINATION
-   ========================================= */
-.pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    padding: 1.5rem 0;
-}
-
-.pagination a, .pagination span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 36px;
-    height: 36px;
-    padding: 0 0.5rem;
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    transition: var(--transition);
-}
-
-.pagination a:hover {
-    background: var(--bg-surface-soft);
-    color: var(--text-main);
-}
-
-.pagination .active {
-    background: var(--primary);
-    color: white;
-    font-weight: 600;
-}
-
-/* =========================================
-   UTILITIES
-   ========================================= */
-.hidden { display: none; }
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.flex-wrap { flex-wrap: wrap; }
-.items-center { align-items: center; }
-.items-start { align-items: flex-start; }
-.items-end { align-items: flex-end; }
-.justify-between { justify-content: space-between; }
-.justify-center { justify-content: center; }
-.justify-end { justify-content: flex-end; }
-.gap-2 { gap: 0.5rem; }
-.gap-4 { gap: 1rem; }
-.gap-6 { gap: 1.5rem; }
-.mt-4 { margin-top: 1rem; }
-.mt-8 { margin-top: 2rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.mb-4 { margin-bottom: 1rem; }
-.mb-6 { margin-bottom: 1.5rem; }
-.mb-8 { margin-bottom: 2rem; }
-.mb-0 { margin-bottom: 0; }
-.pt-6 { padding-top: 1.5rem; }
-.w-full { width: 100%; }
-.text-sm { font-size: 0.875rem; }
-.text-xs { font-size: 0.75rem; }
-.text-center { text-align: center; }
-.text-muted { color: var(--text-muted); }
-.text-main { color: var(--text-main); }
-.font-semibold { font-weight: 600; }
-.font-bold { font-weight: 700; }
-.p-4 { padding: 1rem; }
-.p-6 { padding: 1.5rem; }
-.p-8 { padding: 2rem; }
-.p-12 { padding: 3rem; }
-
-/* =========================================
-   MOBILE RESPONSIVE TABLES (GLOBAL)
-   ========================================= */
-@media (max-width: 768px) {
-    .table-container table,
-    .table-container thead,
-    .table-container tbody,
-    .table-container th,
-    .table-container td,
-    .table-container tr {
-        display: block;
-        width: 100%;
-    }
-    
-    .table-container thead tr {
-        display: none; /* Hide desktop headers */
-    }
-    
-    .table-container tr {
-        margin-bottom: 1rem;
-        background: var(--bg-surface-soft);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 0.75rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    
-    .table-container td {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.75rem 0.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        min-height: 44px; /* Touch-friendly height */
-        text-align: right;
-        font-size: 0.9rem;
-    }
-    
-    .table-container td:last-child {
-        border-bottom: none;
-        justify-content: center;
-        padding-top: 1rem;
-    }
-    
-    .table-container td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        margin-right: 1rem;
-        text-align: left;
-    }
-    
-    .table-container td > .badge,
-    .table-container td > .btn {
-        margin-left: auto;
-    }
-}
-
-/* =========================================
-   TABLE WRAPPER (Compact desktop table on mobile)
-   ========================================= */
-.table-wrapper {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table-wrapper thead th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--bg-surface);
-}
-
-.table-wrapper tbody tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.02);
-}
-
-.action-cell {
-    display: flex;
-    gap: 0.25rem;
-    flex-wrap: wrap;
-}
-
-@media (min-width: 769px) {
-    .hide-on-desktop {
-        display: none !important;
-    }
-}
-
-@media (max-width: 768px) {
-    .hide-on-mobile {
-        display: none !important;
-    }
-    
-    .table-wrapper th,
-    .table-wrapper td {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.85rem;
-        white-space: normal; /* allow wrapping to prevent overflow */
-    }
-    
-    .table-wrapper .badge {
-        padding: 0.1rem 0.3rem;
-        font-size: 0.7rem;
-    }
-    
-    .table-wrapper .btn {
-        padding: 0.35rem;
-        font-size: 0.8rem;
-        justify-content: center;
-    }
-    
-    /* Make action buttons icon-only on mobilee */
+    /* Make action buttons icon-only on mobile */
     .table-wrapper .btn span.btn-text {
         display: none;
     }

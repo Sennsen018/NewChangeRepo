@@ -83,11 +83,63 @@ def profile():
     assignments = cursor.fetchall()
 
     cursor.close()
-    conn.close()
     return render_template('teacher_profile.html',
                            teacher=teacher_data,
                            assignments=assignments,
                            name=session.get('name'))
+
+@teacher.route('/request_email_otp', methods=['POST'])
+def request_email_otp():
+    from Main.auth.loginPY import generate_otp, send_otp_email
+    new_email = request.form.get('new_email')
+    
+    if not new_email:
+        return jsonify({'success': False, 'message': 'Email is required.'})
+        
+    otp = generate_otp()
+    session['email_change_otp'] = otp
+    session['pending_new_email'] = new_email
+    session['email_otp_expiry'] = (datetime.now() + timedelta(minutes=10)).timestamp()
+    
+    if send_otp_email(new_email, otp):
+        return jsonify({'success': True, 'message': 'OTP sent to your new email.'})
+    else:
+        # Fallback for demo
+        return jsonify({'success': True, 'message': f'Failed to send email. (Demo OTP: {otp})'})
+
+@teacher.route('/verify_email_change', methods=['POST'])
+def verify_email_change():
+    entered_otp = request.form.get('otp')
+    utid = session['user_id']
+    
+    if not entered_otp:
+        return jsonify({'success': False, 'message': 'OTP is required.'})
+        
+    if datetime.now().timestamp() > session.get('email_otp_expiry', 0):
+        return jsonify({'success': False, 'message': 'OTP has expired.'})
+        
+    if entered_otp == session.get('email_change_otp'):
+        new_email = session.get('pending_new_email')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+            cursor.execute("UPDATE Teachers SET email = %s WHERE utid = %s", (new_email, utid))
+            conn.commit()
+            
+            # Clear session
+            session.pop('email_change_otp', None)
+            session.pop('pending_new_email', None)
+            session.pop('email_otp_expiry', None)
+            
+            return jsonify({'success': True, 'message': 'Email updated successfully.'})
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Update failed: {str(e)}'})
+        finally:
+            cursor.close()
+            conn.close()
+    else:
+        return jsonify({'success': False, 'message': 'Invalid OTP code.'})
 
 @teacher.route('/qr_generator', methods=['GET'])
 def qr_generator():
@@ -250,6 +302,7 @@ def manage_students():
         action = request.form.get('action')
         reason = request.form.get('reason', 'No reason provided')
         subj_id = request.form.get('subject_id')
+        section = request.form.get('section')
 
         if action == 'request_drop':
             try:
@@ -317,10 +370,13 @@ def manage_students():
 
             # Get students in this class with search filter
             query = """
-                SELECT s.* 
+                SELECT s.*, dr.status as drop_status
                 FROM Students s
                 JOIN Enrollments e ON s.usid = e.usid
                 JOIN Teacher_Assignments ta ON e.assignment_id = ta.assignment_id
+                LEFT JOIN Drop_Requests dr ON s.usid = dr.usid 
+                    AND dr.subject_id = ta.subject_id 
+                    AND dr.status = 'Pending'
                 WHERE ta.utid = %s AND ta.subject_id = %s AND ta.section = %s AND s.status = 'Active'
             """
             params = [utid, subject_id, section]

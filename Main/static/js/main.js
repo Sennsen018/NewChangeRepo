@@ -108,12 +108,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- DELETION PIN SECURITY UI ---
     const pinModalsHTML = `
-        <div id="pinVerifyModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div id="pinVerifyModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
             <div class="glass-panel" style="width: 400px; padding: 2rem; border: 1px solid var(--danger);">
                 <h3 style="color: var(--danger); margin-bottom: 1rem;"><i class="fas fa-shield-alt"></i> Security Verification</h3>
-                <p style="font-size: 0.85rem; margin-bottom: 1.5rem;">This action is permanent. Please enter your 4-digit security PIN to confirm deletion.</p>
+                <p style="font-size: 0.85rem; margin-bottom: 1.5rem;">This action is permanent. Please enter your 6-digit security PIN to confirm deletion.</p>
                 <div class="form-group mb-4">
-                    <input type="password" id="security_pin_input" class="form-control" placeholder="Enter PIN" maxlength="4" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;" autofocus>
+                    <input type="password" id="security_pin_input" class="form-control" placeholder="Enter PIN" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;" inputmode="numeric" pattern="[0-9]*" autofocus>
                     <div id="pin_error_msg" style="color: var(--danger); font-size: 0.75rem; margin-top: 0.5rem; display: none;">Incorrect PIN. Please try again.</div>
                 </div>
                 <div class="flex gap-2">
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
-        <div id="pinChangeModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div id="pinChangeModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
             <div class="glass-panel" style="width: 400px; padding: 2rem;">
                 <h3 style="margin-bottom: 1rem;">Setup/Change Deletion PIN</h3>
                 
@@ -139,13 +139,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         <input type="text" id="pin_otp_input" class="form-control" maxlength="4" placeholder="0000">
                     </div>
                     <div class="form-group mb-4">
-                        <label class="form-label">Enter New Numerical PIN</label>
-                        <input type="password" id="new_pin_input" class="form-control" maxlength="6" placeholder="Numbers only">
+                        <label class="form-label">Enter New Numerical PIN (6-Digits)</label>
+                        <input type="password" id="new_pin_input" class="form-control" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="6-digit PIN only">
                     </div>
                     <button class="btn btn-primary w-full" onclick="verifyAndSetPin()">Update Security PIN</button>
                 </div>
                 
-                <button class="btn btn-secondary w-full mt-3" onclick="document.getElementById('pinChangeModal').style.display='none'">Cancel</button>
+                <button class="btn btn-secondary w-full mt-3" onclick="document.getElementById('pinChangeModal').classList.remove('active')">Cancel</button>
             </div>
         </div>
     `;
@@ -203,7 +203,7 @@ window.confirmWithPin = function(deleteUrl) {
     
     input.value = '';
     error.style.display = 'none';
-    modal.style.display = 'flex';
+    modal.classList.add('active');
     input.focus();
     
     // Setup confirm button handler once
@@ -236,7 +236,7 @@ window.confirmWithPin = function(deleteUrl) {
 };
 
 window.closePinModal = function() {
-    document.getElementById('pinVerifyModal').style.display = 'none';
+    document.getElementById('pinVerifyModal').classList.remove('active');
     pendingDeleteUrl = null;
 };
 
@@ -244,7 +244,7 @@ window.closePinModal = function() {
  * PIN Management Logicc
  */
 window.openChangePinModal = function() {
-    document.getElementById('pinChangeModal').style.display = 'flex';
+    document.getElementById('pinChangeModal').classList.add('active');
     document.getElementById('pin_step_1').style.display = 'block';
     document.getElementById('pin_step_2').style.display = 'none';
 };
@@ -289,7 +289,7 @@ window.verifyAndSetPin = async function() {
         
         if (data.success) {
             alert('Security PIN updated successfully!');
-            document.getElementById('pinChangeModal').style.display = 'none';
+            document.getElementById('pinChangeModal').classList.remove('active');
         } else {
             alert(data.message);
         }

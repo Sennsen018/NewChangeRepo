@@ -1,4 +1,4 @@
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify
 import json
 from Main.db import get_db_connection, log_system_action
@@ -480,12 +480,14 @@ def delete_student(usid):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # Check for attendance records
-        cursor.execute("SELECT COUNT(*) as count FROM Attendance WHERE usid = %s", (usid,))
-        if cursor.fetchone()['count'] > 0:
-            flash('Cannot delete: student has attendance records', 'error')
-            return redirect(url_for('admin.manage_students'))
-            
+        # Manually cascade deletes to prevent foreign key constraint errors
+        cursor.execute("DELETE FROM Attendance WHERE usid = %s", (usid,))
+        cursor.execute("DELETE FROM Excuse_Letters WHERE usid = %s", (usid,))
+        cursor.execute("DELETE FROM Drop_Requests WHERE usid = %s", (usid,))
+        cursor.execute("DELETE FROM Notifications WHERE usid = %s", (usid,))
+        cursor.execute("DELETE FROM Enrollments WHERE usid = %s", (usid,))
+        
+        # Finally delete the student
         cursor.execute("DELETE FROM Students WHERE usid = %s", (usid,))
         
         # Audit Logging
@@ -499,6 +501,91 @@ def delete_student(usid):
         cursor.close()
         conn.close()
     return redirect(url_for('admin.manage_students'))
+
+@admin.route('/verify_pin', methods=['POST'])
+def verify_pin():
+    """Verifies the 4-digit security PIN for sensitive operations."""
+    entered_pin = request.form.get('pin')
+    admin_id = session.get('user_id')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT deletion_pin_hash FROM Admins WHERE admin_id = %s", (admin_id,))
+    admin = cursor.fetchone()
+    
+    success = False
+    if admin and admin['deletion_pin_hash']:
+        if check_password_hash(admin['deletion_pin_hash'], entered_pin):
+            success = True
+    
+    cursor.close()
+    conn.close()
+    return jsonify({'success': success})
+
+@admin.route('/request_pin_otp', methods=['POST'])
+def request_pin_otp():
+    """Generates and sends an OTP to the admin's email to authorize PIN change."""
+    from Main.auth.loginPY import generate_otp, send_otp_email
+    
+    admin_id = session.get('user_id')
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT email, username FROM Admins WHERE admin_id = %s", (admin_id,))
+    admin = cursor.fetchone()
+    
+    if not admin:
+        cursor.close()
+        conn.close()
+        return jsonify({'success': False, 'message': 'Admin not found.'})
+        
+    otp = generate_otp()
+    session['pin_change_otp'] = otp
+    session['pin_otp_expiry'] = (datetime.now() + timedelta(minutes=10)).timestamp()
+    
+    if send_otp_email(admin['email'], otp, admin['username']):
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'message': f'A verification code has been sent to {admin["email"]}.'})
+    else:
+        # Fallback for development if email fails
+        cursor.close()
+        conn.close()
+        return jsonify({'success': False, 'message': 'Failed to send email. Check SMTP settings.'})
+
+@admin.route('/change_deletion_pin', methods=['POST'])
+def change_deletion_pin():
+    """Verifies OTP and updates the security PIN for deletion operations."""
+    entered_otp = request.form.get('otp')
+    new_pin = request.form.get('new_pin')
+    admin_id = session.get('user_id')
+    
+    # Validation
+    if not new_pin.isdigit() or len(new_pin) != 6:
+        return jsonify({'success': False, 'message': 'PIN must be exactly 6 numeric digits.'})
+        
+    if datetime.now().timestamp() > session.get('pin_otp_expiry', 0):
+        return jsonify({'success': False, 'message': 'OTP has expired. Please request a new one.'})
+        
+    if entered_otp != session.get('pin_change_otp'):
+        return jsonify({'success': False, 'message': 'Invalid verification code.'})
+        
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    pin_hash = generate_password_hash(new_pin)
+    cursor.execute("UPDATE Admins SET deletion_pin_hash = %s WHERE admin_id = %s", (pin_hash, admin_id))
+    
+    log_system_action(cursor, 'Admins', admin_id, 'Update', admin_id, 'admin', "Security PIN updated")
+    
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    # Cleanup session
+    session.pop('pin_change_otp', None)
+    session.pop('pin_otp_expiry', None)
+    
+    return jsonify({'success': True, 'message': 'Security PIN updated successfully!'})
 
 @admin.route('/manage_teachers', methods=['GET', 'POST'])
 def manage_teachers():
@@ -1492,108 +1579,6 @@ def attendance_analytics():
                            weekly_trends=weekly_trends,
                            monthly_trends=monthly_trends)
 
-# --- DELETION PIN SECURITY ---
-
-@admin.route('/verify_pin', methods=['POST'])
-def verify_pin():
-    """
-    Verifies if the entered PIN matches the admin's stored deletion PIN.
-    """
-    pin = request.form.get('pin')
-    admin_id = session.get('user_id')
-    
-    if not pin or not admin_id:
-        return jsonify({'success': False, 'message': 'Invalid request.'})
-        
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-    
-    cursor.execute("SELECT deletion_pin FROM admins WHERE admin_id = %s", (admin_id,))
-    admin_data = cursor.fetchone()
-    
-    from werkzeug.security import check_password_hash
-    # If no PIN is set, allow '1234' as default for first-time setup
-    stored_pin = admin_data['deletion_pin']
-    
-    is_valid = False
-    if stored_pin:
-        is_valid = check_password_hash(stored_pin, pin)
-    else:
-        is_valid = (pin == '1234') # Default fallback
-        
-    cursor.close()
-    conn.close()
-    
-    if is_valid:
-        return jsonify({'success': True})
-    else:
-        return jsonify({'success': False, 'message': 'Incorrect security PIN.'})
-
-@admin.route('/request_pin_otp', methods=['POST'])
-def request_pin_otp():
-    """
-    Generates and sends an OTP to the admin's email to change the deletion PIN.
-    """
-    from Main.auth.loginPY import generate_otp, send_otp_email
-    admin_id = session.get('user_id')
-    
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("SELECT email FROM admins WHERE admin_id = %s", (admin_id,))
-    admin_data = cursor.fetchone()
-    
-    if not admin_data:
-        return jsonify({'success': False, 'message': 'Admin not found.'})
-        
-    otp = generate_otp()
-    session['pin_reset_otp'] = otp
-    session['pin_reset_expiry'] = (datetime.now() + timedelta(minutes=10)).timestamp()
-    
-    if send_otp_email(admin_data['email'], otp):
-        return jsonify({'success': True, 'message': f'OTP sent to {admin_data["email"]}'})
-    else:
-        # Fallback for local dev if SMTP fails
-        return jsonify({'success': True, 'message': f'OTP generated (Local Dev): {otp}', 'dev_otp': otp})
-
-@admin.route('/change_deletion_pin', methods=['POST'])
-def change_deletion_pin():
-    """
-    Verifies the OTP and updates the deletion PIN.
-    """
-    entered_otp = request.form.get('otp')
-    new_pin = request.form.get('new_pin')
-    admin_id = session.get('user_id')
-    
-    if not entered_otp or not new_pin:
-        return jsonify({'success': False, 'message': 'All fields are required.'})
-        
-    if not new_pin.isdigit() or len(new_pin) < 4:
-        return jsonify({'success': False, 'message': 'PIN must be at least 4 digits.'})
-        
-    # Check OTP
-    if datetime.now().timestamp() > session.get('pin_reset_expiry', 0):
-        return jsonify({'success': False, 'message': 'OTP has expired.'})
-        
-    if entered_otp != session.get('pin_reset_otp'):
-        return jsonify({'success': False, 'message': 'Invalid OTP.'})
-        
-    # Update PIN
-    from werkzeug.security import generate_password_hash
-    hashed_pin = generate_password_hash(new_pin)
-    
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("UPDATE admins SET deletion_pin = %s WHERE admin_id = %s", (hashed_pin, admin_id))
-    conn.commit()
-    
-    # Clear session
-    session.pop('pin_reset_otp', None)
-    session.pop('pin_reset_expiry', None)
-    
-    cursor.close()
-    conn.close()
-    
-    return jsonify({'success': True, 'message': 'Deletion PIN updated successfully.'})
 
 @admin.route('/manual_enroll', methods=['GET', 'POST'])
 def manual_enroll():

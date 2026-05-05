@@ -4,6 +4,8 @@ NEWLY ATTENDANCE MANAGEMENT SYSTEM
 admin account :
 username: admin1
 password: password123
+adminattendeez0218@gmail.com
+adminpassword123
 
 teacher account:
 username: T-2024-001

@@ -29,6 +29,9 @@
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
                             <i class="fas fa-key"></i> Change Password
                         </a>
+                        <a href="#" class="dropdown-item" onclick="openChangePinModal()">
+                            <i class="fas fa-shield-alt"></i> Security PIN
+                        </a>
                         <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
@@ -329,10 +332,10 @@
                                                onclick="return confirm('Remove this student from this subject?')">
                                                 <i class="fas fa-user-minus"></i> <span class="btn-text">Unenroll</span>
                                             </a>
-                                            <a href="{{ url_for('admin.delete_student', usid=estudent.usid) }}" 
+                                            <a href="#" 
                                                class="btn btn-danger" 
                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem; text-decoration: none;"
-                                               onclick="return confirm('Are you sure you want to PERMANENTLY delete this student?')">
+                                               onclick="event.preventDefault(); confirmWithPin(`{{ url_for('admin.delete_student', usid=estudent.usid) }}`)">
                                                 <i class="fas fa-trash-alt"></i> <span class="btn-text">Delete</span>
                                             </a>
                                         </td>
@@ -807,6 +810,6 @@
     </nav>
 
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v=1.1"></script>
 </body>
 </html>

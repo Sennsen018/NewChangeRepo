@@ -37,6 +37,9 @@
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
                             <i class="fas fa-key"></i> Change Password
                         </a>
+                        <a href="#" class="dropdown-item" onclick="openChangePinModal()">
+                            <i class="fas fa-shield-alt"></i> Security PIN
+                        </a>
                         <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>

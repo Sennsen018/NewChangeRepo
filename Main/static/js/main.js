@@ -27,6 +27,8 @@ function toggleSidebarMinimize() {
     const sidebar = document.querySelector('.sidebar');
     if (sidebar) {
         sidebar.classList.toggle('minimized');
+        // Persist state across page loads
+        localStorage.setItem('sidebarMinimized', sidebar.classList.contains('minimized') ? '1' : '0');
     }
 }
 
@@ -111,6 +113,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sidebar) {
         sidebar.style.overflowY = 'auto';
         sidebar.style.scrollbarWidth = 'thin';
+
+        // Restore minimized state on mobile (≤1024px)
+        if (window.innerWidth <= 1024 && localStorage.getItem('sidebarMinimized') === '1') {
+            sidebar.classList.add('minimized');
+        }
     }
 
     // --- DELETION PIN SECURITY UI ---

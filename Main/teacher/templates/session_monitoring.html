@@ -181,13 +181,13 @@
                     <span>Attendeez</span>
                 </div>
         <nav class="sidebar-nav">
-                <a href="{{ url_for('teacher.profile') }}" class="nav-item profile-nav-item"><i class="fas fa-user-circle"></i> My Profile</a>
-            <a href="{{ url_for('teacher.dashboard') }}" class="nav-item active"><i class="fas fa-house"></i> Teacher Dashboard</a>
-            <a href="{{ url_for('teacher.manage_students') }}" class="nav-item"><i class="fas fa-users"></i> Manage Students</a>
-            <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item"><i class="fas fa-clipboard-check"></i> Manual Attendance</a>
-            <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item"><i class="fas fa-star-half-alt"></i> Manage Marks</a>
-            <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item"><i class="fas fa-envelope-open-text"></i> View Excuse Letters</a>
-            <a href="{{ url_for('teacher.reports') }}" class="nav-item"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="{{ url_for('teacher.profile') }}" class="nav-item profile-nav-item" data-tooltip="My Profile"><i class="fas fa-user-circle"></i><span class="nav-item-text"> My Profile</span></a>
+            <a href="{{ url_for('teacher.dashboard') }}" class="nav-item active" data-tooltip="Teacher Dashboard"><i class="fas fa-house"></i><span class="nav-item-text"> Teacher Dashboard</span></a>
+            <a href="{{ url_for('teacher.manage_students') }}" class="nav-item" data-tooltip="Manage Students"><i class="fas fa-users"></i><span class="nav-item-text"> Manage Students</span></a>
+            <a href="{{ url_for('teacher.manual_attendance') }}" class="nav-item" data-tooltip="Manual Attendance"><i class="fas fa-clipboard-check"></i><span class="nav-item-text"> Manual Attendance</span></a>
+            <a href="{{ url_for('teacher.manage_marks') }}" class="nav-item" data-tooltip="Manage Marks"><i class="fas fa-star-half-alt"></i><span class="nav-item-text"> Manage Marks</span></a>
+            <a href="{{ url_for('teacher.view_excuses') }}" class="nav-item" data-tooltip="View Excuse Letters"><i class="fas fa-envelope-open-text"></i><span class="nav-item-text"> View Excuse Letters</span></a>
+            <a href="{{ url_for('teacher.reports') }}" class="nav-item" data-tooltip="Reports"><i class="fas fa-chart-bar"></i><span class="nav-item-text"> Reports</span></a>
         </nav>
         
     </aside>

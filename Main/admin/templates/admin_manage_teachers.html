@@ -37,16 +37,16 @@
                 <button class="sidebar-minimize-btn" onclick="toggleSidebarMinimize()" title="Minimize sidebar"><i class="fas fa-chevron-left"></i></button>
             </div>
             <nav class="sidebar-nav">
-                <a href="{{ url_for('admin.dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}"><i class="fas fa-house"></i> Admin Dashboard</a>
-                <a href="{{ url_for('admin.manage_students') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_students' else '' }}"><i class="fas fa-user-graduate"></i> Manage Students</a>
-                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_teachers' else '' }}"><i class="fas fa-chalkboard-teacher"></i> Manage Teachers</a>
-                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_subjects' else '' }}"><i class="fas fa-book"></i> Manage Subjects</a>
-                <a href="{{ url_for('admin.manual_enroll') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manual_enroll' else '' }}"><i class="fas fa-user-plus"></i> Manual Enrollment</a>
-                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.assign_classes' else '' }}"><i class="fas fa-link"></i> Assign Classes</a>
-                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_schedules' else '' }}"><i class="fas fa-calendar-alt"></i> Manage Schedules</a>
-                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.attendance_analytics' else '' }}"><i class="fas fa-chart-pie"></i> Attendance Analytics</a>
-                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.drop_requests' else '' }}"><i class="fas fa-user-minus"></i> Drop Requests</a>
-                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.audit_logs' else '' }}"><i class="fas fa-clipboard-list"></i> Audit Logs</a>
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}" data-tooltip="Admin Dashboard"><i class="fas fa-house"></i><span class="nav-item-text"> Admin Dashboard</span></a>
+                <a href="{{ url_for('admin.manage_students') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_students' else '' }}" data-tooltip="Manage Students"><i class="fas fa-user-graduate"></i><span class="nav-item-text"> Manage Students</span></a>
+                <a href="{{ url_for('admin.manage_teachers') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_teachers' else '' }}" data-tooltip="Manage Teachers"><i class="fas fa-chalkboard-teacher"></i><span class="nav-item-text"> Manage Teachers</span></a>
+                <a href="{{ url_for('admin.manage_subjects') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_subjects' else '' }}" data-tooltip="Manage Subjects"><i class="fas fa-book"></i><span class="nav-item-text"> Manage Subjects</span></a>
+                <a href="{{ url_for('admin.manual_enroll') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manual_enroll' else '' }}" data-tooltip="Manual Enrollment"><i class="fas fa-user-plus"></i><span class="nav-item-text"> Manual Enrollment</span></a>
+                <a href="{{ url_for('admin.assign_classes') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.assign_classes' else '' }}" data-tooltip="Assign Classes"><i class="fas fa-link"></i><span class="nav-item-text"> Assign Classes</span></a>
+                <a href="{{ url_for('admin.manage_schedules') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.manage_schedules' else '' }}" data-tooltip="Manage Schedules"><i class="fas fa-calendar-alt"></i><span class="nav-item-text"> Manage Schedules</span></a>
+                <a href="{{ url_for('admin.attendance_analytics') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.attendance_analytics' else '' }}" data-tooltip="Attendance Analytics"><i class="fas fa-chart-pie"></i><span class="nav-item-text"> Attendance Analytics</span></a>
+                <a href="{{ url_for('admin.drop_requests') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.drop_requests' else '' }}" data-tooltip="Drop Requests"><i class="fas fa-user-minus"></i><span class="nav-item-text"> Drop Requests</span></a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.audit_logs' else '' }}" data-tooltip="Audit Logs"><i class="fas fa-clipboard-list"></i><span class="nav-item-text"> Audit Logs</span></a>
             </nav>
             <div class="sidebar-bottom-actions">
             </div>

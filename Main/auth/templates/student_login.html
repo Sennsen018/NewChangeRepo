@@ -364,42 +364,46 @@
         .btn-gold {
             background: var(--gold-gradient);
             color: #1e1b4b;
-            /* Dark text for contrast */
             border: none;
             width: 100%;
-            padding: 1rem;
-            font-size: 1.05rem;
+            padding: 0.9rem 1.25rem;
+            font-size: 1rem;
             font-weight: 700;
             border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
+            gap: 0.6rem;
+            letter-spacing: 0.02em;
+            box-shadow: 0 4px 14px rgba(251, 191, 36, 0.3);
             position: relative;
             overflow: hidden;
             margin-bottom: 1rem;
         }
 
-        .btn-gold::before {
+        .btn-gold::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transition: left 0.5s ease;
+            inset: 0;
+            background: rgba(255,255,255,0);
+            transition: background 0.2s ease;
+            border-radius: inherit;
         }
 
         .btn-gold:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+            box-shadow: 0 8px 22px rgba(251, 191, 36, 0.45);
         }
 
-        .btn-gold:hover::before {
-            left: 100%;
+        .btn-gold:hover::after {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .btn-gold:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(251, 191, 36, 0.3);
         }
 
         .btn-secondary-link {
@@ -497,32 +501,23 @@
         /* Loading Spinner */
         .spinner {
             display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(30, 27, 75, 0.3);
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(30, 27, 75, 0.25);
             border-radius: 50%;
             border-top-color: #1e1b4b;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 0.5rem;
+            animation: spin 0.75s linear infinite;
+            flex-shrink: 0;
         }
 
         @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            to { transform: rotate(360deg); }
         }
 
-        .btn-gold.loading .spinner {
-            display: inline-block;
-        }
-
-        .btn-gold.loading .btn-text {
-            opacity: 0.8;
-        }
-
-        .btn-gold.loading {
-            pointer-events: none;
-        }
+        .btn-gold.loading .spinner { display: block; }
+        .btn-gold.loading .btn-text { opacity: 0.85; }
+        .btn-gold.loading .btn-icon { display: none; }
+        .btn-gold.loading { pointer-events: none; opacity: 0.9; }
 
         /* Entrance Animations */
         @keyframes fadeInUp {
@@ -641,7 +636,8 @@
 
                 <button type="submit" class="btn-gold" id="submitBtn">
                     <div class="spinner"></div>
-                    <span class="btn-text">Sign In</span>
+                    <i class="fas fa-sign-in-alt btn-icon"></i>
+                    <span class="btn-text">Login</span>
                 </button>
 
                 <a href="{{ url_for('auth.teacher_login') }}" class="btn-secondary-link">

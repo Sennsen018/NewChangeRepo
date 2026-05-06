@@ -6,6 +6,84 @@
     <title>Daily Attendance Log | Attendeez</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* ── Daily Attendance Log — Mobile Table ── */
+
+        /* Desktop: normal horizontal table */
+        .dal-table thead { display: table-header-group; }
+        .dal-table tbody tr { display: table-row; }
+        .dal-table td { display: table-cell; }
+        .dal-table td::before { display: none; }
+
+        @media (max-width: 768px) {
+            /* Card-style rows on mobile */
+            .dal-table,
+            .dal-table tbody,
+            .dal-table tr,
+            .dal-table td { display: block; width: 100%; }
+
+            .dal-table thead { display: none; }
+
+            .dal-table tbody tr {
+                background: var(--bg-surface-soft);
+                border: 1px solid var(--border-color);
+                border-radius: 10px;
+                margin-bottom: 0.75rem;
+                padding: 0.5rem 0.75rem;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            }
+
+            .dal-table td {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0.55rem 0.25rem;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                font-size: 0.875rem;
+                min-height: 40px;
+                text-align: right;
+            }
+
+            .dal-table td:last-child { border-bottom: none; }
+
+            /* Column label on the left */
+            .dal-table td::before {
+                content: attr(data-label);
+                font-size: 0.7rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: var(--text-dim);
+                text-align: left;
+                flex-shrink: 0;
+                margin-right: 0.75rem;
+                white-space: nowrap;
+            }
+
+            /* Date accordion header wraps on small screens */
+            .dal-date-header {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .dal-date-header h4 {
+                font-size: 0.85rem !important;
+                flex: 1 1 100%;
+            }
+
+            .dal-date-header .dal-counts {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+
+            /* Table container padding reset on mobile */
+            .dal-table-wrapper {
+                padding: 0.75rem 0.5rem !important;
+            }
+        }
+    </style>
 </head>
 <body class="theme-teacher">
     <div class="dashboard-container">
@@ -136,12 +214,13 @@
                         <div style="border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; margin-bottom: 1rem;">
                             <!-- Date header — click to toggle -->
                             <div onclick="toggleAccordion('log-{{ loop.index }}')"
+                                class="dal-date-header"
                                 style="background: rgba(255,255,255,0.05); padding: 0.9rem 1.25rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s;">
                                 <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-main);">
                                     <i class="fas fa-calendar-day" style="color: var(--primary); margin-right: 0.5rem;"></i>
                                     {{ date }}
                                 </h4>
-                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div class="dal-counts" style="display: flex; align-items: center; gap: 0.75rem;">
                                     <!-- Present / Absent counts -->
                                     <span style="font-size: 0.8rem; color: #10b981; font-weight: 600;">
                                         <i class="fas fa-check"></i> {{ logs | selectattr('status', 'equalto', 'Present') | list | length }}
@@ -171,9 +250,9 @@
                                 </div>
                             </div>
                             <!-- Table body -->
-                            <div id="content-log-{{ loop.index }}" style="display: none; padding: 1rem;">
+                            <div id="content-log-{{ loop.index }}" class="dal-table-wrapper" style="display: none; padding: 1rem;">
                                 <div class="table-container">
-                                    <table style="margin: 0;">
+                                    <table style="margin: 0;" class="dal-table">
                                         <thead>
                                             <tr>
                                                 <th>Student ID</th>
@@ -186,25 +265,29 @@
                                         <tbody>
                                             {% for row in logs %}
                                             <tr>
-                                                <td><span class="badge badge-primary" style="font-size: 0.75rem;">{{ row.usid }}</span></td>
-                                                <td>{{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}</td>
-                                                <td>
+                                                <td data-label="Student ID">
+                                                    <span class="badge badge-primary" style="font-size: 0.75rem; font-family: monospace;">{{ row.usid }}</span>
+                                                </td>
+                                                <td data-label="Name" style="font-weight: 500;">{{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}</td>
+                                                <td data-label="Status">
                                                     {% if row.status == 'Present' %}
-                                                    <span class="badge badge-success">Present</span>
+                                                    <span class="badge badge-success"><i class="fas fa-check" style="margin-right: 0.3rem;"></i>Present</span>
                                                     {% elif row.status == 'Absent' %}
-                                                    <span class="badge" style="background: var(--danger-color); color: white;">Absent</span>
+                                                    <span class="badge badge-danger"><i class="fas fa-times" style="margin-right: 0.3rem;"></i>Absent</span>
                                                     {% elif row.status == 'Late' %}
-                                                    <span class="badge badge-warning">Late</span>
+                                                    <span class="badge badge-warning"><i class="fas fa-clock" style="margin-right: 0.3rem;"></i>Late</span>
                                                     {% else %}
-                                                    <span class="badge" style="background: #ef4444; color: white;">{{ row.status }}</span>
+                                                    <span class="badge badge-danger">{{ row.status }}</span>
                                                     {% endif %}
                                                 </td>
-                                                <td style="font-size: 0.85rem; color: var(--text-muted);">{{ row.time }}</td>
-                                                <td>
+                                                <td data-label="Time" style="font-size: 0.85rem; color: var(--text-muted); font-variant-numeric: tabular-nums;">
+                                                    <i class="fas fa-clock" style="margin-right: 0.3rem; opacity: 0.5;"></i>{{ row.time }}
+                                                </td>
+                                                <td data-label="Validity">
                                                     {% if row.is_valid == 'Valid' %}
-                                                    <span style="color: var(--success-color);"><i class="fas fa-check-circle"></i> Valid</span>
+                                                    <span style="color: #10b981; font-weight: 600; font-size: 0.85rem;"><i class="fas fa-check-circle" style="margin-right: 0.3rem;"></i>Valid</span>
                                                     {% else %}
-                                                    <span style="color: var(--danger-color);"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
+                                                    <span style="color: #ef4444; font-weight: 600; font-size: 0.85rem;"><i class="fas fa-exclamation-triangle" style="margin-right: 0.3rem;"></i>Invalid</span>
                                                     {% endif %}
                                                 </td>
                                             </tr>

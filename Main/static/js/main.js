@@ -23,6 +23,13 @@ function toggleSidebar() {
     }
 }
 
+function toggleSidebarMinimize() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('minimized');
+    }
+}
+
 // Close dropdown or sidebar when clicking outside
 window.addEventListener('click', function(e) {
     const dropdown = document.getElementById('user-dropdown');

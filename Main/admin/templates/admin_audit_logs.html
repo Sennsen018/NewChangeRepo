@@ -34,6 +34,7 @@
                         </a>
                     </div>
                 </div>
+                <button class="sidebar-minimize-btn" onclick="toggleSidebarMinimize()" title="Minimize sidebar"><i class="fas fa-chevron-left"></i></button>
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ url_for('admin.dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}"><i class="fas fa-house"></i> Admin Dashboard</a>

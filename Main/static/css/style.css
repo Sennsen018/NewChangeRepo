@@ -1348,12 +1348,67 @@ td {
 @media (max-width: 1024px) {
     .sidebar {
         transform: translateX(-100%);
-        width: 280px;
+        width: 240px;
         box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
     }
 
     .sidebar.open {
         transform: translateX(0);
+    }
+
+    /* Minimized sidebar: icon-only */
+    .sidebar.minimized {
+        width: 64px;
+        transform: translateX(0);
+    }
+
+    .sidebar.minimized .nav-item span,
+    .sidebar.minimized .nav-item-btn span,
+    .sidebar.minimized .sidebar-logo span,
+    .sidebar.minimized .sidebar-logo .user-menu-container,
+    .sidebar.minimized .nav-label,
+    .sidebar.minimized .sidebar-bottom-actions .btn span {
+        display: none;
+    }
+
+    .sidebar.minimized .nav-item {
+        justify-content: center;
+        padding: 0.75rem;
+        font-size: 0;
+    }
+
+    .sidebar.minimized .nav-item i {
+        margin-right: 0;
+        font-size: 1.1rem;
+        width: auto;
+    }
+
+    .sidebar.minimized .sidebar-logo {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+        font-size: 0;
+    }
+
+    .sidebar.minimized .sidebar-logo > div:first-child i {
+        font-size: 1.4rem;
+        margin: 0;
+    }
+
+    .sidebar.minimized .sidebar-logo > div:first-child {
+        gap: 0;
+    }
+
+    .sidebar.minimized .sidebar-minimize-btn i {
+        transform: rotate(180deg);
+    }
+
+    .sidebar.minimized .profile-nav-item {
+        justify-content: center;
+    }
+
+    .sidebar.minimized .nav-item.active::before {
+        left: 0;
     }
 
     .main-content {
@@ -1385,6 +1440,33 @@ td {
 
     .flex-responsive>.w-fit {
         width: fit-content;
+    }
+}
+
+/* Sidebar minimize button — hidden on desktop */
+.sidebar-minimize-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+}
+
+.sidebar-minimize-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-main);
+}
+
+@media (max-width: 1024px) {
+    .sidebar-minimize-btn {
+        display: inline-flex;
     }
 }
 

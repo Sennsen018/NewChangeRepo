@@ -7,81 +7,241 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* ── Daily Attendance Log — Mobile Table ── */
+        /* ═══════════════════════════════════════════
+           DAL TABLE — Desktop base styles
+        ═══════════════════════════════════════════ */
+        .dal-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
 
-        /* Desktop: normal horizontal table */
-        .dal-table thead { display: table-header-group; }
-        .dal-table tbody tr { display: table-row; }
-        .dal-table td { display: table-cell; }
-        .dal-table td::before { display: none; }
+        .dal-table thead th {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+            font-weight: 700;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
 
+        .dal-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.15s;
+        }
+
+        .dal-table tbody tr:last-child { border-bottom: none; }
+        .dal-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+        .dal-table tbody td {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+
+        /* Status pill */
+        .dal-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .dal-status.present { background: rgba(16,185,129,0.15); color: #10b981; }
+        .dal-status.absent  { background: rgba(239,68,68,0.15);  color: #ef4444; }
+        .dal-status.late    { background: rgba(245,158,11,0.15); color: #f59e0b; }
+
+        /* Validity icon */
+        .dal-valid   { color: #10b981; font-size: 0.95rem; }
+        .dal-invalid { color: #ef4444; font-size: 0.95rem; }
+
+        /* ID badge */
+        .dal-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--primary);
+            background: var(--primary-soft);
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        /* Time cell */
+        .dal-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        /* ═══════════════════════════════════════════
+           DAL TABLE — Mobile compact table
+           Goal: mini-desktop, NO cards, NO scroll
+        ═══════════════════════════════════════════ */
         @media (max-width: 768px) {
-            /* Card-style rows on mobile */
-            .dal-table,
-            .dal-table tbody,
-            .dal-table tr,
-            .dal-table td { display: block; width: 100%; }
 
-            .dal-table thead { display: none; }
-
-            .dal-table tbody tr {
-                background: var(--bg-surface-soft);
-                border: 1px solid var(--border-color);
-                border-radius: 10px;
-                margin-bottom: 0.75rem;
-                padding: 0.5rem 0.75rem;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            /* Remove outer padding so table fills width */
+            .dal-table-wrapper {
+                padding: 0 !important;
             }
 
-            .dal-table td {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0.55rem 0.25rem;
-                border-bottom: 1px solid rgba(255,255,255,0.05);
-                font-size: 0.875rem;
-                min-height: 40px;
-                text-align: right;
+            /* Rounded table container */
+            .dal-table-wrapper .table-container {
+                border-radius: 0 0 10px 10px;
+                overflow: hidden;
+                border: none;
             }
 
-            .dal-table td:last-child { border-bottom: none; }
+            /* Fixed layout — we control every column width */
+            .dal-table {
+                table-layout: fixed;
+                width: 100%;
+                font-size: 0;          /* reset — each cell sets its own */
+            }
 
-            /* Column label on the left */
-            .dal-table td::before {
-                content: attr(data-label);
-                font-size: 0.7rem;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.06em;
-                color: var(--text-dim);
-                text-align: left;
-                flex-shrink: 0;
-                margin-right: 0.75rem;
+            /* ── Column widths (must sum to 100%) ──
+               ID: 22%  |  Name: 34%  |  Status: 20%  |  Time: 14%  |  Valid: 10%
+            */
+            .dal-table colgroup { display: table-column-group; }
+            .dal-col-id     { width: 22%; }
+            .dal-col-name   { width: 34%; }
+            .dal-col-status { width: 20%; }
+            .dal-col-time   { width: 14%; }
+            .dal-col-valid  { width: 10%; }
+
+            /* Header row */
+            .dal-table thead th {
+                padding: 0.45rem 0.35rem;
+                font-size: 0.6rem;
+                letter-spacing: 0.04em;
+                text-align: center;
+                border-bottom: 2px solid var(--border-color);
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+
+            /* Left-align ID and Name headers */
+            .dal-table thead th:nth-child(1),
+            .dal-table thead th:nth-child(2) { text-align: left; padding-left: 0.5rem; }
+
+            /* Body rows */
+            .dal-table tbody tr { display: table-row; }
+
+            .dal-table tbody td {
+                display: table-cell;
+                padding: 0.5rem 0.35rem;
+                font-size: 0.78rem;
+                vertical-align: middle;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
-            /* Date accordion header wraps on small screens */
+            /* ── Col 1: Student ID — left, tiny monospace ── */
+            .dal-table tbody td:nth-child(1) {
+                text-align: left;
+                padding-left: 0.5rem;
+            }
+
+            .dal-id {
+                font-size: 0.65rem;
+                padding: 0.1rem 0.3rem;
+                max-width: 100%;
+                display: inline-block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* ── Col 2: Name — left, truncate with ellipsis ── */
+            .dal-table tbody td:nth-child(2) {
+                text-align: left;
+                font-size: 0.78rem;
+                font-weight: 600;
+                color: var(--text-main);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 0;          /* forces ellipsis in fixed-layout table */
+            }
+
+            /* ── Col 3: Status — centered, icon + short label ── */
+            .dal-table tbody td:nth-child(3) { text-align: center; }
+
+            .dal-status {
+                padding: 0.15rem 0.35rem;
+                font-size: 0.65rem;
+                gap: 0.2rem;
+            }
+
+            /* Hide text label on mobile — icon only */
+            .dal-status .dal-status-text { display: none; }
+
+            /* ── Col 4: Time — right-aligned, compact ── */
+            .dal-table tbody td:nth-child(4) {
+                text-align: right;
+                padding-right: 0.4rem;
+            }
+
+            .dal-time {
+                font-size: 0.68rem;
+                letter-spacing: -0.01em;
+            }
+
+            /* ── Col 5: Validity — centered, icon only ── */
+            .dal-table tbody td:nth-child(5) { text-align: center; }
+
+            .dal-valid, .dal-invalid { font-size: 0.85rem; }
+
+            /* Zebra stripe for readability */
+            .dal-table tbody tr:nth-child(even) {
+                background: rgba(255,255,255,0.018);
+            }
+
+            /* Tighter accordion header on mobile */
             .dal-date-header {
-                flex-wrap: wrap;
-                gap: 0.5rem;
+                padding: 0.7rem 0.9rem !important;
+                flex-wrap: nowrap !important;
+                gap: 0.4rem !important;
             }
 
             .dal-date-header h4 {
-                font-size: 0.85rem !important;
-                flex: 1 1 100%;
+                font-size: 0.82rem !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                flex: 1 1 auto;
+                min-width: 0;
             }
 
-            .dal-date-header .dal-counts {
-                display: flex;
-                gap: 0.5rem;
-                align-items: center;
-                flex-wrap: wrap;
+            .dal-counts {
+                gap: 0.4rem !important;
+                flex-shrink: 0;
             }
 
-            /* Table container padding reset on mobile */
-            .dal-table-wrapper {
-                padding: 0.75rem 0.5rem !important;
+            .dal-counts .badge {
+                display: none; /* hide "N records" badge — redundant on mobile */
             }
+        }
+
+        /* Extra tight for very small phones */
+        @media (max-width: 380px) {
+            .dal-col-id     { width: 20%; }
+            .dal-col-name   { width: 32%; }
+            .dal-col-status { width: 20%; }
+            .dal-col-time   { width: 16%; }
+            .dal-col-valid  { width: 12%; }
+
+            .dal-table tbody td { padding: 0.4rem 0.25rem; font-size: 0.72rem; }
+            .dal-id { font-size: 0.6rem; }
+            .dal-time { font-size: 0.62rem; }
         }
     </style>
 </head>
@@ -253,41 +413,62 @@
                             <div id="content-log-{{ loop.index }}" class="dal-table-wrapper" style="display: none; padding: 1rem;">
                                 <div class="table-container">
                                     <table style="margin: 0;" class="dal-table">
+                                        <colgroup>
+                                            <col class="dal-col-id">
+                                            <col class="dal-col-name">
+                                            <col class="dal-col-status">
+                                            <col class="dal-col-time">
+                                            <col class="dal-col-valid">
+                                        </colgroup>
                                         <thead>
                                             <tr>
-                                                <th>Student ID</th>
+                                                <th>ID</th>
                                                 <th>Name</th>
-                                                <th>Status</th>
-                                                <th>Time</th>
-                                                <th>Validity</th>
+                                                <th style="text-align:center;">Status</th>
+                                                <th style="text-align:right;">Time</th>
+                                                <th style="text-align:center;">✔</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for row in logs %}
                                             <tr>
-                                                <td data-label="Student ID">
-                                                    <span class="badge badge-primary" style="font-size: 0.75rem; font-family: monospace;">{{ row.usid }}</span>
+                                                <td>
+                                                    <span class="dal-id">{{ row.usid }}</span>
                                                 </td>
-                                                <td data-label="Name" style="font-weight: 500;">{{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}</td>
-                                                <td data-label="Status">
+                                                <td title="{{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}">
+                                                    {{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}
+                                                </td>
+                                                <td style="text-align:center;">
                                                     {% if row.status == 'Present' %}
-                                                    <span class="badge badge-success"><i class="fas fa-check" style="margin-right: 0.3rem;"></i>Present</span>
+                                                    <span class="dal-status present">
+                                                        <i class="fas fa-check"></i>
+                                                        <span class="dal-status-text">Present</span>
+                                                    </span>
                                                     {% elif row.status == 'Absent' %}
-                                                    <span class="badge badge-danger"><i class="fas fa-times" style="margin-right: 0.3rem;"></i>Absent</span>
+                                                    <span class="dal-status absent">
+                                                        <i class="fas fa-times"></i>
+                                                        <span class="dal-status-text">Absent</span>
+                                                    </span>
                                                     {% elif row.status == 'Late' %}
-                                                    <span class="badge badge-warning"><i class="fas fa-clock" style="margin-right: 0.3rem;"></i>Late</span>
+                                                    <span class="dal-status late">
+                                                        <i class="fas fa-clock"></i>
+                                                        <span class="dal-status-text">Late</span>
+                                                    </span>
                                                     {% else %}
-                                                    <span class="badge badge-danger">{{ row.status }}</span>
+                                                    <span class="dal-status absent">
+                                                        <i class="fas fa-question"></i>
+                                                        <span class="dal-status-text">{{ row.status }}</span>
+                                                    </span>
                                                     {% endif %}
                                                 </td>
-                                                <td data-label="Time" style="font-size: 0.85rem; color: var(--text-muted); font-variant-numeric: tabular-nums;">
-                                                    <i class="fas fa-clock" style="margin-right: 0.3rem; opacity: 0.5;"></i>{{ row.time }}
+                                                <td style="text-align:right;">
+                                                    <span class="dal-time">{{ row.time }}</span>
                                                 </td>
-                                                <td data-label="Validity">
+                                                <td style="text-align:center;">
                                                     {% if row.is_valid == 'Valid' %}
-                                                    <span style="color: #10b981; font-weight: 600; font-size: 0.85rem;"><i class="fas fa-check-circle" style="margin-right: 0.3rem;"></i>Valid</span>
+                                                    <i class="fas fa-check-circle dal-valid" title="Valid"></i>
                                                     {% else %}
-                                                    <span style="color: #ef4444; font-weight: 600; font-size: 0.85rem;"><i class="fas fa-exclamation-triangle" style="margin-right: 0.3rem;"></i>Invalid</span>
+                                                    <i class="fas fa-times-circle dal-invalid" title="Invalid"></i>
                                                     {% endif %}
                                                 </td>
                                             </tr>

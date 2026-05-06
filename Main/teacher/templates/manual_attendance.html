@@ -151,17 +151,57 @@
                 Select a Class
             </h3>
             {% if classes %}
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:0.75rem;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:0.75rem;">
                 {% for c in classes %}
-                <!-- Each class is a link that reloads the page with the chosen subject_id + section -->
-                <a href="{{ url_for('teacher.manual_attendance', subject_id=c.subject_id, section=c.section) }}"
-                   class="class-btn {% if selected_subject_id == c.subject_id and selected_section == c.section %}active{% endif %}">
-                    <span class="badge badge-warning" style="margin-bottom:0.4rem; display:inline-block;">
-                        {{ c.subject_code }}
-                    </span>
-                    <div style="font-weight:600; margin-bottom:0.2rem;">{{ c.subject_name }}</div>
-                    <small style="color:var(--text-muted);">Section {{ c.section }}</small>
-                </a>
+                {# Determine this class's attendance state from the backend #}
+                {% set is_selected = (selected_subject_id == c.subject_id and selected_section == c.section) %}
+                <div class="class-btn {% if is_selected %}active{% endif %}" style="position:relative;">
+                    <!-- Class info — clicking the card body selects it -->
+                    <a href="{{ url_for('teacher.manual_attendance', subject_id=c.subject_id, section=c.section) }}"
+                       style="display:block;text-decoration:none;color:inherit;padding-right:2.5rem;">
+                        <span class="badge badge-warning" style="margin-bottom:0.4rem;display:inline-block;">
+                            {{ c.subject_code }}
+                        </span>
+                        <div style="font-weight:600;margin-bottom:0.2rem;">{{ c.subject_name }}</div>
+                        <small style="color:var(--text-muted);">Section {{ c.section }}</small>
+                    </a>
+
+                    {# Start icon button — top-right corner of the card #}
+                    {# We need per-class attendance state. We pass it via data attributes and compute in JS. #}
+                    {% if is_selected and attendance_locked %}
+                        {% if attendance_finalized %}
+                        <!-- Saved: locked icon, not clickable -->
+                        <button class="start-att-btn" disabled
+                            style="position:absolute;top:0.75rem;right:0.75rem;width:36px;height:36px;border-radius:50%;border:none;background:rgba(16,185,129,0.15);color:#10b981;cursor:not-allowed;display:flex;align-items:center;justify-content:center;font-size:0.9rem;"
+                            title="Attendance saved for today">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                        {% else %}
+                        <!-- Unsaved: warning icon, click to review -->
+                        <a href="{{ url_for('teacher.review_attendance', session_id=today_session_id) }}"
+                            style="position:absolute;top:0.75rem;right:0.75rem;width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,0.15);color:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:0.9rem;text-decoration:none;"
+                            title="Unsaved attendance — click to review">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </a>
+                        {% endif %}
+                    {% elif is_selected and not attendance_locked %}
+                        <!-- Selected, no attendance yet: active play button -->
+                        <button class="start-att-btn"
+                            onclick="triggerManualStart('{{ c.subject_id }}','{{ c.section }}')"
+                            style="position:absolute;top:0.75rem;right:0.75rem;width:36px;height:36px;border-radius:50%;border:none;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.9rem;"
+                            title="Start attendance">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    {% else %}
+                        <!-- Not selected: neutral play button, click selects + starts -->
+                        <button class="start-att-btn"
+                            onclick="triggerManualStart('{{ c.subject_id }}','{{ c.section }}')"
+                            style="position:absolute;top:0.75rem;right:0.75rem;width:36px;height:36px;border-radius:50%;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:all 0.2s;"
+                            title="Start attendance for this class">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    {% endif %}
+                </div>
                 {% endfor %}
             </div>
             {% else %}
@@ -187,24 +227,61 @@
 
             {% if attendance_locked %}
                 {% if attendance_method == 'qr' %}
-                <div class="alert alert-warning mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                <!-- QR attendance already done today -->
+                <div style="background:rgba(245,158,11,0.12);border:2px solid #f59e0b;border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
                     <div>
-                        <i class="fas fa-qrcode"></i>
-                        <strong>QR Attendance Already Recorded:</strong> Today's attendance was taken via QR Code scanning. Manual attendance is not available.
+                        <i class="fas fa-qrcode" style="color:#f59e0b;"></i>
+                        <strong>QR Attendance Already Recorded</strong>
+                        <p style="margin:0.25rem 0 0 0;color:var(--text-muted);font-size:0.85rem;">Today's attendance was taken via QR Code. Manual attendance is not available.</p>
+                        <p style="margin:0.25rem 0 0 0;font-size:0.8rem;color:var(--text-muted);">
+                            <i class="fas fa-clock"></i>
+                            <span id="start-countdown"></span>
+                        </p>
                     </div>
-                    <a href="{{ url_for('teacher.manage_marks', subject_id=selected_subject_id, section=selected_section) }}" class="btn btn-primary" style="background:#f59e0b; border:none; padding: 0.4rem 1rem;">
-                        <i class="fas fa-edit"></i> Edit in Manage Marks
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        {% if today_session_id %}
+                        <a href="{{ url_for('teacher.review_attendance', session_id=today_session_id) }}" class="btn btn-primary" style="background:#f59e0b;border:none;padding:0.4rem 1rem;">
+                            <i class="fas fa-eye"></i> Review Attendance
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('teacher.manage_marks', subject_id=selected_subject_id, section=selected_section) }}" class="btn btn-secondary" style="padding:0.4rem 1rem;">
+                            <i class="fas fa-edit"></i> Manage Marks
+                        </a>
+                    </div>
+                </div>
+                {% elif attendance_finalized %}
+                <!-- Finalized/saved attendance -->
+                <div style="background:rgba(16,185,129,0.12);border:2px solid #10b981;border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+                    <div>
+                        <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                        <strong>Attendance Saved &amp; Locked</strong>
+                        <p style="margin:0.25rem 0 0 0;color:var(--text-muted);font-size:0.85rem;">Today's attendance has been finalized. No further changes allowed here.</p>
+                        <p style="margin:0.25rem 0 0 0;font-size:0.8rem;color:var(--text-muted);">
+                            <i class="fas fa-clock"></i>
+                            <span id="start-countdown"></span>
+                        </p>
+                    </div>
+                    <a href="{{ url_for('teacher.manage_marks', subject_id=selected_subject_id, section=selected_section) }}" class="btn btn-secondary" style="padding:0.4rem 1rem;">
+                        <i class="fas fa-edit"></i> Manage Marks
                     </a>
                 </div>
                 {% else %}
-                <div class="alert alert-warning mb-4" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                <!-- Unsaved attendance exists -->
+                <div style="background:rgba(245,158,11,0.12);border:2px solid #f59e0b;border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
                     <div>
-                        <i class="fas fa-lock"></i>
-                        <strong>Attendance Recorded &amp; Locked:</strong> Today's attendance has been recorded. No further changes allowed here.
+                        <i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i>
+                        <strong>Unsaved Attendance</strong>
+                        <p style="margin:0.25rem 0 0 0;color:var(--text-muted);font-size:0.85rem;">⚠️ Attendance was recorded but NOT saved yet. Review and save to finalize.</p>
+                        <p style="margin:0.25rem 0 0 0;font-size:0.8rem;color:var(--text-muted);">
+                            <i class="fas fa-clock"></i>
+                            <span id="start-countdown"></span>
+                        </p>
                     </div>
-                    <a href="{{ url_for('teacher.manage_marks', subject_id=selected_subject_id, section=selected_section) }}" class="btn btn-primary" style="background:#f59e0b; border:none; padding: 0.4rem 1rem;">
-                        <i class="fas fa-edit"></i> Edit in Manage Marks
+                    {% if today_session_id %}
+                    <a href="{{ url_for('teacher.review_attendance', session_id=today_session_id) }}" class="btn btn-primary" style="background:#f59e0b;border:none;padding:0.4rem 1rem;">
+                        <i class="fas fa-save"></i> Review &amp; Save
                     </a>
+                    {% endif %}
                 </div>
                 {% endif %}
             {% endif %}
@@ -226,7 +303,8 @@
                 </div>
             </div>
 
-            <!-- Attendance submission form -->
+            <!-- Attendance submission form — only shown when attendance is NOT locked -->
+            {% if not attendance_locked %}
             <form method="POST" action="{{ url_for('teacher.submit_manual_attendance') }}" id="attendanceForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
@@ -245,11 +323,9 @@
                         {{ students|length }} Student(s) Enrolled
                     </div>
                     <div style="display:flex; gap:0.5rem;">
-                        <!-- Button: mark everyone present -->
                         <button type="button" class="toggle-all-btn" onclick="selectAll()">
                             <i class="fas fa-check-double"></i> All Present
                         </button>
-                        <!-- Button: clear all checkboxes (everyone absent) -->
                         <button type="button" class="toggle-all-btn" onclick="clearAll()">
                             <i class="fas fa-times"></i> Clear All
                         </button>
@@ -260,22 +336,17 @@
                     <table>
                         <thead>
                             <tr>
-                                <!-- Checkbox column -->
                                 <th style="width:50px;">Present</th>
                                 <th>Student ID</th>
                                 <th>Name</th>
                                 <th>Year Level</th>
                                 <th>Email</th>
-                                <!-- Real-time status badge column -->
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="student-tbody">
                             {% for s in students %}
                             <tr class="student-row" id="row-{{ s.usid }}">
-
-                                <!-- Present checkbox — name="present_ids" value=usid -->
-                                <!-- Only checked rows are submitted; backend infers unchecked = Absent -->
                                 <td class="check-cell" style="text-align:center;">
                                     <input type="checkbox"
                                            name="present_ids"
@@ -283,13 +354,10 @@
                                            id="chk-{{ s.usid }}"
                                            onchange="updateCounter()">
                                 </td>
-
                                 <td><span class="badge badge-primary">{{ s.usid }}</span></td>
                                 <td><strong>{{ s.last_name }}</strong>, {{ s.first_name }} {{ s.middle_name }}</td>
                                 <td>{{ s.level }}</td>
                                 <td style="font-size:0.85rem; color:var(--text-muted);">{{ s.email }}</td>
-
-                                <!-- Live status badge — updates instantly when checkbox is toggled -->
                                 <td id="status-{{ s.usid }}">
                                     <span class="badge" style="background:rgba(239,68,68,0.15); color:#f87171;">
                                         Absent
@@ -303,18 +371,41 @@
 
                 <!-- Submit button -->
                 <div style="margin-top:1.5rem; display:flex; justify-content:flex-end;">
-                    {% if attendance_locked %}
-                    <button type="button" class="btn btn-primary" style="min-width:200px; opacity:0.5; cursor:not-allowed;" disabled>
-                        <i class="fas fa-lock"></i>&nbsp; Attendance Locked
-                    </button>
-                    {% else %}
-                    <button type="submit" class="btn btn-primary" style="min-width:200px;"
-                            onclick="return confirm('Record attendance for today? This will lock editing via this form.');">
+                    <button type="submit" class="btn btn-primary" style="min-width:200px;">
                         <i class="fas fa-clipboard-check"></i>&nbsp; Record Attendance
                     </button>
-                    {% endif %}
                 </div>
             </form>
+            {% else %}
+            <!-- Locked: show read-only table, no form -->
+            <div class="flex justify-between items-center" style="margin-bottom:0.5rem;">
+                <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
+                    {{ students|length }} Student(s) Enrolled
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Year Level</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                        <tr>
+                            <td><span class="badge badge-primary">{{ s.usid }}</span></td>
+                            <td><strong>{{ s.last_name }}</strong>, {{ s.first_name }} {{ s.middle_name }}</td>
+                            <td>{{ s.level }}</td>
+                            <td style="font-size:0.85rem; color:var(--text-muted);">{{ s.email }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
 
             {% else %}
             <!-- No students enrolled in this class yet -->
@@ -351,69 +442,88 @@
         todayDateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
     }
 
+    // ── 10-hour cooldown countdown ──────────────────────────────────────────
+    // If attendance was taken today, show a countdown until the button re-enables (10h after session start)
+    const SESSION_START_ISO = {{ ('"' + today_session_start + '"') if today_session_start else 'null' }};
+    const COOLDOWN_HOURS = 10;
+
+    function formatCountdown(ms) {
+        if (ms <= 0) return null;
+        const totalSec = Math.floor(ms / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    // Inject countdown badge next to the locked/unsaved start button
+    function startCountdown() {
+        if (!SESSION_START_ISO) return;
+        const sessionStart = new Date(SESSION_START_ISO);
+        const unlockAt = new Date(sessionStart.getTime() + COOLDOWN_HOURS * 3600 * 1000);
+
+        const countdownEl = document.getElementById('start-countdown');
+        if (!countdownEl) return;
+
+        function tick() {
+            const remaining = unlockAt - Date.now();
+            const txt = formatCountdown(remaining);
+            if (txt) {
+                countdownEl.textContent = `Re-enables in ${txt}`;
+                countdownEl.style.display = 'inline';
+            } else {
+                countdownEl.textContent = 'Available again — refresh to start';
+                countdownEl.style.color = '#10b981';
+            }
+        }
+        tick();
+        setInterval(tick, 1000);
+    }
+    startCountdown();
+
+    // ── triggerManualStart ──────────────────────────────────────────────────
+    // Called when teacher clicks the play button on a class card.
+    // Navigates to this page with the class selected (which loads the form).
+    function triggerManualStart(subjectId, section) {
+        window.location.href = `/teacher/manual_attendance?subject_id=${subjectId}&section=${encodeURIComponent(section)}`;
+    }
+
     // Total number of students rendered in this class
     const totalStudents = Number('{{ students | length }}');
 
-    /**
-     * updateCounter()
-     * Called every time a checkbox changes.
-     * Re-counts checked boxes, updates the counter bar and
-     * live status badges for each student row.
-     */
     function updateCounter() {
-        // Count how many checkboxes are currently checked
         const checked = document.querySelectorAll('input[name="present_ids"]:checked');
         const presentCount = checked.length;
         const absentCount  = totalStudents - presentCount;
         const pct          = totalStudents > 0 ? (presentCount / totalStudents * 100) : 0;
 
-        // Update the counter display
         document.getElementById('cnt-present').textContent = presentCount;
         document.getElementById('cnt-absent').textContent  = absentCount;
-
-        // Animate the progress bar width
         document.getElementById('progress-bar').style.width = pct.toFixed(1) + '%';
 
-        // Update each student row's live status badge
         document.querySelectorAll('input[name="present_ids"]').forEach(chk => {
             const statusCell = document.getElementById('status-' + chk.value);
             if (!statusCell) return;
-
             if (chk.checked) {
-                // Show green Present badge
-                statusCell.innerHTML = '<span class="badge" ' +
-                    'style="background:rgba(16,185,129,0.2); color:#34d399;">Present</span>';
-                // Highlight the row
+                statusCell.innerHTML = '<span class="badge" style="background:rgba(16,185,129,0.2); color:#34d399;">Present</span>';
                 document.getElementById('row-' + chk.value).style.background = 'rgba(16,185,129,0.05)';
             } else {
-                // Show red Absent badge
-                statusCell.innerHTML = '<span class="badge" ' +
-                    'style="background:rgba(239,68,68,0.15); color:#f87171;">Absent</span>';
-                // Reset row background
+                statusCell.innerHTML = '<span class="badge" style="background:rgba(239,68,68,0.15); color:#f87171;">Absent</span>';
                 document.getElementById('row-' + chk.value).style.background = '';
             }
         });
     }
 
-    /**
-     * selectAll()
-     * Marks every student as Present by checking all checkboxes.
-     */
     function selectAll() {
         document.querySelectorAll('input[name="present_ids"]').forEach(chk => chk.checked = true);
-        updateCounter();   // Refresh the live counts
+        updateCounter();
     }
 
-    /**
-     * clearAll()
-     * Unchecks all checkboxes (everyone will be Absent).
-     */
     function clearAll() {
         document.querySelectorAll('input[name="present_ids"]').forEach(chk => chk.checked = false);
-        updateCounter();   // Refresh the live counts
+        updateCounter();
     }
 
-    // Run once on page load so the counter starts correctly at 0 Presents
     updateCounter();
 </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

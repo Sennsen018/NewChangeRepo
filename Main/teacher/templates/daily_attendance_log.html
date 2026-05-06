@@ -405,24 +405,13 @@
                         <div>
                             <h3 style="margin: 0;">Attendance Records</h3>
                             <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
-                                {{ daily_logs | length }} total record(s) — grouped by date
+                                {{ daily_logs | length }} total record(s) — grouped by date.
+                                Use the <strong>Save</strong> button on each date to finalize.
                             </p>
                         </div>
-                        <!-- Save Attendance form -->
-                        <form method="POST" action="{{ url_for('teacher.submit_manual_attendance') }}"
-                              onsubmit="return confirm('Save attendance for today? This will lock editing via this form.');">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
-                            <input type="hidden" name="section" value="{{ selected_class.section }}">
-                            {% for s in all_students %}
-                            <input type="hidden" name="all_ids" value="{{ s.usid }}">
-                            {% endfor %}
-                            <button type="submit" class="btn btn-primary"
-                                    {% if attendance_locked %}disabled style="opacity:0.5; cursor:not-allowed;"{% endif %}>
-                                <i class="fas fa-save"></i>
-                                {% if attendance_locked %}Attendance Saved{% else %}Save Attendance{% endif %}
-                            </button>
-                        </form>
+                        <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
                     </div>
 
                     {% if daily_logs %}
@@ -430,6 +419,7 @@
                     <div>
                         {% for date, logs in grouped %}
                         {% set logs = logs | list %}
+                        {% set date_info = date_finalized_map.get(date, {'is_finalized': false, 'session_id': none}) %}
                         <div style="border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; margin-bottom: 1rem;">
                             <!-- Date header — click to toggle -->
                             <div onclick="toggleAccordion('log-{{ loop.index }}')"
@@ -440,6 +430,16 @@
                                     {{ date }}
                                 </h4>
                                 <div class="dal-counts" style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <!-- Saved / Unsaved badge -->
+                                    {% if date_info.is_finalized %}
+                                    <span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.55rem;border-radius:99px;font-size:0.68rem;font-weight:700;background:rgba(16,185,129,0.15);color:#10b981;flex-shrink:0;">
+                                        <i class="fas fa-check-circle"></i> Saved
+                                    </span>
+                                    {% else %}
+                                    <span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.55rem;border-radius:99px;font-size:0.68rem;font-weight:700;background:rgba(245,158,11,0.15);color:#f59e0b;flex-shrink:0;">
+                                        <i class="fas fa-exclamation-triangle"></i> Unsaved
+                                    </span>
+                                    {% endif %}
                                     <!-- Present / Absent counts -->
                                     <span style="font-size: 0.8rem; color: #10b981; font-weight: 600;">
                                         <i class="fas fa-check"></i> {{ logs | selectattr('status', 'equalto', 'Present') | list | length }}
@@ -450,7 +450,18 @@
                                     <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-muted); font-size: 0.75rem;">
                                         {{ logs | length }} records
                                     </span>
-                                    <!-- Delete button -->
+                                    <!-- Review/Save button for unsaved sessions -->
+                                    {% if not date_info.is_finalized and date_info.session_id %}
+                                    <a href="{{ url_for('teacher.review_attendance', session_id=date_info.session_id) }}"
+                                       class="btn btn-primary"
+                                       style="padding:0.2rem 0.6rem;font-size:0.72rem;background:#f59e0b;border:none;white-space:nowrap;"
+                                       onclick="event.stopPropagation();"
+                                       title="Review and save this attendance">
+                                        <i class="fas fa-save"></i> Save
+                                    </a>
+                                    {% endif %}
+                                    <!-- Delete button — disabled for finalized -->
+                                    {% if not date_info.is_finalized %}
                                     <form method="POST" action="{{ url_for('teacher.delete_daily_attendance') }}"
                                         style="margin: 0;"
                                         onsubmit="return confirm('Delete ALL attendance records for {{ date }}? This cannot be undone.');">
@@ -464,6 +475,11 @@
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
+                                    {% else %}
+                                    <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.8rem;" title="Saved attendance cannot be deleted">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    {% endif %}
                                     <i class="fas fa-chevron-down" id="icon-log-{{ loop.index }}"
                                         style="transition: transform 0.3s; color: var(--text-muted);"></i>
                                 </div>
@@ -544,20 +560,10 @@
                     <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
                         <i class="fas fa-calendar-times" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
                         <p>No attendance records found for this class.</p>
-                        <form method="POST" action="{{ url_for('teacher.submit_manual_attendance') }}" style="margin-top: 1rem;"
-                              onsubmit="return confirm('Save attendance for today?');">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
-                            <input type="hidden" name="section" value="{{ selected_class.section }}">
-                            {% for s in all_students %}
-                            <input type="hidden" name="all_ids" value="{{ s.usid }}">
-                            {% endfor %}
-                            <button type="submit" class="btn btn-primary"
-                                    {% if attendance_locked %}disabled style="opacity:0.5; cursor:not-allowed;"{% endif %}>
-                                <i class="fas fa-save"></i>
-                                {% if attendance_locked %}Attendance Saved{% else %}Save Attendance{% endif %}
-                            </button>
-                        </form>
+                        <a href="{{ url_for('teacher.manual_attendance', subject_id=selected_class.subject_id, section=selected_class.section) }}"
+                           class="btn btn-primary" style="margin-top: 1rem;">
+                            <i class="fas fa-clipboard-check"></i> Take Attendance
+                        </a>
                     </div>
                     {% endif %}
                 </div>

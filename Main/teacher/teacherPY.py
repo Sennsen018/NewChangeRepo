@@ -55,7 +55,20 @@ def dashboard():
         c['today_present'] = stats.get('Present', 0)
         c['today_absent'] = stats.get('Absent', 0)
         c['today_late'] = stats.get('Late', 0)
-    
+
+        # Check if today's session is finalized (saved) and get start time
+        cursor.execute("""
+            SELECT is_finalized, start_time FROM Sessions
+            WHERE utid = %s AND subject_id = %s AND section = %s
+              AND start_time::date = CURRENT_DATE
+            ORDER BY start_time DESC LIMIT 1
+        """, (utid, c['subject_id'], c['section']))
+        fin_row = cursor.fetchone()
+        c['today_finalized'] = bool(fin_row['is_finalized']) if fin_row else False
+        # ISO string for JS countdown (None if no session today)
+        c['today_session_start'] = fin_row['start_time'].isoformat() if fin_row else None
+        # today_has_session: any session exists today (finalized or not)
+        c['today_has_session'] = fin_row is not None
     cursor.close()
     conn.close()
     
@@ -141,6 +154,171 @@ def verify_email_change():
     else:
         return jsonify({'success': False, 'message': 'Invalid OTP code.'})
 
+@teacher.route('/check_attendance_today', methods=['GET'])
+def check_attendance_today():
+    """
+    Checks whether attendance has already been recorded for a given class today.
+    Returns JSON: { exists: bool, is_finalized: bool, method: 'qr'|'manual'|null }
+    """
+    utid = session['user_id']
+    subject_id = request.args.get('subject_id')
+    section_val = request.args.get('section')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("""
+        SELECT session_id, random_token, is_finalized
+        FROM Sessions
+        WHERE utid = %s AND subject_id = %s AND section = %s
+          AND start_time::date = CURRENT_DATE
+        ORDER BY start_time DESC LIMIT 1
+    """, (utid, subject_id, section_val))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if row:
+        method = 'manual' if row['random_token'] == 'MANUAL' else 'qr'
+        return jsonify({
+            'exists': True,
+            'is_finalized': bool(row['is_finalized']),
+            'method': method,
+            'session_id': row['session_id']
+        })
+    return jsonify({'exists': False, 'is_finalized': False, 'method': None, 'session_id': None})
+
+
+@teacher.route('/get_temp_attendance/<session_id>', methods=['GET'])
+def get_temp_attendance(session_id):
+    """
+    Returns the current (possibly unsaved) attendance records for a session.
+    Used by the save/review UI to show editable attendance before finalizing.
+    """
+    utid = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    # Verify teacher owns this session
+    cursor.execute("""
+        SELECT ses.*, sub.subject_name, sub.subject_code
+        FROM Sessions ses
+        JOIN Subjects sub ON ses.subject_id = sub.subject_id
+        WHERE ses.session_id = %s AND ses.utid = %s
+    """, (session_id, utid))
+    ses = cursor.fetchone()
+    if not ses:
+        cursor.close()
+        conn.close()
+        return jsonify({'success': False, 'message': 'Session not found'})
+
+    cursor.execute("""
+        SELECT a.attendance_id, a.usid, a.status, a.remarks,
+               s.first_name, s.middle_name, s.last_name
+        FROM Attendance a
+        JOIN Students s ON a.usid = s.usid
+        WHERE a.session_id = %s
+        ORDER BY s.last_name, s.first_name
+    """, (session_id,))
+    records = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify({
+        'success': True,
+        'session': ses,
+        'records': records,
+        'is_finalized': bool(ses['is_finalized'])
+    })
+
+
+@teacher.route('/update_temp_status', methods=['POST'])
+def update_temp_status():
+    """
+    Updates a student's attendance status in an UNSAVED (temp) session.
+    Blocked if the session is already finalized.
+    """
+    utid = session['user_id']
+    data = request.json
+    attendance_id = data.get('attendance_id')
+    new_status = data.get('status')
+
+    if new_status not in ('Present', 'Absent', 'Late'):
+        return jsonify({'success': False, 'message': 'Invalid status'})
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        # Verify teacher owns this attendance record via session
+        cursor.execute("""
+            SELECT a.attendance_id, a.status, ses.is_finalized
+            FROM Attendance a
+            JOIN Sessions ses ON a.session_id = ses.session_id
+            WHERE a.attendance_id = %s AND ses.utid = %s
+        """, (attendance_id, utid))
+        rec = cursor.fetchone()
+        if not rec:
+            return jsonify({'success': False, 'message': 'Record not found'})
+        if rec['is_finalized']:
+            return jsonify({'success': False, 'message': 'Attendance is already saved and cannot be edited'})
+
+        cursor.execute("UPDATE Attendance SET status = %s WHERE attendance_id = %s", (new_status, attendance_id))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@teacher.route('/save_attendance', methods=['POST'])
+def save_attendance():
+    """
+    Finalizes (saves) an attendance session permanently.
+    Once finalized: is_finalized = TRUE, attendance cannot be edited via temp flow.
+    Validates that at least one attendance record exists before saving.
+    """
+    utid = session['user_id']
+    data = request.json
+    session_id = data.get('session_id')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        # Verify teacher owns this session
+        cursor.execute("""
+            SELECT * FROM Sessions WHERE session_id = %s AND utid = %s
+        """, (session_id, utid))
+        ses = cursor.fetchone()
+        if not ses:
+            return jsonify({'success': False, 'message': 'Session not found'})
+        if ses['is_finalized']:
+            return jsonify({'success': False, 'message': 'Attendance is already saved'})
+
+        # Validate: must have at least one attendance record
+        cursor.execute("SELECT COUNT(*) as cnt FROM Attendance WHERE session_id = %s", (session_id,))
+        cnt = cursor.fetchone()['cnt']
+        if cnt == 0:
+            return jsonify({'success': False, 'message': 'No attendance records found. Cannot save empty attendance.'})
+
+        # Finalize the session
+        cursor.execute("UPDATE Sessions SET is_finalized = TRUE WHERE session_id = %s", (session_id,))
+
+        # Audit log
+        log_system_action(cursor, 'Sessions', session_id, 'Update', utid, 'teacher',
+                          f"Attendance finalized/saved for session {session_id}")
+
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Attendance saved successfully!'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @teacher.route('/qr_generator', methods=['GET'])
 def qr_generator():
     subject_id = request.args.get('subject_id')
@@ -150,7 +328,8 @@ def qr_generator():
 @teacher.route('/start_session', methods=['POST'])
 def start_session():
     """
-    Initiates a new attendance session for a given subject and section.
+    Initiates a new QR attendance session for a given subject and section.
+    Blocks if attendance already exists for today (one per day rule).
     Session duration defaults to 1 minute, with a max of 10.
     """
     data = request.json
@@ -165,26 +344,37 @@ def start_session():
     if duration_mins < 1: duration_mins = 1
     
     utid = session['user_id']
-    session_id = f"session_{uuid.uuid4().hex[:8]}"
-    token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-    
-    start_time = datetime.now()
-    expires_at = start_time + timedelta(minutes=duration_mins)
-    
+
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        # One attendance per class per day rule
         cursor.execute("""
-            INSERT INTO Sessions (session_id, utid, subject_id, section, random_token, start_time, expires_at, latitude, longitude, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'Active')
+            SELECT COUNT(*) as count FROM Sessions
+            WHERE utid = %s AND subject_id = %s AND section = %s
+              AND start_time::date = CURRENT_DATE
+        """, (utid, subject_id, section))
+        if cursor.fetchone()['count'] >= 1:
+            return jsonify({'success': False, 'message': 'Attendance already recorded for today. You cannot start another session.'})
+
+        session_id = f"session_{uuid.uuid4().hex[:8]}"
+        token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        
+        start_time = datetime.now()
+        expires_at = start_time + timedelta(minutes=duration_mins)
+
+        cursor.execute("""
+            INSERT INTO Sessions (session_id, utid, subject_id, section, random_token, start_time, expires_at, latitude, longitude, status, is_finalized)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'Active', FALSE)
         """, (session_id, utid, subject_id, section, token, start_time, expires_at, lat, lon))
         
         # Audit Logging
-        log_system_action(cursor, 'Sessions', session_id, 'Create', utid, 'teacher', f"Session started for Subject {subject_id}, Section {section}")
+        log_system_action(cursor, 'Sessions', session_id, 'Create', utid, 'teacher', f"QR Session started for Subject {subject_id}, Section {section}")
         
         conn.commit()
         return jsonify({'success': True, 'session_id': session_id, 'token': token, 'expires_at': expires_at.isoformat()})
     except Exception as e:
+        conn.rollback()
         return jsonify({'success': False, 'message': str(e)})
     finally:
         cursor.close()
@@ -694,6 +884,9 @@ def daily_attendance_log():
 
     daily_logs = []
     selected_class = None
+    date_finalized_map = {}
+    all_students = []
+    attendance_locked = False
 
     if subject_id and section:
         for c in classes:
@@ -718,7 +911,22 @@ def daily_attendance_log():
                 if row['date'] and not isinstance(row['date'], str):
                     row['date'] = row['date'].strftime('%Y-%m-%d')
 
-            # All active students for Save Attendance form
+            # Build per-date finalization map for accordion headers
+            cursor.execute("""
+                SELECT start_time::date as date, is_finalized, session_id
+                FROM Sessions
+                WHERE utid = %s AND subject_id = %s AND section = %s
+                ORDER BY start_time DESC
+            """, (utid, subject_id, section))
+            for sr in cursor.fetchall():
+                d = sr['date'].strftime('%Y-%m-%d') if not isinstance(sr['date'], str) else sr['date']
+                if d not in date_finalized_map:
+                    date_finalized_map[d] = {
+                        'is_finalized': bool(sr['is_finalized']),
+                        'session_id': sr['session_id']
+                    }
+
+            # All active students (kept for compatibility)
             cursor.execute("""
                 SELECT s.usid FROM Students s
                 JOIN Enrollments e ON s.usid = e.usid
@@ -743,8 +951,9 @@ def daily_attendance_log():
                            classes=classes,
                            selected_class=selected_class,
                            daily_logs=daily_logs,
-                           all_students=all_students if selected_class else [],
-                           attendance_locked=attendance_locked if selected_class else False,
+                           date_finalized_map=date_finalized_map,
+                           all_students=all_students,
+                           attendance_locked=attendance_locked,
                            subject_id=subject_id,
                            section=section)
 
@@ -753,6 +962,7 @@ def daily_attendance_log():
 def delete_daily_attendance():
     """
     Deletes all attendance records for a specific class on a specific date.
+    Blocked if the session for that date is finalized (saved).
     Logs each deletion action into Attendance_Audit_Log.
     """
     utid = session['user_id']
@@ -764,6 +974,20 @@ def delete_daily_attendance():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
+        # Block deletion if the session for this date is finalized
+        cursor.execute("""
+            SELECT is_finalized FROM Sessions
+            WHERE utid = %s AND subject_id = %s AND section = %s
+              AND start_time::date = %s
+            ORDER BY start_time DESC LIMIT 1
+        """, (utid, subject_id, section, date_str))
+        ses_row = cursor.fetchone()
+        if ses_row and ses_row['is_finalized']:
+            flash(f'Cannot delete attendance for {date_str} — it has been saved and locked.', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('teacher.daily_attendance_log', subject_id=subject_id, section=section))
+
         # Fetch records to delete for logging
         cursor.execute("""
             SELECT a.attendance_id, a.status 
@@ -778,6 +1002,13 @@ def delete_daily_attendance():
                 DELETE FROM Attendance a
                 USING Sessions ses
                 WHERE a.session_id = ses.session_id AND ses.utid = %s AND ses.subject_id = %s AND ses.section = %s AND a.scan_time::date = %s
+            """, (utid, subject_id, section, date_str))
+            
+            # Also delete the session record for that date
+            cursor.execute("""
+                DELETE FROM Sessions
+                WHERE utid = %s AND subject_id = %s AND section = %s
+                  AND start_time::date = %s
             """, (utid, subject_id, section, date_str))
             
             for rec in records_to_delete:
@@ -797,7 +1028,7 @@ def delete_daily_attendance():
         cursor.close()
         conn.close()
         
-    return redirect(url_for('teacher.reports', subject_id=subject_id, section=section))
+    return redirect(url_for('teacher.daily_attendance_log', subject_id=subject_id, section=section))
 
 @teacher.route('/manage_marks')
 def manage_marks():
@@ -819,7 +1050,9 @@ def manage_marks():
     
     attendance_records = []
     selected_class = None
-    
+    today_unsaved_session_id = None
+    today_finalized = False
+
     # Initialize defaults for template
     total_pages = 1
     current_page = 1
@@ -891,28 +1124,53 @@ def manage_marks():
             total_pages = (total_count + per_page - 1) // per_page
 
             # Select data
-            select_query = "SELECT a.attendance_id, s.first_name, s.middle_name, s.last_name, s.usid, sub.subject_name, a.scan_time, a.status, a.is_valid, a.remarks, a.behavior_flags, a.distance_meters " + query
+            select_query = "SELECT a.attendance_id, s.first_name, s.middle_name, s.last_name, s.usid, sub.subject_name, a.scan_time, a.status, a.is_valid, a.remarks, a.behavior_flags, a.distance_meters, ses.is_finalized " + query
             select_query += " ORDER BY a.scan_time::date DESC, s.last_name ASC, s.first_name ASC LIMIT %s OFFSET %s"
             params.extend([per_page, offset])
 
             cursor.execute(select_query, params)
             attendance_records = cursor.fetchall()
-    
+
+            # Check if today has an unsaved session (for the Save banner)
+            cursor.execute("""
+                SELECT session_id FROM Sessions
+                WHERE utid = %s AND subject_id = %s AND section = %s
+                  AND start_time::date = CURRENT_DATE
+                  AND is_finalized = FALSE
+                ORDER BY start_time DESC LIMIT 1
+            """, (utid, subject_id, section))
+            unsaved_row = cursor.fetchone()
+            today_unsaved_session_id = unsaved_row['session_id'] if unsaved_row else None
+
+            # Check if today's session is finalized — locks the whole page
+            cursor.execute("""
+                SELECT is_finalized FROM Sessions
+                WHERE utid = %s AND subject_id = %s AND section = %s
+                  AND start_time::date = CURRENT_DATE
+                ORDER BY start_time DESC LIMIT 1
+            """, (utid, subject_id, section))
+            fin_row = cursor.fetchone()
+            today_finalized = bool(fin_row['is_finalized']) if fin_row else False
+
     cursor.close()
     conn.close()
-    return render_template('manage_marks.html', 
-                           records=attendance_records, 
-                           classes=classes, 
+    return render_template('manage_marks.html',
+                           records=attendance_records,
+                           classes=classes,
                            selected_class=selected_class,
                            total_pages=total_pages,
                            current_page=current_page,
                            search=search,
-                           status_filter=status_filter)
+                           status_filter=status_filter,
+                           today_unsaved_session_id=today_unsaved_session_id,
+                           today_finalized=today_finalized,
+                           name=session.get('name'))
 
 @teacher.route('/update_mark', methods=['POST'])
 def update_mark():
     """
     Manually overrides a student's attendance status (e.g. change Absent -> Present).
+    Blocked if the session is finalized (saved).
     Logs the update action including the previous and new status.
     """
     utid = session['user_id']
@@ -924,25 +1182,36 @@ def update_mark():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    cursor.execute("SELECT status FROM Attendance WHERE attendance_id = %s", (attendance_id,))
+    # Check if the session is finalized
+    cursor.execute("""
+        SELECT a.status, ses.is_finalized
+        FROM Attendance a
+        JOIN Sessions ses ON a.session_id = ses.session_id
+        WHERE a.attendance_id = %s AND ses.utid = %s
+    """, (attendance_id, utid))
     record = cursor.fetchone()
     
-    if record and record['status'] != new_status:
-        old_status = record['status']
-        cursor.execute("UPDATE Attendance SET status = %s WHERE attendance_id = %s", (new_status, attendance_id))
-        
-        cursor.execute("""
-            INSERT INTO Attendance_Audit_Log (attendance_id, action, old_status, new_status, changed_by_user_id, changed_by_role)
-            VALUES (%s, 'Update', %s, %s, %s, %s)
-        """, (attendance_id, old_status, new_status, utid, role))
-        
-        # Audit Logging
-        log_system_action(cursor, 'Attendance', attendance_id, 'Update', utid, role, f"Attendance status updated: {old_status} -> {new_status}")
-        
-        conn.commit()
-        flash('Attendance mark updated successfully.', 'success')
+    if record:
+        if record['is_finalized']:
+            flash('This attendance record is saved and cannot be edited.', 'error')
+        elif record['status'] != new_status:
+            old_status = record['status']
+            cursor.execute("UPDATE Attendance SET status = %s WHERE attendance_id = %s", (new_status, attendance_id))
+            
+            cursor.execute("""
+                INSERT INTO Attendance_Audit_Log (attendance_id, action, old_status, new_status, changed_by_user_id, changed_by_role)
+                VALUES (%s, 'Update', %s, %s, %s, %s)
+            """, (attendance_id, old_status, new_status, utid, role))
+            
+            # Audit Logging
+            log_system_action(cursor, 'Attendance', attendance_id, 'Update', utid, role, f"Attendance status updated: {old_status} -> {new_status}")
+            
+            conn.commit()
+            flash('Attendance mark updated successfully.', 'success')
+        else:
+            flash('No changes made to attendance.', 'info')
     else:
-        flash('No changes made to attendance.', 'info')
+        flash('Record not found.', 'error')
         
     cursor.close()
     conn.close()
@@ -1031,8 +1300,10 @@ def manual_attendance():
     already_recorded    = False
     attendance_locked   = False
     attendance_method   = None  # 'manual' or 'qr'
+    attendance_finalized = False
+    today_session_id    = None
+    today_session_start = None
     today_session_count = 0
-
     if selected_subject_id and selected_section:
         # Find the label for the currently selected class
         for c in classes:
@@ -1056,7 +1327,7 @@ def manual_attendance():
 
         # Check today's session — 1 per day max, detect method
         cursor.execute("""
-            SELECT session_id, random_token
+            SELECT session_id, random_token, is_finalized, start_time
             FROM Sessions
             WHERE utid = %s AND subject_id = %s AND section = %s
               AND start_time::date = CURRENT_DATE
@@ -1067,8 +1338,12 @@ def manual_attendance():
             today_session_count = 1
             already_recorded = True
             attendance_method = 'manual' if existing_session['random_token'] == 'MANUAL' else 'qr'
-            # Locked = attendance already recorded (once per day rule)
             attendance_locked = True
+            attendance_finalized = bool(existing_session['is_finalized'])
+            today_session_id = existing_session['session_id']
+            today_session_start = existing_session['start_time'].isoformat()
+        else:
+            today_session_start = None
 
     cursor.close()
     conn.close()
@@ -1085,6 +1360,9 @@ def manual_attendance():
         already_recorded=already_recorded,
         attendance_locked=attendance_locked,
         attendance_method=attendance_method,
+        attendance_finalized=attendance_finalized,
+        today_session_id=today_session_id,
+        today_session_start=today_session_start,
         today_session_count=today_session_count
     )
 
@@ -1134,12 +1412,13 @@ def submit_manual_attendance():
         # STEP 1: Create a Session record for this manual attendance event.
         # lat/lon = 0 because this is not a QR / GPS session.
         # status = 'Ended' immediately since it is teacher-submitted.
+        # is_finalized = FALSE — teacher must explicitly save to finalize.
         cursor.execute("""
             INSERT INTO Sessions
                 (session_id, utid, subject_id, section,
                  random_token, start_time, expires_at,
-                 latitude, longitude, status)
-            VALUES (%s, %s, %s, %s, 'MANUAL', %s, %s, 0, 0, 'Ended')
+                 latitude, longitude, status, is_finalized)
+            VALUES (%s, %s, %s, %s, 'MANUAL', %s, %s, 0, 0, 'Ended', FALSE)
         """, (manual_session_id, utid, subject_id, section, now, now))
         
         # Audit Logging
@@ -1165,24 +1444,72 @@ def submit_manual_attendance():
         total_present = len(present_ids)
         total_absent  = len(all_ids) - total_present
         flash(
-            f'Attendance saved! \u2705 {total_present} Present \u00b7 \u274c {total_absent} Absent.',
-            'success'
+            f'Attendance recorded! \u2705 {total_present} Present \u00b7 \u274c {total_absent} Absent. ⚠️ NOT SAVED YET — Review and save to finalize.',
+            'warning'
         )
+
+        # Redirect to a review page where teacher can save or edit
+        return redirect(url_for(
+            'teacher.review_attendance',
+            session_id=manual_session_id
+        ))
 
     except Exception as e:
         conn.rollback()
         flash(f'Error saving attendance: {str(e)}', 'error')
+        return redirect(url_for(
+            'teacher.manual_attendance',
+            subject_id=subject_id,
+            section=section
+        ))
 
     finally:
         cursor.close()
         conn.close()
 
-    # Redirect back to the same class view so teacher can verify
-    return redirect(url_for(
-        'teacher.manual_attendance',
-        subject_id=subject_id,
-        section=section
-    ))
+
+@teacher.route('/review_attendance/<session_id>')
+def review_attendance(session_id):
+    """
+    Review page: shows attendance records for a session before finalizing.
+    Teacher can edit statuses (if not finalized) and then save or discard.
+    """
+    utid = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor.execute("""
+        SELECT ses.*, sub.subject_name, sub.subject_code
+        FROM Sessions ses
+        JOIN Subjects sub ON ses.subject_id = sub.subject_id
+        WHERE ses.session_id = %s AND ses.utid = %s
+    """, (session_id, utid))
+    ses = cursor.fetchone()
+
+    if not ses:
+        flash('Session not found.', 'error')
+        cursor.close()
+        conn.close()
+        return redirect(url_for('teacher.dashboard'))
+
+    cursor.execute("""
+        SELECT a.attendance_id, a.usid, a.status, a.remarks,
+               s.first_name, s.middle_name, s.last_name
+        FROM Attendance a
+        JOIN Students s ON a.usid = s.usid
+        WHERE a.session_id = %s
+        ORDER BY s.last_name, s.first_name
+    """, (session_id,))
+    records = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('review_attendance.html',
+                           name=session.get('name'),
+                           ses=ses,
+                           records=records,
+                           is_finalized=bool(ses['is_finalized']))
 
 @teacher.route('/view_excuses')
 def view_excuses():

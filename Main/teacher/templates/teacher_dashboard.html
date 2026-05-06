@@ -7,6 +7,92 @@
     <title>Teacher Dashboard | Attendeez</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        /* ── Method selection modal ── */
+        .method-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .method-modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .method-modal {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 480px;
+            width: 100%;
+            transform: translateY(20px);
+            transition: transform 0.25s ease;
+        }
+        .method-modal-overlay.open .method-modal {
+            transform: translateY(0);
+        }
+        .method-card {
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            background: var(--bg-surface-soft);
+        }
+        .method-card:hover {
+            border-color: var(--primary);
+            background: rgba(79,70,229,0.08);
+            transform: translateY(-2px);
+        }
+        .method-card .method-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .method-card h4 {
+            font-size: 1.1rem;
+            margin: 0 0 0.4rem 0;
+        }
+        .method-card p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* ── Attendance status badge on class card ── */
+        .att-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .att-status-unsaved {
+            background: rgba(245,158,11,0.15);
+            color: #f59e0b;
+        }
+        .att-status-saved {
+            background: rgba(16,185,129,0.15);
+            color: #10b981;
+        }
+        .att-status-none {
+            background: rgba(100,116,139,0.12);
+            color: #64748b;
+        }
+    </style>
 </head>
 
 <body class="theme-teacher">
@@ -23,10 +109,8 @@
                         <i class="fas fa-ellipsis-v"></i>
                     </button>
                     <div id="user-dropdown" class="user-dropdown">
-                        <div
-                            style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
-                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ name
-                                }}</p>
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin: 0;">{{ name }}</p>
                             <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Faculty Member</p>
                         </div>
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
@@ -49,7 +133,6 @@
                 <a href="{{ url_for('teacher.reports') }}" class="nav-item" data-tooltip="Reports"><i class="fas fa-chart-bar"></i><span class="nav-item-text"> Reports</span></a>
                 <a href="{{ url_for('teacher.daily_attendance_log') }}" class="nav-item" data-tooltip="Daily Attendance Log"><i class="fas fa-calendar-check"></i><span class="nav-item-text"> Daily Attendance Log</span></a>
             </nav>
-            
         </aside>
 
         <!-- Main Content -->
@@ -79,37 +162,65 @@
                     <div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid var(--primary);">
                         <div class="flex justify-between items-start mb-4">
                             <div>
-                                <div
-                                    style="font-weight: 700; color: var(--primary); font-size: 0.8rem; margin-bottom: 0.25rem;">
-                                    {{ c.subject_code }}</div>
+                                <div style="font-weight: 700; color: var(--primary); font-size: 0.8rem; margin-bottom: 0.25rem;">
+                                    {{ c.subject_code }}
+                                </div>
                                 <h4 style="font-size: 1.1rem; margin: 0; line-height: 1.4;">{{ c.subject_name }}</h4>
                             </div>
                             <span class="badge badge-warning">Section {{ c.section }}</span>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                            <div
-                                style="padding: 0.75rem; background: var(--bg-surface-soft); border-radius: var(--radius-sm);">
-                                <div
-                                    style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">
-                                    Enrolled</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="padding: 0.75rem; background: var(--bg-surface-soft); border-radius: var(--radius-sm);">
+                                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Enrolled</div>
                                 <div style="font-size: 1.25rem; font-weight: 700;">{{ c.student_count }}</div>
                             </div>
-                            <div
-                                style="padding: 0.75rem; background: var(--accent-soft); border-radius: var(--radius-sm);">
-                                <div
-                                    style="font-size: 0.7rem; color: var(--accent); text-transform: uppercase; margin-bottom: 0.25rem;">
-                                    Today</div>
-                                <div style="font-size: 1.25rem; font-weight: 700; color: var(--accent);">{{
-                                    c.today_present }}</div>
+                            <div style="padding: 0.75rem; background: var(--accent-soft); border-radius: var(--radius-sm);">
+                                <div style="font-size: 0.7rem; color: var(--accent); text-transform: uppercase; margin-bottom: 0.25rem;">Today Present</div>
+                                <div style="font-size: 1.25rem; font-weight: 700; color: var(--accent);">{{ c.today_present }}</div>
                             </div>
                         </div>
 
+                        <!-- Today's attendance status indicator -->
+                        <div style="margin-bottom: 1rem;" id="att-status-{{ c.subject_id }}-{{ c.section }}">
+                            {% if c.today_present > 0 or c.today_absent > 0 or c.today_late > 0 %}
+                                {% if c.today_finalized %}
+                                <span class="att-status-badge att-status-saved">
+                                    <i class="fas fa-check-circle"></i> Attendance Saved
+                                </span>
+                                {% else %}
+                                <span class="att-status-badge att-status-unsaved">
+                                    <i class="fas fa-exclamation-triangle"></i> Unsaved Attendance
+                                </span>
+                                {% endif %}
+                            {% else %}
+                            <span class="att-status-badge att-status-none">
+                                <i class="fas fa-circle"></i> No Attendance Today
+                            </span>
+                            {% endif %}
+                        </div>
+
                         <div class="flex gap-2">
-                            <a href="{{ url_for('teacher.qr_generator', subject_id=c.subject_id, section=c.section) }}"
-                                class="btn btn-primary" style="flex: 1; background: var(--primary);">
-                                <i class="fas fa-play"></i> Start Class
-                            </a>
+                            {% if c.today_finalized %}
+                            <!-- Attendance saved today — button fully disabled -->
+                            <button class="btn btn-secondary" style="flex:1;opacity:0.5;cursor:not-allowed;" disabled title="Attendance already saved for today">
+                                <i class="fas fa-lock"></i> Attendance Done
+                            </button>
+                            {% elif c.today_has_session %}
+                            <!-- Session exists but unsaved — redirect to review -->
+                            <button class="btn btn-primary" style="flex:1;background:#f59e0b;border-color:#f59e0b;"
+                                onclick="startAttendance('{{ c.subject_id }}', '{{ c.section }}', '{{ c.subject_name }}', '{{ c.subject_code }}')">
+                                <i class="fas fa-exclamation-triangle"></i> Unsaved — Review
+                            </button>
+                            {% else %}
+                            <!-- No attendance today — normal start button -->
+                            <button
+                                class="btn btn-primary"
+                                style="flex: 1; background: var(--primary);"
+                                onclick="startAttendance('{{ c.subject_id }}', '{{ c.section }}', '{{ c.subject_name }}', '{{ c.subject_code }}')">
+                                <i class="fas fa-play"></i> Start Attendance
+                            </button>
+                            {% endif %}
                             <a href="{{ url_for('teacher.reports', subject_id=c.subject_id, section=c.section) }}"
                                 class="btn btn-secondary" style="flex: 1;">
                                 <i class="fas fa-chart-line"></i> Reports
@@ -118,8 +229,7 @@
                     </div>
                     {% else %}
                     <div class="glass-panel" style="padding: 4rem; text-align: center; grid-column: 1 / -1;">
-                        <i class="fas fa-calendar-xmark fa-3x"
-                            style="color: var(--text-dim); margin-bottom: 1.5rem;"></i>
+                        <i class="fas fa-calendar-xmark fa-3x" style="color: var(--text-dim); margin-bottom: 1.5rem;"></i>
                         <p class="text-muted">No classes assigned to your account yet.</p>
                     </div>
                     {% endfor %}
@@ -127,7 +237,137 @@
             </div>
         </main>
     </div>
+
+    <!-- ── Method Selection Modal ── -->
+    <div class="method-modal-overlay" id="method-modal-overlay" onclick="closeMethodModal(event)">
+        <div class="method-modal" id="method-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.2rem;">Start Attendance</h3>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;" id="modal-class-label">—</p>
+                </div>
+                <button onclick="closeMethodModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.25rem; padding: 0.25rem;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                Choose how you want to take attendance. Once selected, the method cannot be changed for today.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="method-card" id="qr-method-card" onclick="selectMethod('qr')">
+                    <div class="method-icon" style="color: var(--primary);">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h4>QR Code</h4>
+                    <p>Students scan a QR code to mark themselves present</p>
+                </div>
+                <div class="method-card" id="manual-method-card" onclick="selectMethod('manual')">
+                    <div class="method-icon" style="color: #10b981;">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h4>Manual</h4>
+                    <p>Manually mark each student as present or absent</p>
+                </div>
+            </div>
+
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem; text-align: center;">
+                <i class="fas fa-info-circle"></i> Only one attendance session is allowed per class per day.
+            </p>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        let pendingSubjectId = null;
+        let pendingSection = null;
+        const CSRF = () => document.querySelector('meta[name="csrf-token"]').content;
+
+        function startAttendance(subjectId, section, subjectName, subjectCode) {
+            pendingSubjectId = subjectId;
+            pendingSection = section;
+
+            // First check if attendance already exists today
+            Swal.fire({
+                title: 'Checking...',
+                text: 'Verifying today\'s attendance status.',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch(`/teacher/check_attendance_today?subject_id=${subjectId}&section=${encodeURIComponent(section)}`)
+                .then(r => r.json())
+                .then(data => {
+                    Swal.close();
+
+                    if (data.exists) {
+                        if (data.is_finalized) {
+                            // Already saved — block
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Attendance Already Recorded',
+                                html: `<p>Attendance for today has already been <strong>saved</strong> for this class.</p>
+                                       <p style="color: var(--text-muted); font-size: 0.9rem;">Use <strong>Manage Marks</strong> if you need to make corrections.</p>`,
+                                confirmButtonText: 'Go to Manage Marks',
+                                showCancelButton: true,
+                                cancelButtonText: 'Close'
+                            }).then(result => {
+                                if (result.isConfirmed) {
+                                    window.location.href = `/teacher/manage_marks?subject_id=${subjectId}&section=${encodeURIComponent(section)}`;
+                                }
+                            });
+                        } else {
+                            // Unsaved session exists — offer to continue
+                            const methodLabel = data.method === 'qr' ? 'QR Code' : 'Manual';
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Unsaved Attendance Found',
+                                html: `<p>You have an <strong>unsaved</strong> attendance session (${methodLabel}) for today.</p>
+                                       <p style="color: #f59e0b; font-size: 0.9rem;">⚠️ This attendance has not been saved yet.</p>`,
+                                confirmButtonText: 'Review & Save',
+                                showCancelButton: true,
+                                cancelButtonText: 'Close',
+                                confirmButtonColor: '#f59e0b'
+                            }).then(result => {
+                                if (result.isConfirmed) {
+                                    window.location.href = `/teacher/review_attendance/${data.session_id}`;
+                                }
+                            });
+                        }
+                    } else {
+                        // No attendance today — show method selection modal
+                        document.getElementById('modal-class-label').textContent = `${subjectCode} · ${subjectName} · Section ${section}`;
+                        document.getElementById('method-modal-overlay').classList.add('open');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('Error', 'Could not check attendance status. Please try again.', 'error');
+                });
+        }
+
+        function selectMethod(method) {
+            closeMethodModal();
+            if (method === 'qr') {
+                window.location.href = `/teacher/qr_generator?subject_id=${pendingSubjectId}&section=${encodeURIComponent(pendingSection)}`;
+            } else {
+                window.location.href = `/teacher/manual_attendance?subject_id=${pendingSubjectId}&section=${encodeURIComponent(pendingSection)}`;
+            }
+        }
+
+        function closeMethodModal(event) {
+            if (event && event.target !== document.getElementById('method-modal-overlay')) return;
+            document.getElementById('method-modal-overlay').classList.remove('open');
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('method-modal-overlay').classList.remove('open');
+            }
+        });
+    </script>
 
     <nav class="bottom-nav">
         <a href="{{ url_for('teacher.dashboard') }}"
@@ -158,5 +398,4 @@
     </nav>
 
 </body>
-
 </html>

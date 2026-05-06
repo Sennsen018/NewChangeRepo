@@ -581,6 +581,48 @@
         /* ═══════════════ SESSION ═══════════════ */
         function startSession() {
             if (!navigator.geolocation) { Swal.fire('Error', 'Geolocation not supported.', 'error'); return; }
+
+            // First check if attendance already exists today
+            Swal.fire({ title: 'Checking...', text: 'Verifying today\'s attendance status.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            fetch(`/teacher/check_attendance_today?subject_id=${subjectId}&section=${encodeURIComponent(section)}`)
+                .then(r => r.json())
+                .then(data => {
+                    Swal.close();
+                    if (data.exists) {
+                        if (data.is_finalized) {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Attendance Already Recorded',
+                                text: 'Attendance for today has already been saved for this class.',
+                                confirmButtonText: 'Go to Dashboard'
+                            }).then(() => { window.location.href = '{{ url_for("teacher.dashboard") }}'; });
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Unsaved Attendance Found',
+                                html: '<p>You have an unsaved attendance session for today.</p>',
+                                confirmButtonText: 'Review & Save',
+                                showCancelButton: true,
+                                cancelButtonText: 'Close',
+                                confirmButtonColor: '#f59e0b'
+                            }).then(result => {
+                                if (result.isConfirmed) {
+                                    window.location.href = `/teacher/review_attendance/${data.session_id}`;
+                                }
+                            });
+                        }
+                        return;
+                    }
+                    // No attendance today — proceed with geolocation
+                    getLocationAndStart();
+                })
+                .catch(() => {
+                    Swal.close();
+                    getLocationAndStart(); // Fallback: proceed anyway
+                });
+        }
+
+        function getLocationAndStart() {
             Swal.fire({ title: 'Getting Location…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             navigator.geolocation.getCurrentPosition(pos => {
                 const lat = pos.coords.latitude, lon = pos.coords.longitude;
@@ -678,16 +720,23 @@
                     .then(r => r.json())
                     .then(data => {
                         if (data.success) {
+                            const sid = currentSessionId;
                             currentSessionId = null;
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Session Ended',
-                                text: 'All absent students have been marked. Redirecting to dashboard…',
-                                timer: 2500,
-                                showConfirmButton: false,
+                                html: '<p>All absent students have been marked.</p><p style="color:#f59e0b;font-weight:600;">⚠️ Attendance is NOT saved yet. Review and save to finalize.</p>',
+                                confirmButtonText: '<i class="fas fa-save"></i> Review & Save',
+                                showCancelButton: true,
+                                cancelButtonText: 'Save Later',
+                                confirmButtonColor: '#10b981',
                                 allowOutsideClick: false
-                            }).then(() => {
-                                window.location.href = '{{ url_for("teacher.dashboard") }}';
+                            }).then(result => {
+                                if (result.isConfirmed) {
+                                    window.location.href = `/teacher/review_attendance/${sid}`;
+                                } else {
+                                    window.location.href = '{{ url_for("teacher.dashboard") }}';
+                                }
                             });
                         } else {
                             Swal.fire('Error', data.message || 'Could not end the session. Try again.', 'error');
@@ -825,6 +874,14 @@
             </div>`;
             }).join('');
         }
+
+        // Warn before leaving if a session is active
+        window.addEventListener('beforeunload', function(e) {
+            if (currentSessionId) {
+                e.preventDefault();
+                e.returnValue = 'You have an active attendance session. Are you sure you want to leave?';
+            }
+        });
     </script>
 </body>
 

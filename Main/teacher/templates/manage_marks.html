@@ -117,10 +117,35 @@
                         <a href="{{ url_for('teacher.manage_marks', subject_id=selected_class.subject_id, section=selected_class.section, clear=1) }}" class="btn btn-secondary" style="height: 42px; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Clear All Filters">
                             <i class="fas fa-sync-alt"></i>
                         </a>
-    
                     </div>
                 </form>
             </div>
+
+            <!-- Unsaved attendance banner with Save button -->
+            {% if today_finalized %}
+            <div style="background:rgba(16,185,129,0.1);border:2px solid #10b981;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                    <i class="fas fa-lock" style="color:#10b981;font-size:1.4rem;"></i>
+                    <div>
+                        <strong style="color:#10b981;">Attendance Saved — Marks Locked</strong>
+                        <p style="margin:0.2rem 0 0 0;font-size:0.85rem;color:var(--text-muted);">Today's attendance has been finalized. All records below are read-only and cannot be edited or deleted.</p>
+                    </div>
+                </div>
+            </div>
+            {% elif today_unsaved_session_id %}
+            <div style="background:rgba(245,158,11,0.12);border:2px solid #f59e0b;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                    <i class="fas fa-exclamation-triangle" style="color:#f59e0b;font-size:1.4rem;"></i>
+                    <div>
+                        <strong style="color:#f59e0b;">Today's Attendance is Unsaved</strong>
+                        <p style="margin:0.2rem 0 0 0;font-size:0.85rem;color:var(--text-muted);">You can still edit marks below. Click Save to finalize — after saving, marks cannot be changed.</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('teacher.review_attendance', session_id=today_unsaved_session_id) }}" class="btn btn-primary" style="background:#f59e0b;border:none;white-space:nowrap;">
+                    <i class="fas fa-save"></i> Save Attendance
+                </a>
+            </div>
+            {% endif %}
 
             <div class="glass-panel p-4" style="padding: 1.5rem;">
                 <div class="table-container">
@@ -138,7 +163,18 @@
                         <tbody>
                             {% for r in records %}
                             <tr {% if r.is_valid == 'Invalid' or r.status == 'Flagged' %}style="background: rgba(239, 68, 68, 0.05); border-left: 3px solid var(--danger-color);"{% endif %}>
-                                <td>{{ r.first_name }} {{ r.middle_name }} {{ r.last_name }}</td>
+                                <td>
+                                    {{ r.first_name }} {{ r.middle_name }} {{ r.last_name }}
+                                    {% if r.is_finalized %}
+                                    <span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.15rem 0.5rem;border-radius:99px;font-size:0.65rem;font-weight:700;background:rgba(16,185,129,0.12);color:#10b981;margin-left:0.4rem;">
+                                        <i class="fas fa-lock"></i> Saved
+                                    </span>
+                                    {% else %}
+                                    <span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.15rem 0.5rem;border-radius:99px;font-size:0.65rem;font-weight:700;background:rgba(245,158,11,0.12);color:#f59e0b;margin-left:0.4rem;">
+                                        <i class="fas fa-exclamation-triangle"></i> Unsaved
+                                    </span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ r.scan_time.strftime('%Y-%m-%d %H:%M') }}</td>
                                 <td>
                                     {% if r.status == 'Present' %}
@@ -161,7 +197,6 @@
                                 <td>
                                     {% if r.behavior_flags %}
                                         {% set flags = r.behavior_flags %}
-                                        {# Behavior flags are stored as JSON string in DB but Flask-MySQL might return it differently. #}
                                         <div style="font-size: 0.75rem; color: var(--text-muted);">
                                             {% if r.distance_meters %}
                                                 <div style="margin-bottom: 2px;"><i class="fas fa-map-marker-alt"></i> {{ r.distance_meters | round }}m</div>
@@ -181,9 +216,15 @@
                                     {% endif %}
                                 </td>
                                 <td>
+                                    {% if r.is_finalized %}
+                                    <!-- Finalized: editing locked -->
+                                    <span style="color:var(--text-muted);font-size:0.8rem;" title="Attendance is saved and locked">
+                                        <i class="fas fa-lock"></i> Locked
+                                    </span>
+                                    {% else %}
                                     <div style="display:flex; gap:0.5rem; align-items:center;">
                                         <form method="POST" action="{{ url_for('teacher.update_mark') }}" data-inline style="display:inline-flex; gap:0.5rem; margin:0;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <input type="hidden" name="attendance_id" value="{{ r.attendance_id }}">
                                             <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
                                             <input type="hidden" name="section" value="{{ selected_class.section }}">
@@ -195,9 +236,8 @@
                                             </select>
                                             <button type="submit" class="btn btn-primary" style="padding:0.2rem 0.5rem; font-size:0.8rem;">Update</button>
                                         </form>
-                                        
-                                        <form method="POST" action="{{ url_for('teacher.delete_mark') }}" data-inline style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this attendance record? This action will be logged.');">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <form method="POST" action="{{ url_for('teacher.delete_mark') }}" data-inline style="margin:0;" onsubmit="return confirm('Delete this attendance record? This action will be logged.');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <input type="hidden" name="attendance_id" value="{{ r.attendance_id }}">
                                             <input type="hidden" name="subject_id" value="{{ selected_class.subject_id }}">
                                             <input type="hidden" name="section" value="{{ selected_class.section }}">
@@ -206,6 +246,7 @@
                                             </button>
                                         </form>
                                     </div>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% else %}

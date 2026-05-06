@@ -94,9 +94,15 @@ CREATE TABLE IF NOT EXISTS Sessions (
     latitude DECIMAL(10, 8),
     longitude DECIMAL(11, 8),
     status VARCHAR(20) DEFAULT 'Active' CHECK (status IN ('Active', 'Ended')),
+    -- is_finalized: FALSE = unsaved/temporary, TRUE = saved/locked (cannot be edited)
+    is_finalized BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (uTID) REFERENCES Teachers(uTID),
     FOREIGN KEY (subject_id) REFERENCES Subjects(subject_id)
 );
+
+-- Migration: add is_finalized to existing Sessions table if it doesn't exist
+-- Run this once against your existing database:
+-- ALTER TABLE Sessions ADD COLUMN IF NOT EXISTS is_finalized BOOLEAN DEFAULT FALSE;
 
 -- 9. Attendance Table
 CREATE TABLE IF NOT EXISTS Attendance (

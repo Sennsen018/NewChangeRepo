@@ -81,6 +81,58 @@
             white-space: nowrap;
         }
 
+        /* Name display — full on desktop, short on mobile */
+        .dal-name-short { display: none; }
+        .dal-name-full  { display: inline; }
+
+        /* ── Override global .table-container mobile block-display rules ──
+           The global CSS forces display:block on all .table-container tables
+           at ≤768px. We need to keep .dal-table as a real table. */
+        @media (max-width: 768px) {
+            .dal-table-wrapper .table-container .dal-table,
+            .dal-table-wrapper .table-container .dal-table thead,
+            .dal-table-wrapper .table-container .dal-table tbody,
+            .dal-table-wrapper .table-container .dal-table tr,
+            .dal-table-wrapper .table-container .dal-table th,
+            .dal-table-wrapper .table-container .dal-table td {
+                display: revert;
+            }
+
+            /* Restore thead visibility */
+            .dal-table-wrapper .table-container .dal-table thead tr {
+                display: table-row;
+            }
+
+            /* Restore td::before to nothing (global adds data-label pseudo) */
+            .dal-table-wrapper .table-container .dal-table td::before {
+                display: none !important;
+                content: none !important;
+            }
+
+            /* Restore normal td layout */
+            .dal-table-wrapper .table-container .dal-table td {
+                display: table-cell;
+                text-align: unset;
+                justify-content: unset;
+                min-height: unset;
+                border-bottom: unset;
+                background: unset;
+                border-radius: unset;
+                padding: 0.45rem 0.3rem;
+            }
+
+            /* Restore tr */
+            .dal-table-wrapper .table-container .dal-table tbody tr {
+                display: table-row;
+                margin-bottom: 0;
+                padding: 0;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
         /* ═══════════════════════════════════════════
            DAL TABLE — Mobile compact table
            Goal: mini-desktop, NO cards, NO scroll
@@ -103,117 +155,120 @@
             .dal-table {
                 table-layout: fixed;
                 width: 100%;
-                font-size: 0;          /* reset — each cell sets its own */
             }
 
             /* ── Column widths (must sum to 100%) ──
-               ID: 22%  |  Name: 34%  |  Status: 20%  |  Time: 14%  |  Valid: 10%
+               ID: 20%  |  Name: 30%  |  Status: 18%  |  Time: 20%  |  Valid: 12%
             */
-            .dal-table colgroup { display: table-column-group; }
-            .dal-col-id     { width: 22%; }
-            .dal-col-name   { width: 34%; }
-            .dal-col-status { width: 20%; }
-            .dal-col-time   { width: 14%; }
-            .dal-col-valid  { width: 10%; }
+            .dal-col-id     { width: 20%; }
+            .dal-col-name   { width: 30%; }
+            .dal-col-status { width: 18%; }
+            .dal-col-time   { width: 20%; }
+            .dal-col-valid  { width: 12%; }
 
             /* Header row */
             .dal-table thead th {
-                padding: 0.45rem 0.35rem;
-                font-size: 0.6rem;
-                letter-spacing: 0.04em;
-                text-align: center;
+                padding: 0.3rem 0.25rem;
+                font-size: 0.55rem;
+                letter-spacing: 0.02em;
                 border-bottom: 2px solid var(--border-color);
-                overflow: hidden;
                 white-space: nowrap;
+                overflow: hidden;
                 text-overflow: ellipsis;
             }
 
             /* Left-align ID and Name headers */
             .dal-table thead th:nth-child(1),
-            .dal-table thead th:nth-child(2) { text-align: left; padding-left: 0.5rem; }
+            .dal-table thead th:nth-child(2) {
+                text-align: left;
+                padding-left: 0.4rem;
+            }
 
-            /* Body rows */
-            .dal-table tbody tr { display: table-row; }
-
+            /* Body cells */
             .dal-table tbody td {
-                display: table-cell;
-                padding: 0.5rem 0.35rem;
-                font-size: 0.78rem;
+                padding: 0.35rem 0.25rem;
+                font-size: 0.72rem;
                 vertical-align: middle;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
-            /* ── Col 1: Student ID — left, tiny monospace ── */
+            /* ── Col 1: Student ID ── */
             .dal-table tbody td:nth-child(1) {
                 text-align: left;
-                padding-left: 0.5rem;
+                padding-left: 0.4rem;
             }
 
             .dal-id {
-                font-size: 0.65rem;
-                padding: 0.1rem 0.3rem;
-                max-width: 100%;
+                font-size: 0.58rem;
+                padding: 0.08rem 0.22rem;
                 display: inline-block;
+                max-width: 100%;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                vertical-align: middle;
             }
 
-            /* ── Col 2: Name — left, truncate with ellipsis ── */
+            /* ── Col 2: Name — show short, hide full ── */
             .dal-table tbody td:nth-child(2) {
                 text-align: left;
-                font-size: 0.78rem;
+                padding-left: 0.4rem;
+                font-size: 0.72rem;
                 font-weight: 600;
                 color: var(--text-main);
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                max-width: 0;          /* forces ellipsis in fixed-layout table */
             }
 
-            /* ── Col 3: Status — centered, icon + short label ── */
-            .dal-table tbody td:nth-child(3) { text-align: center; }
+            .dal-name-full  { display: none; }
+            .dal-name-short { display: inline; white-space: nowrap; }
+
+            /* ── Col 3: Status — centered, icon only ── */
+            .dal-table tbody td:nth-child(3) {
+                text-align: center;
+                padding-left: 0.15rem;
+                padding-right: 0.15rem;
+            }
 
             .dal-status {
-                padding: 0.15rem 0.35rem;
-                font-size: 0.65rem;
-                gap: 0.2rem;
+                padding: 0.12rem 0.25rem;
+                font-size: 0.6rem;
+                gap: 0.1rem;
             }
 
-            /* Hide text label on mobile — icon only */
             .dal-status .dal-status-text { display: none; }
 
-            /* ── Col 4: Time — right-aligned, compact ── */
+            /* ── Col 4: Time — right-aligned ── */
             .dal-table tbody td:nth-child(4) {
                 text-align: right;
-                padding-right: 0.4rem;
+                padding-right: 0.3rem;
             }
 
-            .dal-time {
-                font-size: 0.68rem;
-                letter-spacing: -0.01em;
-            }
+            .dal-time { font-size: 0.62rem; }
 
             /* ── Col 5: Validity — centered, icon only ── */
-            .dal-table tbody td:nth-child(5) { text-align: center; }
-
-            .dal-valid, .dal-invalid { font-size: 0.85rem; }
-
-            /* Zebra stripe for readability */
-            .dal-table tbody tr:nth-child(even) {
-                background: rgba(255,255,255,0.018);
+            .dal-table tbody td:nth-child(5) {
+                text-align: center;
+                padding-left: 0.1rem;
+                padding-right: 0.1rem;
             }
 
-            /* Tighter accordion header on mobile */
+            .dal-valid, .dal-invalid { font-size: 0.78rem; }
+
+            /* Zebra stripe */
+            .dal-table tbody tr:nth-child(even) {
+                background: rgba(255,255,255,0.02);
+            }
+
+            /* Tighter accordion header */
             .dal-date-header {
-                padding: 0.7rem 0.9rem !important;
+                padding: 0.55rem 0.75rem !important;
                 flex-wrap: nowrap !important;
-                gap: 0.4rem !important;
+                gap: 0.35rem !important;
+                align-items: center !important;
             }
 
             .dal-date-header h4 {
-                font-size: 0.82rem !important;
+                font-size: 0.75rem !important;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -222,26 +277,30 @@
             }
 
             .dal-counts {
-                gap: 0.4rem !important;
+                gap: 0.3rem !important;
                 flex-shrink: 0;
             }
 
-            .dal-counts .badge {
-                display: none; /* hide "N records" badge — redundant on mobile */
-            }
+            .dal-counts > span { font-size: 0.7rem !important; }
+
+            /* Hide "N records" badge */
+            .dal-counts > .badge { display: none; }
         }
 
-        /* Extra tight for very small phones */
+        /* Extra tight for very small phones (≤380px) */
         @media (max-width: 380px) {
-            .dal-col-id     { width: 20%; }
-            .dal-col-name   { width: 32%; }
-            .dal-col-status { width: 20%; }
-            .dal-col-time   { width: 16%; }
-            .dal-col-valid  { width: 12%; }
+            .dal-col-id     { width: 19%; }
+            .dal-col-name   { width: 28%; }
+            .dal-col-status { width: 18%; }
+            .dal-col-time   { width: 22%; }
+            .dal-col-valid  { width: 13%; }
 
-            .dal-table tbody td { padding: 0.4rem 0.25rem; font-size: 0.72rem; }
-            .dal-id { font-size: 0.6rem; }
-            .dal-time { font-size: 0.62rem; }
+            .dal-table tbody td   { padding: 0.28rem 0.18rem; font-size: 0.66rem; }
+            .dal-table thead th   { font-size: 0.5rem; padding: 0.25rem 0.18rem; }
+            .dal-id               { font-size: 0.54rem; }
+            .dal-time             { font-size: 0.58rem; }
+            .dal-date-header      { padding: 0.45rem 0.6rem !important; }
+            .dal-date-header h4   { font-size: 0.68rem !important; }
         }
     </style>
 </head>
@@ -436,7 +495,8 @@
                                                     <span class="dal-id">{{ row.usid }}</span>
                                                 </td>
                                                 <td title="{{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}">
-                                                    {{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}
+                                                    <span class="dal-name-full"></span>{{ row.first_name }} {{ row.middle_name }} {{ row.last_name }}</span>
+                                                    <span class="dal-name-short">{{ row.first_name[0] if row.first_name else '' }}. {{ row.last_name }}</span>
                                                 </td>
                                                 <td style="text-align:center;">
                                                     {% if row.status == 'Present' %}

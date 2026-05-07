@@ -642,7 +642,17 @@
             <div class="alert-box show alert-{{ category }}">
                 <i
                     class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
-                <span>{{ message }}</span>
+                <div style="flex:1;">
+                    <span>{{ message }}</span>
+                    {% if category != 'success' and 'locked' in message.lower() %}
+                    <div style="margin-top:0.4rem;">
+                        <a href="{{ url_for('auth.forgot_password', role='admin') }}"
+                           style="color:inherit;font-weight:700;text-decoration:underline;font-size:0.85rem;">
+                            <i class="fas fa-key" style="margin-right:4px;"></i>Unlock via Forgot Password &rarr;
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
             {% endfor %}
             {% endif %}
@@ -692,6 +702,18 @@
                     <a href="{{ url_for('auth.teacher_login') }}" class="btn-secondary-link">
                         <i class="fas fa-chalkboard-teacher"></i> Faculty
                     </a>
+                </div>
+
+                <!-- Locked account unlock hint -->
+                <div style="margin-top:1.2rem; padding:0.85rem 1rem; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.2); border-radius:var(--radius-md); display:flex; align-items:center; gap:0.75rem;">
+                    <i class="fas fa-lock-open" style="color:var(--accent-color); font-size:1.1rem; flex-shrink:0;"></i>
+                    <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.5;">
+                        Account locked?
+                        <a href="{{ url_for('auth.forgot_password', role='admin') }}"
+                           style="color:var(--accent-color); font-weight:600; text-decoration:none;">
+                            Reset &amp; unlock via email OTP
+                        </a>
+                    </div>
                 </div>
             </form>
 

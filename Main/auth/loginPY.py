@@ -291,11 +291,11 @@ def admin_login():
             else:
                 attempts = admin['failed_attempts'] + 1
                 lockout = None
-                if attempts >= 10:
+                if attempts >= 5:
                     lockout = datetime.now() + timedelta(hours=2)
-                    flash('Account locked for 2 hours due to 10 failed attempts.', 'error')
+                    flash('Account locked for 2 hours due to 5 failed attempts.', 'error')
                 else:
-                    flash(f'Invalid credentials. {10 - attempts} attempts remaining.', 'error')
+                    flash(f'Invalid credentials. {5 - attempts} attempts remaining.', 'error')
                 cursor.execute("UPDATE Admins SET failed_attempts = %s, lockout_time = %s WHERE admin_id = %s", (attempts, lockout, admin['admin_id']))
                 conn.commit()
         else:
@@ -561,11 +561,20 @@ def reset_password():
         hashed_pw = generate_password_hash(new_password)
         
         if user_type == 'student':
-            cursor.execute("UPDATE Students SET password_hash = %s WHERE email = %s", (hashed_pw, email))
+            cursor.execute(
+                "UPDATE Students SET password_hash = %s, failed_attempts = 0, lockout_time = NULL WHERE email = %s",
+                (hashed_pw, email)
+            )
         elif user_type == 'teacher':
-            cursor.execute("UPDATE Teachers SET password_hash = %s WHERE email = %s", (hashed_pw, email))
+            cursor.execute(
+                "UPDATE Teachers SET password_hash = %s, failed_attempts = 0, lockout_time = NULL WHERE email = %s",
+                (hashed_pw, email)
+            )
         elif user_type == 'admin':
-            cursor.execute("UPDATE Admins SET password_hash = %s WHERE email = %s", (hashed_pw, email))
+            cursor.execute(
+                "UPDATE Admins SET password_hash = %s, failed_attempts = 0, lockout_time = NULL WHERE email = %s",
+                (hashed_pw, email)
+            )
             
         conn.commit()
         cursor.close()

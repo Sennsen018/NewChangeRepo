@@ -15,3 +15,5 @@ qrcode==8.2
 Werkzeug==3.1.6
 WTForms==3.2.1
 supabase==2.10.0
+pandas
+openpyxl

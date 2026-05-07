@@ -3,13 +3,17 @@
 -- 1. Function: Notify student when a Drop Request is created or updated
 CREATE OR REPLACE FUNCTION notify_on_drop_request()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_subject_name VARCHAR(100);
 BEGIN
+    SELECT subject_name INTO v_subject_name FROM Subjects WHERE subject_id = NEW.subject_id;
+    
     IF (TG_OP = 'INSERT') THEN
         INSERT INTO Notifications (uSID, message, type)
-        VALUES (NEW.uSID, 'A drop request has been initiated for you in subject ID: ' || NEW.subject_id, 'Warning');
+        VALUES (NEW.uSID, 'A drop request has been initiated for you in ' || v_subject_name, 'Warning');
     ELSIF (TG_OP = 'UPDATE' AND OLD.status != NEW.status) THEN
         INSERT INTO Notifications (uSID, message, type)
-        VALUES (NEW.uSID, 'Your drop request status for Subject ID ' || NEW.subject_id || ' has been updated to: ' || NEW.status, 
+        VALUES (NEW.uSID, 'Your drop request status for ' || v_subject_name || ' has been updated to: ' || NEW.status, 
                 CASE WHEN NEW.status = 'Approved' THEN 'Info' ELSE 'Alert' END);
     END IF;
     RETURN NEW;
@@ -32,13 +36,20 @@ $$ LANGUAGE plpgsql;
 -- 3. Function: Notify student when attendance is recorded
 CREATE OR REPLACE FUNCTION notify_on_attendance_recorded()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_subject_name VARCHAR(100);
 BEGIN
+    SELECT s.subject_name INTO v_subject_name 
+    FROM Subjects s
+    JOIN Sessions sess ON s.subject_id = sess.subject_id
+    WHERE sess.session_id = NEW.session_id;
+
     IF (NEW.status = 'Present') THEN
         INSERT INTO Notifications (uSID, message, type)
-        VALUES (NEW.uSID, 'Your attendance for session ' || NEW.session_id || ' has been successfully marked as Present.', 'Info');
+        VALUES (NEW.uSID, 'Your attendance for today (' || to_char(CURRENT_DATE, 'MM-DD-YY') || ') has been successfully marked as Present.', 'Info');
     ELSIF (NEW.status = 'Flagged') THEN
         INSERT INTO Notifications (uSID, message, type)
-        VALUES (NEW.uSID, 'Your attendance for session ' || NEW.session_id || ' has been flagged for review.', 'Alert');
+        VALUES (NEW.uSID, 'Your attendance for today (' || to_char(CURRENT_DATE, 'MM-DD-YY') || ') has been flagged for review.', 'Alert');
     END IF;
     RETURN NEW;
 END;
@@ -104,11 +115,15 @@ RETURNS TRIGGER AS $$
 DECLARE
     absence_count INT;
     v_subject_id INT;
+    v_subject_name VARCHAR(100);
 BEGIN
     -- Only check if the status is 'Absent'
     IF (NEW.status = 'Absent') THEN
         -- Get the subject_id from the session
         SELECT subject_id INTO v_subject_id FROM Sessions WHERE session_id = NEW.session_id;
+        
+        -- Get the subject_name
+        SELECT subject_name INTO v_subject_name FROM Subjects WHERE subject_id = v_subject_id;
         
         -- Count absences for this student in this subject
         SELECT COUNT(*) INTO absence_count 
@@ -119,7 +134,7 @@ BEGIN
         -- Notify if absences exceed 3 (customizable limit)
         IF (absence_count >= 3) THEN
             INSERT INTO Notifications (uSID, message, type)
-            VALUES (NEW.uSID, 'You have accumulated ' || absence_count || ' absences in Subject ID: ' || v_subject_id || '. Please contact your instructor.', 'Alert');
+            VALUES (NEW.uSID, 'You have accumulated ' || absence_count || ' absences in ' || v_subject_name || '. Please contact your instructor.', 'Alert');
         END IF;
     END IF;
     RETURN NEW;

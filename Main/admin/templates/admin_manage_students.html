@@ -11,7 +11,7 @@
     <div class="dashboard-container">
         <!-- Sidebar -->
                         <aside class="sidebar">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="sidebar-logo">
                 <div>
                     <i class="fas fa-fingerprint"></i>
@@ -74,6 +74,7 @@
                     </div>
                     <div class="flex gap-3">
                         <button class="btn btn-secondary" onclick="openBulkModal()"><i class="fas fa-users-cog"></i> Bulk Enroll</button>
+                        <button class="btn btn-success" onclick="openUploadModal()"><i class="fas fa-file-excel"></i> Upload Students</button>
                         <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Add Student</button>
                     </div>
                 </div>
@@ -640,6 +641,30 @@
             </form>
         </div>
     </div>
+
+    <!-- Upload Students Modal -->
+    <div id="uploadStudentsModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+        <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
+            <button onclick="closeModal('uploadStudentsModal')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">&times;</button>
+            <h3 class="mb-4">Upload List of Students</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Upload an Excel file (.xlsx) containing student information. Students will be added to the system but not yet enrolled in any classes.</p>
+            <form method="POST" action="{{ url_for('admin.upload_students_excel') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="form-group mb-4">
+                    <label class="form-label">Excel File</label>
+                    <input type="file" name="excel_file" class="form-control" accept=".xlsx, .xls" required style="padding: 0.5rem;">
+                </div>
+                <div class="form-group mb-4">
+                    <a href="{{ url_for('admin.download_student_template') }}" style="color: var(--primary); font-size: 0.85rem; text-decoration: underline;"><i class="fas fa-download mr-1"></i> Download Excel Template</a>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('uploadStudentsModal')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Upload and Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Bulk Enroll Modal -->
     <div id="bulkEnrollModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
         <div class="glass-panel" style="width: 500px; padding: 2rem; position: relative;">
@@ -749,6 +774,10 @@
             document.getElementById('bulkEnrollModal').classList.add('active');
         }
 
+        function openUploadModal() {
+            document.getElementById('uploadStudentsModal').classList.add('active');
+        }
+
         // On page load: reopen add modal if error + saved data
         document.addEventListener('DOMContentLoaded', () => {
             const hasError = document.querySelector('.alert-error, .alert-danger');
@@ -838,7 +867,7 @@
     </script>
 
 
-    <nav class="bottom-nav">
+        <nav class="bottom-nav">
         <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
             <i class="fas fa-home"></i>
             <span>Home</span>

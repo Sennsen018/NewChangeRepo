@@ -471,6 +471,125 @@ def manage_students():
                            status_filter=status_filter,
                            now=datetime.now())
 
+@admin.route('/download_student_template')
+def download_student_template():
+    import pandas as pd
+    from io import BytesIO
+    from flask import send_file
+    
+    df = pd.DataFrame({
+        'First Name': ['Juan', 'Maria'],
+        'Middle Name': ['Dela', 'Clara'],
+        'Last Name': ['Cruz', 'Santos'],
+        'Email': ['juan.cruz@gmail.com', 'maria.santos@gmail.com'],
+        'Course': ['BSIT', 'BSCS'],
+        'Level': ['1st Year', '2nd Year'],
+        'Section': ['A', 'B']
+    })
+    
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Students')
+    output.seek(0)
+    
+    return send_file(output, download_name="student_template.xlsx", as_attachment=True)
+
+@admin.route('/upload_students_excel', methods=['POST'])
+def upload_students_excel():
+    if 'excel_file' not in request.files:
+        flash('No file part', 'error')
+        return redirect(url_for('admin.manage_students'))
+        
+    file = request.files['excel_file']
+    if file.filename == '':
+        flash('No selected file', 'error')
+        return redirect(url_for('admin.manage_students'))
+        
+    if file and (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
+        try:
+            import pandas as pd
+            df = pd.read_excel(file)
+            
+            required_cols = ['First Name', 'Middle Name', 'Last Name', 'Email', 'Course', 'Level', 'Section']
+            for col in required_cols:
+                if col not in df.columns:
+                    flash(f'Missing required column in Excel: {col}', 'error')
+                    return redirect(url_for('admin.manage_students'))
+            
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            
+            success_count = 0
+            error_count = 0
+            
+            current_year = datetime.now().year
+            prefix = f"S-{current_year}-"
+            
+            for index, row in df.iterrows():
+                try:
+                    first_name = str(row['First Name']).strip() if pd.notna(row['First Name']) else ''
+                    middle_name = str(row['Middle Name']).strip() if pd.notna(row['Middle Name']) else ''
+                    last_name = str(row['Last Name']).strip() if pd.notna(row['Last Name']) else ''
+                    email = str(row['Email']).strip() if pd.notna(row['Email']) else ''
+                    course = str(row['Course']).strip() if pd.notna(row['Course']) else ''
+                    level = str(row['Level']).strip() if pd.notna(row['Level']) else ''
+                    section = str(row['Section']).strip() if pd.notna(row['Section']) else ''
+                    
+                    is_valid, error_msg, validated_data = validate_user_data(first_name, middle_name, last_name, email)
+                    if not is_valid:
+                        error_count += 1
+                        continue
+                        
+                    first_name, middle_name, last_name, email = validated_data
+                    
+                    # Check duplicate email
+                    cursor.execute("SELECT email FROM Students WHERE email = %s UNION SELECT email FROM Teachers WHERE email = %s", (email, email))
+                    if cursor.fetchone():
+                        error_count += 1
+                        continue
+                        
+                    cursor.execute("SELECT usid FROM Students WHERE usid LIKE %s ORDER BY usid DESC LIMIT 1", (prefix + '%',))
+                    last_student = cursor.fetchone()
+                    
+                    if last_student:
+                        last_id_num = int(last_student['usid'].split('-')[2])
+                        new_id_num = last_id_num + 1
+                    else:
+                        new_id_num = 1
+                        
+                    new_usid = f"{prefix}{new_id_num:03d}"
+                    
+                    default_password = f"{current_year}-{new_id_num:03d}"
+                    password_hash = generate_password_hash(default_password)
+                    
+                    cursor.execute("""
+                        INSERT INTO Students (usid, first_name, middle_name, last_name, email, course, level, section, password_hash) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (new_usid, first_name, middle_name, last_name, email, course, level, section, password_hash))
+                    
+                    log_system_action(cursor, 'Students', new_usid, 'Create', session['user_id'], session['role'], f"Student bulk uploaded: {first_name} {last_name}")
+                    
+                    success_count += 1
+                except Exception as e:
+                    error_count += 1
+                    print(f"Row {index} failed: {e}")
+                    
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            if success_count > 0:
+                flash(f'Successfully added {success_count} students. ({error_count} failed or skipped)', 'success')
+            else:
+                flash(f'No students were added. All rows failed validation or were duplicates.', 'error')
+                
+        except Exception as e:
+            flash(f'Error processing file: {str(e)}', 'error')
+    else:
+        flash('Invalid file format. Please upload an Excel file (.xlsx or .xls)', 'error')
+        
+    return redirect(url_for('admin.manage_students'))
+
 @admin.route('/edit_student/<usid>', methods=['POST'])
 def edit_student(usid):
     """

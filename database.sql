@@ -217,3 +217,12 @@ INSERT INTO Subjects (subject_code, subject_name) VALUES
 ('IT102', 'Programming 1'),
 ('IT103', 'Database Management Systems')
 ON CONFLICT DO NOTHING;
+
+-- 17. Login Logs Table
+CREATE TABLE IF NOT EXISTS login_logs (
+    log_id SERIAL PRIMARY KEY,
+    user_id VARCHAR(50),
+    role VARCHAR(20) CHECK (role IN ('Student', 'Teacher', 'Admin')),
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    logout_time TIMESTAMP
+);

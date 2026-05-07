@@ -216,9 +216,14 @@
             <div class="main-content-inner">
                 <div class="flex justify-between items-center mb-6">
                     <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">View and manage your academic alerts.</p>
-                    <button onclick="markAllAsRead()" class="btn btn-secondary" style="font-size: 0.85rem;">
-                        <i class="fas fa-check-double mr-2"></i> Mark all as read
-                    </button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="markAllAsRead()" class="btn btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fas fa-check-double mr-2"></i> Mark all as read
+                        </button>
+                        <button onclick="deleteAllNotifications()" class="btn btn-primary" style="font-size: 0.85rem; background: var(--danger, #ef4444); border-color: var(--danger, #ef4444);">
+                            <i class="fas fa-trash-alt mr-2"></i> Delete all
+                        </button>
+                    </div>
                 </div>
 
                 <div id="notifications-list">
@@ -407,6 +412,29 @@
                 fetchNotifications();
             } catch (error) {
                 console.error('Error marking notifications as read:', error);
+            }
+        }
+
+        async function deleteAllNotifications() {
+            if (!confirm("Are you sure you want to delete all notifications?")) return;
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            try {
+                const response = await fetch("{{ url_for('user.delete_all_notifications') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+                
+                if (response.ok) {
+                    fetchNotifications();
+                } else {
+                    console.error('Failed to delete notifications');
+                }
+            } catch (error) {
+                console.error('Error deleting notifications:', error);
             }
         }
 

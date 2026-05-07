@@ -12,7 +12,7 @@
 <body class="theme-admin">
     <div class="dashboard-container">
         <aside class="sidebar">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="sidebar-logo">
                 <div>
                     <i class="fas fa-fingerprint"></i>
@@ -29,6 +29,9 @@
                         </div>
                         <a href="{{ url_for('auth.change_password') }}" class="dropdown-item">
                             <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="#" class="dropdown-item" onclick="openChangePinModal()">
+                            <i class="fas fa-shield-alt"></i> Security PIN
                         </a>
                         <a href="{{ url_for('auth.logout') }}" class="dropdown-item" style="color: var(--danger);">
                             <i class="fas fa-sign-out-alt"></i> Logout
@@ -208,24 +211,20 @@
     </style>
 
 
-    <nav class="bottom-nav">
-        <a href="{{ url_for('admin.dashboard') }}"
-            class="bottom-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+        <nav class="bottom-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
-        <a href="{{ url_for('admin.manage_students') }}"
-            class="bottom-nav-item {% if request.endpoint == 'admin.manage_students' %}active{% endif %}">
+        <a href="{{ url_for('admin.manage_students') }}" class="bottom-nav-item {% if request.endpoint == 'admin.manage_students' %}active{% endif %}">
             <i class="fas fa-user-graduate"></i>
             <span>Students</span>
         </a>
-        <a href="{{ url_for('admin.manage_teachers') }}"
-            class="bottom-nav-item {% if request.endpoint == 'admin.manage_teachers' %}active{% endif %}">
+        <a href="{{ url_for('admin.manage_teachers') }}" class="bottom-nav-item {% if request.endpoint == 'admin.manage_teachers' %}active{% endif %}">
             <i class="fas fa-chalkboard-teacher"></i>
             <span>Faculty</span>
         </a>
-        <a href="{{ url_for('admin.audit_logs') }}"
-            class="bottom-nav-item {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}">
+        <a href="{{ url_for('admin.audit_logs') }}" class="bottom-nav-item {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}">
             <i class="fas fa-clipboard-list"></i>
             <span>Logs</span>
         </a>

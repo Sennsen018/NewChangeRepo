@@ -184,6 +184,17 @@ def mark_notifications_read():
     conn.close()
     return jsonify({'success': True})
 
+@user.route('/delete_all_notifications', methods=['POST'])
+def delete_all_notifications():
+    usid = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Notifications WHERE usid = %s", (usid,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'success': True})
+
 @user.route('/api/notifications')
 def get_notifications():
     usid = session['user_id']

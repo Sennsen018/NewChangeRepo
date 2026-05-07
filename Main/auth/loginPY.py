@@ -169,6 +169,10 @@ def student_login():
             elif student['password_hash'] and check_password_hash(student['password_hash'], password):
                 # Reset attempts
                 cursor.execute("UPDATE Students SET failed_attempts = 0, lockout_time = NULL WHERE usid = %s", (student['usid'],))
+                cursor.execute("INSERT INTO login_logs (user_id, role, login_time) VALUES (%s, %s, CURRENT_TIMESTAMP) RETURNING log_id", (student['usid'], 'Student'))
+                log_row = cursor.fetchone()
+                if log_row:
+                    session['login_log_id'] = log_row['log_id']
                 conn.commit()
                 session.permanent = True
                 session['user_id'] = student['usid']
@@ -223,6 +227,10 @@ def teacher_login():
                 flash(f'Account locked. Try again after {teacher["lockout_time"]}', 'error')
             elif teacher['password_hash'] and check_password_hash(teacher['password_hash'], password):
                 cursor.execute("UPDATE Teachers SET failed_attempts = 0, lockout_time = NULL WHERE utid = %s", (teacher['utid'],))
+                cursor.execute("INSERT INTO login_logs (user_id, role, login_time) VALUES (%s, %s, CURRENT_TIMESTAMP) RETURNING log_id", (teacher['utid'], 'Teacher'))
+                log_row = cursor.fetchone()
+                if log_row:
+                    session['login_log_id'] = log_row['log_id']
                 conn.commit()
                 session.permanent = True
                 session['user_id'] = teacher['utid']
@@ -271,6 +279,10 @@ def admin_login():
                 flash(f'Account locked. Try again after {admin["lockout_time"]}', 'error')
             elif admin['password_hash'] and check_password_hash(admin['password_hash'], password):
                 cursor.execute("UPDATE Admins SET failed_attempts = 0, lockout_time = NULL WHERE admin_id = %s", (admin['admin_id'],))
+                cursor.execute("INSERT INTO login_logs (user_id, role, login_time) VALUES (%s, %s, CURRENT_TIMESTAMP) RETURNING log_id", (str(admin['admin_id']), 'Admin'))
+                log_row = cursor.fetchone()
+                if log_row:
+                    session['login_log_id'] = log_row['log_id']
                 conn.commit()
                 session.permanent = True
                 session['user_id'] = admin['admin_id']
@@ -576,6 +588,20 @@ def reset_password():
 @auth.route('/logout')
 def logout():
     role = session.get('role')
+    log_id = session.get('login_log_id')
+    
+    if log_id:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE login_logs SET logout_time = CURRENT_TIMESTAMP WHERE log_id = %s", (log_id,))
+                conn.commit()
+                cursor.close()
+                conn.close()
+        except Exception as e:
+            print(f"Error updating logout time: {e}")
+            
     session.clear()
     if role == 'admin':
         return redirect(url_for('auth.admin_login'))

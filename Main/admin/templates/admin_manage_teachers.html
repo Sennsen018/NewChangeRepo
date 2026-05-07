@@ -121,17 +121,17 @@
                 </div>
 
                 <!-- Tab Navigation -->
-                <div class="glass-panel" style="padding: 0.5rem; margin-bottom: 2rem; border-radius: var(--radius-md);">
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="tab-btn active" onclick="showTab('active')" style="display: flex; align-items: center; gap: 0.5rem;">
+                <div class="glass-panel" style="padding: 0.75rem; margin-bottom: 2rem;">
+                    <div class="flex justify-between items-center w-full">
+                        <button class="tab-btn active" onclick="showTab('active')">
                             <i class="fas fa-chalkboard-teacher"></i>
-                            Active Faculty
-                            <span class="badge badge-success" style="margin-left: 0.25rem;">{{ total_count }}</span>
+                            <span>Active Faculty</span>
+                            <span class="badge badge-success">{{ total_count }}</span>
                         </button>
-                        <button class="tab-btn" onclick="showTab('archived')" style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
+                        <button class="tab-btn" onclick="showTab('archived')">
                             <i class="fas fa-archive"></i>
-                            Archived
-                            <span class="badge badge-danger" style="margin-left: 0.25rem;">{{ teachers | selectattr('status', 'equalto', 'Archived') | list | length }}</span>
+                            <span>Archived</span>
+                            <span class="badge badge-danger">{{ teachers | selectattr('status', 'equalto', 'Archived') | list | length }}</span>
                         </button>
                     </div>
                 </div>

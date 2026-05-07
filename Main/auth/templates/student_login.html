@@ -58,7 +58,8 @@
             height: 50vw;
             max-width: 600px;
             max-height: 600px;
-            background: #818cf8; /* Light Indigo */
+            background: #818cf8;
+            /* Light Indigo */
             border-radius: 50%;
             filter: blur(100px);
             top: -20%;
@@ -76,7 +77,8 @@
             height: 40vw;
             max-width: 500px;
             max-height: 500px;
-            background: #fbbf24; /* Gold */
+            background: #fbbf24;
+            /* Gold */
             border-radius: 50%;
             filter: blur(100px);
             bottom: -30%;
@@ -88,9 +90,17 @@
         }
 
         @keyframes floatLeft {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-40px, 50px) scale(1.1); }
-            100% { transform: translate(30px, -30px) scale(0.9); }
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(-40px, 50px) scale(1.1);
+            }
+
+            100% {
+                transform: translate(30px, -30px) scale(0.9);
+            }
         }
 
         .admin-link {
@@ -248,6 +258,7 @@
             width: 40vw;
             height: 40vw;
             max-width: 600px;
+
             max-height: 600px;
             border-radius: 50%;
             filter: blur(90px);
@@ -272,10 +283,21 @@
         }
 
         @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, 50px) scale(1.1); }
-            66% { transform: translate(-30px, 20px) scale(0.9); }
-            100% { transform: translate(0, 0) scale(1); }
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, 50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-30px, 20px) scale(0.9);
+            }
+
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
         }
 
         /* Input fields overrides */
@@ -387,7 +409,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: rgba(255,255,255,0);
+            background: rgba(255, 255, 255, 0);
             transition: background 0.2s ease;
             border-radius: inherit;
         }
@@ -398,7 +420,7 @@
         }
 
         .btn-gold:hover::after {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .btn-gold:active {
@@ -511,13 +533,27 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
-        .btn-gold.loading .spinner { display: block; }
-        .btn-gold.loading .btn-text { opacity: 0.85; }
-        .btn-gold.loading .btn-icon { display: none; }
-        .btn-gold.loading { pointer-events: none; opacity: 0.9; }
+        .btn-gold.loading .spinner {
+            display: block;
+        }
+
+        .btn-gold.loading .btn-text {
+            opacity: 0.85;
+        }
+
+        .btn-gold.loading .btn-icon {
+            display: none;
+        }
+
+        .btn-gold.loading {
+            pointer-events: none;
+            opacity: 0.9;
+        }
 
         /* Entrance Animations */
         @keyframes fadeInUp {
@@ -631,7 +667,8 @@
                 </div>
 
                 <div class="forgot-link-wrapper">
-                    <a href="{{ url_for('auth.forgot_password', role='student') }}" class="forgot-link">Forgot password?</a>
+                    <a href="{{ url_for('auth.forgot_password', role='student') }}" class="forgot-link">Forgot
+                        password?</a>
                 </div>
 
                 <button type="submit" class="btn-gold" id="submitBtn">
